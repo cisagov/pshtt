@@ -24,7 +24,7 @@ class Domain:
         self.hsts_preload_read = ""
         self.hsts_preloaded = ""
         self.broken_root = ""
-        self.broekn_www = ""
+        self.broken_www = ""
 
     def __str__(self):
         return ("Domain: " + str(self.domain) + " \n" +
@@ -36,7 +36,14 @@ class Domain:
                 "Valid HTTPS: " + self.valid_https + "\n" +
                 "Defaults HTTPS: " + self.defaults_to_https + "\n" +
                 "Downgrades HTTPS: " + self.downgrades_https + "\n" +
-                "Strictly Forces HTTPS: " + self.strictly_forces_https + "\n")
-
+                "Strictly Forces HTTPS: " + self.strictly_forces_https + "\n" +
+                "HTTPS Bad Host Name: " + self.https_bad_hostname + "\n" +
+                "HSTS: " + self.hsts + "\n" +
+                "HSTS Header: " + self.hsts_header + "\n" +
+                "HSTS Max Age: " + self.hsts_max_age + "\n" +
+                "HSTS All Subdomains: " + self.hsts_all_subdomains + "\n" +
+                "HSTS Preloaded: " + self.hsts_preloaded + "\n" +
+                "Broken Root: " + self.broken_root + "\n" +
+                "Broken www: " + self.broken_www + "\n")
 
 
