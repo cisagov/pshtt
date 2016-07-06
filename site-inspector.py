@@ -2,6 +2,8 @@
 import httplib
 import urllib2
 import Domain
+import requests
+import re
 
 def main(url):
     #url.base_domain = url.domain
@@ -10,6 +12,9 @@ def main(url):
     is_valid_https(url)
     defaults_to_https(url)
     downgrades_or_forces_https(url)
+    https_bad_hostname(url)
+    has_hsts(url)
+    broken_www(url)
 
 def is_live(url):
     try:
@@ -96,19 +101,103 @@ def downgrades_or_forces_https(url):
         url.downgrades_https = "False"
         url.strictly_forces_https = "False"
 
+def https_bad_chain(url):
+    return 4
+
+def https_bad_hostname(url):
+    try:
+        req = urllib2.Request("https://" + url.base_domain)
+        res = urllib2.build_opener()
+        f = res.open(req)
+        url.https_bad_hostname = "False"
+    except:
+        # no valid https or http
+        url.https_bad_hostname = "True"
+
+def has_hsts(url):
+    try:
+        req = requests.get('https://' + url.base_domain)
+        #req = requests.get(url.redirect_to)
+        print url.base_domain
+        print req.headers
+        if 'strict-transport-security' in req.headers:
+            url.hsts = "True"
+            req_header_handlers(url, req.headers)
+            #url.hsts_header = (req.headers['strict-transport-security'])
+            #url.hsts_max_age = url.hsts_header.replace("max-age=", "")
+        else:
+            url.hsts = "False"
+            url.hsts_preloaded = "False"
+            url.hsts_all_subdomains = "False"
+    except requests.exceptions.SSLError as e:
+        url.hsts = "False"
+        url.hsts_preloaded = "False"
+        url.hsts_all_subdomains = "False"
+
+
+def req_header_handlers(url, headers):
+    url.hsts_header = headers['strict-transport-security']
+    url.hsts_max_age = re.findall(r'max-age=(.*?);', url.hsts_header)[0]
+    if 'includeSubDomains' in url.hsts_header:
+        url.hsts_all_subdomains = "True"
+    else:
+        url.hsts_all_subdomains = "False"
+    if 'preload' in url.hsts_header:
+        url.hsts_preloaded = "True"
+    else:
+        url.hsts_preloaded = "False"
+
+def broken_www(url):
+    if broken_root(url, "https://www.") and broken_root(url, "http://www."):
+        url.broken_root = "True"
+        url.broken_www = "True"
+    elif broken_root(url, "https://www.") or broken_root(url, "http://www."):
+        url.broken_root = "False"
+        url.broken_www = "True"
+    else:
+        url.broken_root = "False"
+        url.broken_www = "False"
+
+def broken_root(url, prefix):
+    try:
+        req = urllib2.Request(prefix + url.base_domain)
+        res = urllib2.build_opener()
+        f = res.open(req)
+        return False
+    except:
+        # no valid https://www or http://www
+        return True
 
 
 
-domain = Domain.Domain("cybercrime.gov")
+
+domains = []
+domains.append(Domain.Domain("cybercrime.gov"))
+domains.append(Domain.Domain("dea.gov"))
+domains.append(Domain.Domain("cwc.gov"))
+domains.append(Domain.Domain("dems.gov"))
+domains.append(Domain.Domain("aidrefugees.gov"))
+domains.append(Domain.Domain("aids.gov"))
+domains.append(Domain.Domain("bbg.gov"))
+domains.append(Domain.Domain("18f.gov"))
+domains.append(Domain.Domain("arctic.gov"))
+for i in domains:
+    main(i)
+for k in domains:
+    print k
+
+#domain = Domain.Domain("cybercrime.gov")
 #domain1 = Domain.Domain("dea.gov")
 #domain2 = Domain.Domain("cwc.gov")
 #domain2 = Domain.Domain("dems.gov")
 #domain2 = Domain.Domain("aidrefugees.gov")
-domain1 = Domain.Domain("bbg.gov")
-domain2 = Domain.Domain("18f.gov")
-main(domain)
-main(domain1)
-main(domain2)
-print domain
-print domain1
-print domain2
+#domain2 = Domain.Domain("aids.gov")
+#domain1 = Domain.Domain("bbg.gov")
+#domain1 = Domain.Domain("18f.gov")
+#domain1 = Domain.Domain("arctic.gov")
+#main(domain)
+#main(domain1)
+#main(domain2)
+#print domain
+#print domain1
+#print domain2
