@@ -15,6 +15,7 @@ def main(url):
     https_bad_hostname(url)
     has_hsts(url)
     broken_www(url)
+    hsts_preload_ready(url)
 
 def is_live(url):
     try:
@@ -118,8 +119,8 @@ def has_hsts(url):
     try:
         req = requests.get('https://' + url.base_domain)
         #req = requests.get(url.redirect_to)
-        print url.base_domain
-        print req.headers
+        #print url.base_domain
+        #print req.headers
         if 'strict-transport-security' in req.headers:
             url.hsts = "True"
             req_header_handlers(url, req.headers)
@@ -146,6 +147,13 @@ def req_header_handlers(url, headers):
         url.hsts_preloaded = "True"
     else:
         url.hsts_preloaded = "False"
+
+def hsts_preload_ready(url):
+    if (url.hsts_preloaded == "True" and url.hsts_all_subdomains == "True"
+            and url.strictly_forces_https == "True" and url.hsts_max_age != ""):
+        url.hsts_preload_ready = "True"
+    else:
+        url.hsts_preload_ready = "False"
 
 def broken_www(url):
     if broken_root(url, "https://www.") and broken_root(url, "http://www."):
