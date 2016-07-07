@@ -21,7 +21,7 @@ class Domain:
         self.hsts_header = ""
         self.hsts_max_age = ""
         self.hsts_all_subdomains = ""
-        self.hsts_preload_read = ""
+        self.hsts_preload_ready = ""
         self.hsts_preloaded = ""
         self.broken_root = ""
         self.broken_www = ""
@@ -42,8 +42,7 @@ class Domain:
                 "HSTS Header: " + self.hsts_header + "\n" +
                 "HSTS Max Age: " + self.hsts_max_age + "\n" +
                 "HSTS All Subdomains: " + self.hsts_all_subdomains + "\n" +
+                "HSTS Preload Ready: " + self.hsts_preload_ready + "\n" +
                 "HSTS Preloaded: " + self.hsts_preloaded + "\n" +
                 "Broken Root: " + self.broken_root + "\n" +
                 "Broken www: " + self.broken_www + "\n")
-
-
