@@ -4,6 +4,15 @@ import urllib2
 import Domain
 import requests
 import re
+import sslyze
+import socket
+
+from sslyze.plugins_finder import PluginsFinder
+from sslyze.plugins_process_pool import PluginsProcessPool
+from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
+from sslyze.ssl_settings import TlsWrappedProtocolEnum
+import sslyze.plugins.plugin_base
+
 
 def main(url):
     #url.base_domain = url.domain
@@ -16,6 +25,7 @@ def main(url):
     has_hsts(url)
     broken_www(url)
     hsts_preload_ready(url)
+    https_bad_chain(url)
 
 def is_live(url):
     try:
@@ -102,8 +112,27 @@ def downgrades_or_forces_https(url):
         url.downgrades_https = "False"
         url.strictly_forces_https = "False"
 
+#add checking certificate of all different valid chains
 def https_bad_chain(url):
-    return 4
+    # Script to get the list of SSLv3 cipher suites supported by smtp.gmail.com
+    # You should use the process pool to make scans quick, but you can also call plugins directly
+    hostname = url.base_domain
+    server_info = ServerConnectivityInfo(hostname=hostname, port=443)
+    server_info.test_connectivity_to_server()
+
+    from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
+    #print '\nCalling a plugin directly...'
+    plugin = CertificateInfoPlugin()
+    plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+    if plugin_result.is_certificate_chain_order_valid:
+        url.https_bad_chain = "False"
+    else:
+        url.https_bad_chain = "True"
+    #print plugin_result.as_text()
+    #for cipher in plugin_result.:
+        #print '    {}'.format(cipher.name)
+
+
 
 def https_bad_hostname(url):
     try:
@@ -135,10 +164,11 @@ def has_hsts(url):
         url.hsts_preloaded = "False"
         url.hsts_all_subdomains = "False"
 
-
+#preload should actually be based on Google list on github of preloaded websites
 def req_header_handlers(url, headers):
-    url.hsts_header = headers['strict-transport-security']
-    url.hsts_max_age = re.findall(r'max-age=(.*?);', url.hsts_header)[0]
+    url.hsts_header = re.sub('[;,]', '', headers['strict-transport-security'])
+    print url.hsts_header
+    url.hsts_max_age = (url.hsts_header.partition(' ')[0])[8:]
     if 'includeSubDomains' in url.hsts_header:
         url.hsts_all_subdomains = "True"
     else:
@@ -176,6 +206,16 @@ def broken_root(url, prefix):
         # no valid https://www or http://www
         return True
 
+def out_csv(results):
+    output_csv = open("results.csv", "wb")
+    output_csv.write("Domain,Base Domain,Canonical,Live,Redirect,Redirect To,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
+    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+    "HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
+    for i in results:
+        output_csv.write(i.output_to_csv())
+    output_csv.close()
+
+
 
 
 
@@ -191,8 +231,9 @@ domains.append(Domain.Domain("18f.gov"))
 domains.append(Domain.Domain("arctic.gov"))
 for i in domains:
     main(i)
-for k in domains:
-    print k
+out_csv(domains)
+#for k in domains:
+    #print k
 
 #domain = Domain.Domain("cybercrime.gov")
 #domain1 = Domain.Domain("dea.gov")
