@@ -18,51 +18,60 @@ def main(url):
     #url.base_domain = url.domain
     if is_live(url):
         is_redirect(url)
-    is_valid_https(url)
-    defaults_to_https(url)
-    downgrades_or_forces_https(url)
-    https_bad_hostname(url)
-    has_hsts(url)
+    if is_valid_https(url):
+        defaults_to_https(url)
+        downgrades_or_forces_https(url)
+        has_hsts(url)
+        hsts_preload_ready(url)
+        https_bad_chain(url)
+        https_bad_hostname(url)
+    else:
+        url.defaults_to_https = "False"
+        url.downgrades_https = "False"
+        url.strictly_forces_https = "False"
+        url.https_bad_chain = "False"
+        url.https_bad_hostname = "False"
+        url.hsts = "False"
+        url.hsts_preloaded = "False"
+        url.hsts_all_subdomains = "False"
+        url.hsts_header = "False"
+        url.hsts_max_age = "False"
     broken_www(url)
-    hsts_preload_ready(url)
-    https_bad_chain(url)
 
+
+#Checks http:// and http://www for a domain and if neither are valid the site is not live
 def is_live(url):
     try:
-        a=urllib2.urlopen(url.domain)
-        #print a.getcode()
+        a=urllib2.urlopen("http://" + url.base_domain)
+        url.domain = "http://" + url.base_domain
         url.live = "True"
         return True
-    except urllib2.HTTPError, e:
-        #print(e.code)
-        url.live = "False"
-        return False
-    except urllib2.URLError, e:
-        #print(e.args)
-        url.live = "False"
-        return False
     except Exception:
-        #print "General Exception"
-        url.live = "False"
-        return False
+        try:
+            #if http:// domain does not exist try http://www
+            a = urllib2.urlopen("http://www." + url.base_domain)
+            url.domain = "http://www." + url.base_domain
+            url.live = "True"
+            return True
+        except Exception:
+            url.live = "False"
+            return False
+
 
 def is_redirect(url):
-    #opener = urllib2.build_opener(urllib2.HTTPRedirectHandler)
-    #request = opener.open(url)
-    #print request.url
-    #httplib.HTTPConnection.debuglevel = 1
     req = urllib2.Request(url.domain)
     res = urllib2.build_opener()
-    #test = urllib2.HTTPSHandler(req)
-    #print test
     f = res.open(req)
     if url.domain == f.url:
         url.redirect = "False"
         url.canonical = str(url.domain)
     else:
         url.redirect = "True"
-        url.canonical = str(f.url)
-        url.redirect_to = str(f.url)
+        url.canonical = f.url
+        url.redirect_to = f.url
+        #If the redirect starts with https then the redirect it the valid https
+        if url.redirect_to[:5] == "https":
+            url.https_domain = url.redirect_to
     #print f.headers.dict
     #print f.status
 
@@ -70,20 +79,19 @@ def is_valid_https(url):
     #change to split ur.domain to check for https and not only http
     try:
         a = urllib2.urlopen("https://" + url.base_domain)
+        url.https_domain = "https://" + url.base_domain
         #print a.getcode()
         url.valid_https = "True"
         return True
-    except urllib2.HTTPError, e:
-        print(e.code)
-        url.valid_https = "False"
-        return False
-    except urllib2.URLError, e:
-        print(e.args)
-        url.valid_https = "False"
-        return False
     except Exception:
-        #print "General Exception"
-        url.valid_https = "False"
+        try:
+            a = urllib2.urlopen("https://www." + url.base_domain)
+            url.https_domain = "https://www." + url.base_domain
+            url.valid_https = "True"
+            return True
+        except Exception:
+            url.valid_https = "False"
+            return False
 
 def defaults_to_https(url):
     if url.canonical[:5] == "https":
@@ -121,7 +129,7 @@ def https_bad_chain(url):
     server_info.test_connectivity_to_server()
 
     from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
-    #print '\nCalling a plugin directly...'
+    #Call Plugin directly
     plugin = CertificateInfoPlugin()
     plugin_result = plugin.process_task(server_info, 'certinfo_basic')
     if plugin_result.is_certificate_chain_order_valid:
@@ -129,12 +137,11 @@ def https_bad_chain(url):
     else:
         url.https_bad_chain = "True"
     #print plugin_result.as_text()
-    #for cipher in plugin_result.:
-        #print '    {}'.format(cipher.name)
 
 
 
-def https_bad_hostname(url):
+
+def https_bad_hostname(url):#
     try:
         req = urllib2.Request("https://" + url.base_domain)
         res = urllib2.build_opener()
@@ -145,29 +152,34 @@ def https_bad_hostname(url):
         url.https_bad_hostname = "True"
 
 def has_hsts(url):
-    try:
-        req = requests.get('https://' + url.base_domain)
-        #req = requests.get(url.redirect_to)
-        #print url.base_domain
-        #print req.headers
-        if 'strict-transport-security' in req.headers:
-            url.hsts = "True"
-            req_header_handlers(url, req.headers)
-            #url.hsts_header = (req.headers['strict-transport-security'])
-            #url.hsts_max_age = url.hsts_header.replace("max-age=", "")
-        else:
-            url.hsts = "False"
+    if url.valid_https == "True":
+        try:
+            req = requests.get('https://' + url.base_domain)
+            #req = requests.get(url.redirect_to)
+            #print url.base_domain
+            #print req.headers
+            if 'strict-transport-security' in req.headers:
+                url.hsts = "True"
+                req_header_handlers(url, req.headers)
+            else:
+                url.hsts = "False"
+                url.hsts_preloaded = "False"
+                url.hsts_all_subdomains = "False"
+        except requests.exceptions.SSLError as e:
+            url.hsts = "False"#
             url.hsts_preloaded = "False"
             url.hsts_all_subdomains = "False"
-    except requests.exceptions.SSLError as e:
+    else:
         url.hsts = "False"
         url.hsts_preloaded = "False"
         url.hsts_all_subdomains = "False"
+        url.hsts_header = "False"
+        url.hsts_max_age = "False"
 
 #preload should actually be based on Google list on github of preloaded websites
 def req_header_handlers(url, headers):
     url.hsts_header = re.sub('[;,]', '', headers['strict-transport-security'])
-    print url.hsts_header
+    #print url.hsts_header"http://example.com"
     url.hsts_max_age = (url.hsts_header.partition(' ')[0])[8:]
     if 'includeSubDomains' in url.hsts_header:
         url.hsts_all_subdomains = "True"
@@ -198,11 +210,10 @@ def broken_www(url):
 
 def broken_root(url, prefix):
     try:
-        req = urllib2.Request(prefix + url.base_domain)
-        res = urllib2.build_opener()
-        f = res.open(req)
+        urllib2.urlopen(prefix + url.base_domain, timeout=1)
+
         return False
-    except:
+    except Exception:
         # no valid https://www or http://www
         return True
 
@@ -220,33 +231,24 @@ def out_csv(results):
 
 
 domains = []
-domains.append(Domain.Domain("cybercrime.gov"))
-domains.append(Domain.Domain("dea.gov"))
-domains.append(Domain.Domain("cwc.gov"))
-domains.append(Domain.Domain("dems.gov"))
-domains.append(Domain.Domain("aidrefugees.gov"))
-domains.append(Domain.Domain("aids.gov"))
-domains.append(Domain.Domain("bbg.gov"))
-domains.append(Domain.Domain("18f.gov"))
-domains.append(Domain.Domain("arctic.gov"))
+with open('domains2.csv') as f:
+    for line in f:
+        domains.append(Domain.Domain(line.rstrip('\n')))
+f.close()
+#domains.append(Domain.Domain("cybercrime.gov"))
+#domains.append(Domain.Domain("dea.gov"))
+#domains.append(Domain.Domain("cwc.gov"))
+#domains.append(Domain.Domain("dems.gov"))
+#domains.append(Domain.Domain("aidrefugees.gov"))
+#domains.append(Domain.Domain("aids.gov"))
+#domains.append(Domain.Domain("bbg.gov"))
+#domains.append(Domain.Domain("18f.gov"))
+#domains.append(Domain.Domain("arctic.gov"))
+#domains.append(Domain.Domain("aapi.GOV"))
 for i in domains:
     main(i)
+    #print "Testing"
 out_csv(domains)
 #for k in domains:
     #print k
 
-#domain = Domain.Domain("cybercrime.gov")
-#domain1 = Domain.Domain("dea.gov")
-#domain2 = Domain.Domain("cwc.gov")
-#domain2 = Domain.Domain("dems.gov")
-#domain2 = Domain.Domain("aidrefugees.gov")
-#domain2 = Domain.Domain("aids.gov")
-#domain1 = Domain.Domain("bbg.gov")
-#domain1 = Domain.Domain("18f.gov")
-#domain1 = Domain.Domain("arctic.gov")
-#main(domain)
-#main(domain1)
-#main(domain2)
-#print domain
-#print domain1
-#print domain2
