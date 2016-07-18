@@ -30,8 +30,8 @@ def main(url):
             downgrades_or_forces_https(url)
             has_hsts(url)
             hsts_preload_ready(url)
-            https_bad_chain(url)
             https_bad_hostname(url)
+            https_bad_chain(url)
         else:
             url.defaults_to_https = "False"
             url.downgrades_https = "False"
@@ -41,8 +41,6 @@ def main(url):
             url.hsts = "False"
             url.hsts_preloaded = "False"
             url.hsts_all_subdomains = "False"
-            url.hsts_header = "False"
-            url.hsts_max_age = "False"
             url.hsts_preload_ready = "False"
         broken_www(url)
 
@@ -51,7 +49,7 @@ def main(url):
 def is_live(url):
     try:
         req = urllib2.Request("http://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 1)
+        con = urllib2.urlopen(req, timeout = 10)
         url.domain = "http://" + url.base_domain
         url.live = "True"
         return True
@@ -59,7 +57,7 @@ def is_live(url):
         try:
             #if http:// domain does not exist try http://www
             req = urllib2.Request("http://www." + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-            con = urllib2.urlopen(req, timeout = 1)
+            con = urllib2.urlopen(req, timeout = 10)
             url.domain = "http://www." + url.base_domain
             url.live = "True"
             return True
@@ -70,18 +68,22 @@ def is_live(url):
 
 
 def is_redirect(url):
-    req = urllib2.Request(url.domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-    con = urllib2.urlopen(req, timeout = 1)
-    if url.domain == con.geturl():
-        url.redirect = "False"
-        url.canonical = str(url.domain)
-    else:
-        url.redirect = "True"
-        url.canonical = con.geturl()
-        url.redirect_to = con.geturl()
-        #If the redirect starts with https then the redirect it the valid https
-        if url.redirect_to[:5] == "https":
-            url.https_domain = url.redirect_to
+    #wrap im try except
+    try:
+        req = urllib2.Request(url.domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
+        con = urllib2.urlopen(req)
+        if url.domain == con.geturl():
+            url.redirect = "False"
+            url.canonical = str(url.domain)
+        else:
+            url.redirect = "True"
+            url.canonical = con.geturl()
+            url.redirect_to = con.geturl()
+            #If the redirect starts with https then the redirect it the valid https
+            if url.redirect_to[:5] == "https":
+                url.https_domain = url.redirect_to
+    except:
+        url.redirect = "Failed"
     #print f.headers.dict
     #print f.status
 
@@ -89,7 +91,7 @@ def is_valid_https(url):
     #change to split ur.domain to check for https and not only http
     try:
         req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 1)
+        con = urllib2.urlopen(req, timeout = 10)
         url.https_domain = "https://" + url.base_domain
         #print a.getcode()
         url.valid_https = "True"
@@ -97,7 +99,7 @@ def is_valid_https(url):
     except Exception:
         try:
             req = urllib2.Request("https://www." + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-            con = urllib2.urlopen(req, timeout = 1)
+            con = urllib2.urlopen(req, timeout = 10)
             url.https_domain = "https://www." + url.base_domain
             url.valid_https = "True"
             return True
@@ -115,7 +117,7 @@ def downgrades_or_forces_https(url):
     try:
         req = urllib2.Request("http://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
         req2 = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 1)
+        con = urllib2.urlopen(req, timeout = 10)
         con2 = urllib2.urlopen(req2)
         if con.url() == con2.url() and con.url()[:5] == "https":
             url.strictly_forces_https = "True"
@@ -135,18 +137,21 @@ def downgrades_or_forces_https(url):
 def https_bad_chain(url):
     # Script to get the list of SSLv3 cipher suites supported by smtp.gmail.com
     # You should use the process pool to make scans quick, but you can also call plugins directly
-    hostname = url.base_domain
-    server_info = ServerConnectivityInfo(hostname=hostname, port=443)
-    server_info.test_connectivity_to_server()
+    try:
+        hostname = url.base_domain
+        server_info = ServerConnectivityInfo(hostname=hostname, port=443)
+        server_info.test_connectivity_to_server()
 
-    from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
-    #Call Plugin directly
-    plugin = CertificateInfoPlugin()
-    plugin_result = plugin.process_task(server_info, 'certinfo_basic')
-    if plugin_result.is_certificate_chain_order_valid:
-        url.https_bad_chain = "False"
-    else:
-        url.https_bad_chain = "True"
+        from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
+        #Call Plugin directly
+        plugin = CertificateInfoPlugin()
+        plugin_result = plugin.process_task(server_info, 'certinfo_basic')
+        if plugin_result.is_certificate_chain_order_valid:
+            url.https_bad_chain = "False"
+        else:
+            url.https_bad_chain = "True"
+    except:
+            url.https_bad_chain = "Failed"
     #why is the bade chain happening
     #print plugin_result.as_text()
 
@@ -156,16 +161,20 @@ def https_bad_chain(url):
 def https_bad_hostname(url):#
     try:
         req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 1)
+        con = urllib2.urlopen(req, timeout = 10)
         url.https_bad_hostname = "False"
+        return False
     except:
         # no valid https or http
         url.https_bad_hostname = "True"
+        return True
+
 
 def has_hsts(url):
     if url.valid_https == "True":
         try:
-            req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
+            #req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
+            req = requests.get("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
             #req = requests.get(url.redirect_to)
             #print url.base_domain
             #print req.headers
@@ -176,7 +185,7 @@ def has_hsts(url):
                 url.hsts = "False"
                 url.hsts_preloaded = "False"
                 url.hsts_all_subdomains = "False"
-        except requests.exceptions.SSLError as e:
+        except: #requests.exceptions.SSLError as e:
             url.hsts = "False"#
             url.hsts_preloaded = "False"
             url.hsts_all_subdomains = "False"
@@ -222,7 +231,7 @@ def broken_www(url):
 def broken_root(url, prefix):
     try:
         req = urllib2.Request(prefix+ url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 1)
+        con = urllib2.urlopen(req, timeout = 10)
         return False
     except Exception:
         # no valid https://www or http://www
@@ -241,10 +250,10 @@ def out_csv(results):
 
 start_time = time.time()
 domains = []
-#with open('feddomains.csv') as f:
-    #for line in f:
-        #domains.append(Domain.Domain(line.rstrip('\n').lower()))
-#f.close()
+with open('domains2.csv') as f:
+    for line in f:
+        domains.append(Domain.Domain(line.rstrip('\n').lower()))
+f.close()
 #domains.append(Domain.Domain("cybercrime.gov"))
 #domains.append(Domain.Domain("dea.gov"))
 #domains.append(Domain.Domain("cwc.gov"))
@@ -254,8 +263,8 @@ domains = []
 #domains.append(Domain.Domain("bbg.gov"))
 #domains.append(Domain.Domain("18f.gov"))
 #domains.append(Domain.Domain("arctic.gov"))
-#domains.append(Domain.Domain("aapi.GOV"))
-#domains.append(Domain.Domain("abandonedmines.gov".lower()))
+#domains.append(Domain.Domain("dotgov.gov"))
+#domains.append(Domain.Domain("wrp.gov".lower()))
 for i in domains:
     main(i)
 out_csv(domains)
