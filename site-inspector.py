@@ -1,7 +1,8 @@
 #!/usr/bin/python
 import httplib
 import urllib2
-import Domain
+import port80
+import port443
 import requests
 import re
 import sslyze
@@ -13,263 +14,269 @@ from sslyze.plugins_finder import PluginsFinder
 from sslyze.plugins_process_pool import PluginsProcessPool
 from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
 from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
+from sslyze.plugins.hsts_plugin import HstsPlugin
+
 import sslyze.plugins.plugin_base
 
-
 def main(url):
-    print url.base_domain
-    if False and is_live(url):
-        is_redirect(url)
-        is_valid_https(url)
-    if True:
-        #url.base_domain = url.domain
-        if is_live(url):
-            is_redirect(url)
-        if is_valid_https(url):
-            defaults_to_https(url)
-            downgrades_or_forces_https(url)
-            has_hsts(url)
-            hsts_preload_ready(url)
-            https_bad_hostname(url)
-            https_bad_chain(url)
-        else:
-            url.defaults_to_https = "False"
-            url.downgrades_https = "False"
-            url.strictly_forces_https = "False"
-            url.https_bad_chain = "False"
-            url.https_bad_hostname = "False"
-            url.hsts = "False"
-            url.hsts_preloaded = "False"
-            url.hsts_all_subdomains = "False"
-            url.hsts_preload_ready = "False"
-        broken_www(url)
+    print url
+    http = port80.port80("http://" + url, url)
+    httpwww = port80.port80("http://" + url, url)
+    https = port443.port443("https://" + url, url)
+    httpswww = port443.port443("https://www." + url, url)
+    #Send all endpoints to basic connectivity check
+    basic_check(http)
+    basic_check(httpwww)
+    basic_check(https)
+    basic_check(httpswww)
+    https_check(https)
+    https_check(httpswww)
+    x = generate_tostring(http, httpwww, https, httpswww)
+    output_csv(x)
 
-
-#Checks http:// and http://www for a domain and if neither are valid the site is not live
-def is_live(url):
+def basic_check(endpoint):
+    #First check if the endpoint is live
     try:
-        req = urllib2.Request("http://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 10)
-        url.domain = "http://" + url.base_domain
-        url.live = "True"
-        return True
-    except Exception:
-        try:
-            #if http:// domain does not exist try http://www
-            req = urllib2.Request("http://www." + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-            con = urllib2.urlopen(req, timeout = 10)
-            url.domain = "http://www." + url.base_domain
-            url.live = "True"
-            return True
-        except Exception:
-            url.domain = "http://www." + url.base_domain
-            url.live = "False"
-            return False
-
-
-def is_redirect(url):
-    #wrap im try except
-    try:
-        req = urllib2.Request(url.domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req)
-        if url.domain == con.geturl():
-            url.redirect = "False"
-            url.canonical = str(url.domain)
-        else:
-            url.redirect = "True"
-            url.canonical = con.geturl()
-            url.redirect_to = con.geturl()
-            #If the redirect starts with https then the redirect it the valid https
-            if url.redirect_to[:5] == "https":
-                url.https_domain = url.redirect_to
+        #Change User agent to get around python urllib2 blacklisting
+        req = urllib2.Request(endpoint.domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
+        #Attempt to resolve domain with timeout
+        con = urllib2.urlopen(req, timeout=1)
+        endpoint.live = True
+        #if the domain is not equal to what is resolved the endpoint is a redirect
+        if endpoint.domain != con.geturl():
+            endpoint.redirect = True
+            #set redirect to value of resolved domain
+            endpoint.redirect_to = con.geturl()
     except:
-        url.redirect = "Failed"
-    #print f.headers.dict
-    #print f.status
+        #Endpoint is not live
+        pass
 
-def is_valid_https(url):
-    #change to split ur.domain to check for https and not only http
-    try:
-        req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 10)
-        url.https_domain = "https://" + url.base_domain
-        #print a.getcode()
-        url.valid_https = "True"
-        return True
-    except Exception:
-        try:
-            req = urllib2.Request("https://www." + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-            con = urllib2.urlopen(req, timeout = 10)
-            url.https_domain = "https://www." + url.base_domain
-            url.valid_https = "True"
-            return True
-        except Exception:
-            url.valid_https = "False"
-            return False
-
-def defaults_to_https(url):
-    if url.canonical[:5] == "https":
-        url.defaults_to_https = "True"
+#Future: add check for expired Cert
+def https_check(endpoint):
+    #If https is live check for hsts
+    if endpoint.live == True:
+        has_hsts(endpoint)
     else:
-        url.defaults_to_https = "False"
+        #If failed check for bad chain
+        bad_chain(endpoint)
+        #expired_cert(endpoint)
 
-def downgrades_or_forces_https(url):
+def has_hsts(endpoint):
+    #Use sslyze to check for HSTS
     try:
-        req = urllib2.Request("http://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        req2 = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 10)
-        con2 = urllib2.urlopen(req2)
-        if con.url() == con2.url() and con.url()[:5] == "https":
-            url.strictly_forces_https = "True"
-            url.downgrades_https = "False"
-        elif con.url() == con2.url():
-            url.strictly_forces_https = "False"
-            url.downgrades_https = "True"
-        else:
-            url.strictly_forces_https = "False"
-            url.downgrades_https = "False"
-    except:
-        #no valid https or http
-        url.downgrades_https = "False"
-        url.strictly_forces_https = "False"
-
-#add checking certificate of all different valid chains
-def https_bad_chain(url):
-    # Script to get the list of SSLv3 cipher suites supported by smtp.gmail.com
-    # You should use the process pool to make scans quick, but you can also call plugins directly
-    try:
-        hostname = url.base_domain
+        #remove the https:// from prefix for sslyze because reasons
+        hostname = endpoint.domain[8:]
         server_info = ServerConnectivityInfo(hostname=hostname, port=443)
         server_info.test_connectivity_to_server()
 
-        from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
-        #Call Plugin directly
+        # Call Plugin directly
+        plugin = HstsPlugin()
+        #Run HSTS plugin from sslyze returning HSTS header
+        plugin_result = plugin.process_task(server_info, 'hsts')
+        # print plugin_result.as_text()[1]
+        if "OK" in plugin_result.as_text()[1]:
+            endpoint.hsts = "True"
+            #Send HSTS header for parsing
+            hsts_header_handler(endpoint, plugin_result.as_text()[1])
+    except:
+        #No valid hsts
+        pass
+
+
+def hsts_header_handler(endpoint, header):
+    #Remove colons, semi colons, and commas from header
+    var = re.sub('[;,:]', '', header)
+    #Removes extra spaces from header
+    x =' '.join(var.split())
+    #Split sslyze text from header
+    endpoint.hsts_header = x.partition("received ")[-1]
+    #print endpoint.hsts_header
+    #check if hsts includes sub domains
+    if 'includeSubDomains' in endpoint.hsts_header:
+        endpoint.hsts_all_subdomains = "True"
+        #Pull max age between the string max-age and the beggining of includes subdomains
+        endpoint.hsts_max_age = x.partition("max-age=")[-1].rpartition(" i")[0]
+    else:
+        #if the header doesnt inlcude sub domains max age is after max-age=
+        endpoint.hsts_max_age = x.partition("max-age=")[-1]
+    #Check is hsts is preloaded
+    if 'preload' in endpoint.hsts_header:
+        endpoint.hsts_preloaded = "True"
+
+def bad_chain(endpoint):
+    # Use ssylze to check for bad chain
+    try:
+        # remove the https:// from prefix for sslyze because reasons
+        hostname = endpoint.domain[8:]
+        server_info = ServerConnectivityInfo(hostname=hostname, port=443)
+        server_info.test_connectivity_to_server()
+
+        # Call Plugin directly
         plugin = CertificateInfoPlugin()
         plugin_result = plugin.process_task(server_info, 'certinfo_basic')
-        if plugin_result.is_certificate_chain_order_valid:
-            url.https_bad_chain = "False"
-        else:
+        if not plugin_result.is_certificate_chain_order_valid:
             url.https_bad_chain = "True"
     except:
-            url.https_bad_chain = "Failed"
-    #why is the bade chain happening
-    #print plugin_result.as_text()
+        pass
+        # Future: why is the bade chain happening
+        # print plugin_result.as_text()
 
-
-
-
-def https_bad_hostname(url):#
-    try:
-        req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 10)
-        url.https_bad_hostname = "False"
-        return False
-    except:
-        # no valid https or http
-        url.https_bad_hostname = "True"
-        return True
-
-
-def has_hsts(url):
-    if url.valid_https == "True":
-        try:
-            #req = urllib2.Request("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-            req = requests.get("https://" + url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-            #req = requests.get(url.redirect_to)
-            #print url.base_domain
-            #print req.headers
-            if 'strict-transport-security' in req.headers:
-                url.hsts = "True"
-                req_header_handlers(url, req.headers)
-            else:
-                url.hsts = "False"
-                url.hsts_preloaded = "False"
-                url.hsts_all_subdomains = "False"
-        except: #requests.exceptions.SSLError as e:
-            url.hsts = "False"#
-            url.hsts_preloaded = "False"
-            url.hsts_all_subdomains = "False"
+def str_live(http, httpwww, https, httpswww):
+    if http.live or httpwww.live or https.live or httpswww.live:
+        return "True"
     else:
-        url.hsts = "False"
-        url.hsts_preloaded = "False"
-        url.hsts_all_subdomains = "False"
-        url.hsts_header = "False"
-        url.hsts_max_age = "False"
+        return "False"
 
-#preload should actually be based on Google list on github of preloaded websites
-def req_header_handlers(url, headers):
-    url.hsts_header = re.sub('[;,]', '', headers['strict-transport-security'])
-    #print url.hsts_header"http://example.com"
-    url.hsts_max_age = (url.hsts_header.partition(' ')[0])[8:]
-    if 'includeSubDomains' in url.hsts_header:
-        url.hsts_all_subdomains = "True"
+def str_redirect(http, httpwww, https, httpswww):
+    if http.redirect or httpwww.redirect or https.redirect or httpswww.redirect:
+        return "True"
     else:
-        url.hsts_all_subdomains = "False"
-    if 'preload' in url.hsts_header:
-        url.hsts_preloaded = "True"
+        return "False"
+
+def str_valid_https(http, httpwww, https, httpswww):
+    if https.live or httpswww.live:
+        return "True"
+    elif http.redirect_to[:5] == "https" or httpwww.redirect_to[:5] == "https":
+        return "True"
     else:
-        url.hsts_preloaded = "False"
+        return "False"
 
-def hsts_preload_ready(url):
-    if (url.hsts_preloaded == "True" and url.hsts_all_subdomains == "True"
-            and url.strictly_forces_https == "True" and url.hsts_max_age != ""):
-        url.hsts_preload_ready = "True"
+def str_defaults_https(http, httpwww):
+    if http.redirect or httpwww.redirect:
+        if http.redirect_to[:5] == "https" or httpwww.redirect_to[:5] == "https":
+            return "True"
+        else:
+            return "False"
     else:
-        url.hsts_preload_ready = "False"
+        return "False"
 
-def broken_www(url):
-    if broken_root(url, "https://www.") and broken_root(url, "http://www."):
-        url.broken_root = "True"
-        url.broken_www = "True"
-    elif broken_root(url, "https://www.") or broken_root(url, "http://www."):
-        url.broken_root = "False"
-        url.broken_www = "True"
+def str_downgrades_https(https, httpswww):
+    if https.redirect or httpswww.redirect:
+        if https.redirect_to[:5] == "http:" or httpswww.redirect_to[:5] == "http:":
+            return "True"
+        else:
+            return "False"
     else:
-        url.broken_root = "False"
-        url.broken_www = "False"
+        return "False"
 
-def broken_root(url, prefix):
-    try:
-        req = urllib2.Request(prefix+ url.base_domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
-        con = urllib2.urlopen(req, timeout = 10)
-        return False
-    except Exception:
-        # no valid https://www or http://www
-        return True
+def str_strictly_forces_https(http, httpwww, https, httpswww):
+    if ((not http.live and not httpwww.live) and (https.live or httpswww.live)):
+        return "True"
+    elif http.redirect or httpwww.redirect:
+        if http.redirect_to[:5] == "https" or httpwww.redirect_to[:5] == "https":
+            return "True"
+        else:
+            return "False"
+    else:
+        return "False"
 
-def out_csv(results):
-    output_csv = open("results.csv", "wb")
-    output_csv.write("Domain,Base Domain,Canonical,Live,Redirect,Redirect To,HTTPS Domain,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
-    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
-    "HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
-    for i in results:
-        output_csv.write(i.output_to_csv())
+def str_bad_chain(https, httpswww):
+    if https.https_bad_chain or httpswww.https_bad_chain:
+        return "True"
+    else:
+        return "False"
+
+def str_bad_hostname(https, httpswww):
+    if not https.live and not httpswww.live:
+        return "True"
+    else:
+        return "False"
+
+def str_hsts(https, httpswww):
+    if https.hsts or httpswww.hsts:
+        return "True"
+    else:
+        return "False"
+
+def str_hsts_header(https, httpswww):
+    if https.hsts:
+        return https.hsts_header
+    elif httpswww.hsts_header:
+        return httpswww.hsts_header
+    else:
+        return ""
+
+def str_max_age(https, httpswww):
+    if https.hsts:
+        return https.hsts_max_age
+    elif httpswww.hsts:
+        return httpswww.hsts_max_age
+    else:
+        return ""
+
+def str_hsts_all_subdomains(https, httpswww):
+    if https.hsts_all_subdomains or httpswww.hsts_all_subdomains:
+        return "True"
+    else:
+        return "False"
+
+def str_hsts_preload_ready(https, httpswww):
+    if https.hsts and https.hsts_max_age != "" and https.hsts_all_subdomains and https.hsts_preloaded:
+        return "True"
+    elif httpswww.hsts and httpswww.hsts_max_age != "" and httpswww.hsts_all_subdomains and httpswww.hsts_preloaded:
+        return "True"
+    else:
+        return "False"
+
+def str_hsts_preloaded(https, httpswww):
+    if https.hsts_preloaded or httpswww.hsts_preloaded:
+        return "True"
+    else:
+        return "False"
+
+def str_broken_root(httpwww, httpswww):
+    if not httpwww.live and not httpswww.live:
+      return "True"
+    else:
+        return "False"
+
+def str_broken_www(httpwww, httpswww):
+    if not httpwww.live or not httpswww.live:
+        return "True"
+    else:
+        return "False"
+
+def generate_tostring(http, httpwww, https, httpswww):
+    finalstring = ""
+    finalstring += http.base_domain + ","
+    finalstring += str_live(http, httpwww, https, httpswww) + ","
+    finalstring += str_redirect(http, httpwww, https, httpswww) + ","
+    finalstring += str_valid_https(http, httpwww, https, httpswww)+ ","
+    finalstring += str_defaults_https(http, httpwww)+ ","
+    finalstring += str_downgrades_https(https, httpswww)+ ","
+    finalstring += str_strictly_forces_https(http, httpwww, https, httpswww)+ ","
+    finalstring += str_bad_chain(https, httpswww)+ ","
+    finalstring += str_bad_hostname(https, httpswww)+ ","
+    finalstring += str_hsts(https, httpswww)+ ","
+    finalstring += str_hsts_header(https, httpswww)+ ","
+    finalstring += str_max_age(https, httpswww)+ ","
+    finalstring += str_hsts_all_subdomains(https, httpswww)+ ","
+    finalstring += str_hsts_preload_ready(https, httpswww)+ ","
+    finalstring += str_hsts_preloaded(https, httpswww)+ ","
+    finalstring += str_broken_root(httpwww, httpswww)+ ","
+    finalstring += str_broken_www(httpwww, httpswww) + "\n"
+    return finalstring
+
+def output_csv(row):
+    output_csv = open("results.csv", "a")
+    output_csv.write(row)
     output_csv.close()
 
 
-
 start_time = time.time()
+output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
+    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+    "HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
 domains = []
-with open('domains2.csv') as f:
+with open('feddomains.csv') as f:
     for line in f:
-        domains.append(Domain.Domain(line.rstrip('\n').lower()))
+        domains.append(line.rstrip('\n').lower())
 f.close()
-#domains.append(Domain.Domain("cybercrime.gov"))
-#domains.append(Domain.Domain("dea.gov"))
-#domains.append(Domain.Domain("cwc.gov"))
-#domains.append(Domain.Domain("dems.gov"))
-#domains.append(Domain.Domain("aidrefugees.gov"))
-#domains.append(Domain.Domain("aids.gov"))
-#domains.append(Domain.Domain("bbg.gov"))
-#domains.append(Domain.Domain("18f.gov"))
-#domains.append(Domain.Domain("arctic.gov"))
-#domains.append(Domain.Domain("dotgov.gov"))
-#domains.append(Domain.Domain("wrp.gov".lower()))
+#domains.append("atf.gov".lower())
+#domains.append("18f.gov".lower())
+
 for i in domains:
     main(i)
-out_csv(domains)
-#for k in domains:
-    #print k
 sec = time.time() - start_time
 print("--- %s minutes, %s seconds ---" % (sec/60, sec))
-
