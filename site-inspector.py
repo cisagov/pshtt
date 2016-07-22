@@ -270,12 +270,12 @@ output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
     "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
     "HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
 domains = []
-# with open('feddomains.csv') as f:
-#     for line in f:
-#         domains.append(line.rstrip('\n').lower())
-# f.close()
-domains.append("atf.gov".lower())
-domains.append("18f.gov".lower())
+with open('feddomains.csv') as f:
+    for line in f:
+        domains.append(line.rstrip('\n').lower())
+f.close()
+# domains.append("atf.gov".lower())
+# domains.append("18f.gov".lower())
 
 for i in domains:
     main(i)
