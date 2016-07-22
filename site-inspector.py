@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 import httplib
 import urllib2
 import port80
@@ -39,7 +40,7 @@ def basic_check(endpoint):
     #First check if the endpoint is live
     try:
         #Change User agent to get around python urllib2 blacklisting
-        req = urllib2.Request(endpoint.domain, headers={'User-Agent': "DHS NCATS (m-15-13)"})
+        req = urllib2.Request(endpoint.domain, headers={'User-Agent': "DHS NCATS (M-15-13)"})
         #Attempt to resolve domain with timeout
         con = urllib2.urlopen(req, timeout=1)
         endpoint.live = True
@@ -269,12 +270,12 @@ output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
     "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
     "HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
 domains = []
-with open('feddomains.csv') as f:
-    for line in f:
-        domains.append(line.rstrip('\n').lower())
-f.close()
-#domains.append("atf.gov".lower())
-#domains.append("18f.gov".lower())
+# with open('feddomains.csv') as f:
+#     for line in f:
+#         domains.append(line.rstrip('\n').lower())
+# f.close()
+domains.append("atf.gov".lower())
+domains.append("18f.gov".lower())
 
 for i in domains:
     main(i)
