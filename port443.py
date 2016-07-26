@@ -17,5 +17,6 @@ class port443:
         self.hsts_header = ""
         self.hsts_max_age = ""
         self.hsts_all_subdomains = False
+        self.hsts_preload = False
         self.hsts_preloaded = False
         self.expired_cert = False
