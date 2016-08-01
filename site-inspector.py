@@ -44,7 +44,7 @@ def main(url):
 def basic_check(endpoint):
     #First check if the endpoint is live
     try:
-        r = requests.get(endpoint.domain, data={'User-Agent': "DHS NCATS (m-15-13)"}, timeout=5)
+        r = requests.get(endpoint.domain, data={'User-Agent': "DHS NCATS (m-15-13)"}, timeout=1)
         #If status code starts with a 3 it is a redirect
         if len(r.history) > 0 and  str(r.history[0].status_code).startswith('3'):
             endpoint.redirect = True
@@ -99,6 +99,7 @@ def has_hsts(endpoint):
                 bad_chain(i,endpoint)
             #Used to avoid iterating through the entire results text
             elif "Weak Signature" in i:
+                weak_signature(i, endpoint)
                 break
     except:
         #No valid hsts
@@ -138,6 +139,10 @@ def expired_cert(expired_date, endpoint):
     #Convert the date returned by sslyze to be comparable to current time
     if datetime.datetime(int(temp[5]),strptime(temp[2], '%b').tm_mon,int(temp[3])) < datetime.datetime.now():
         endpoint.expired_cert = True
+
+def weak_signature(weak_sig, endpoint):
+    if "INSECURE" in weak_sig:
+        endpoint.weak_signature = True
 
 def str_live(http, httpwww, https, httpswww):
     #Domain is live if a single endpoint is live
@@ -255,7 +260,7 @@ def str_hsts_preload(https):
 def str_broken_root(http, https):
     #Returns if both root domains are unreachable
     if not http.live and not https.live:
-      return "True"
+        return "True"
     else:
         return "False"
 
@@ -273,6 +278,12 @@ def str_expired_cert(https, httpswww):
     else:
         return "False"
 
+def str_weak_signature(https, httpswww):
+    if https.weak_signature or httpswww.weak_signature:
+        return "True"
+    else:
+        return "False"
+
 #Preloaded will only be checked if the domain is preload ready
 def str_hsts_preloaded(https):
     #Returns if a domain is on the chromium preload list
@@ -280,6 +291,7 @@ def str_hsts_preloaded(https):
         return "True"
     else:
         return "False"
+
 
 def create_preload_list():
     #Downloads the chromium preloaded domain list and sets it to a global set
@@ -311,6 +323,7 @@ def generate_tostring(http, httpwww, https, httpswww):
     finalstring += str_bad_chain(https, httpswww)+ ","
     finalstring += str_bad_hostname(https, httpswww)+ ","
     finalstring += str_expired_cert(https, httpswww) + ","
+    finalstring += str_weak_signature(https, httpswww) + ","
     finalstring += str_hsts(https)+ ","
     finalstring += str_hsts_header(https)+ ","
     finalstring += str_max_age(https)+ ","
@@ -331,7 +344,7 @@ def output_csv(row):
 
 start_time = time.time()
 output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
-    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
     "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
 preload_list = []
 create_preload_list()
@@ -341,9 +354,6 @@ with open('feddomains.csv') as f:
         domains.append(line.rstrip('\n').lower())
 f.close()
 
-#domains.append("acquisition.gov")
-#domains.append("18f.gov")
-#domains.append("afterschool.gov")
 
 for i in domains:
     main(i)
