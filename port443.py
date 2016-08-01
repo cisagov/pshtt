@@ -20,3 +20,4 @@ class port443:
         self.hsts_preload = False
         self.hsts_preloaded = False
         self.expired_cert = False
+        self.weak_signature = False
