@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+"""Scan a domain. Example: dhs.gov
+
+Usage:
+  site_inspector_python.py (INPUT ... | --file INFILE) [--output OUTFILE | --print] [--sorted]
+  site_inspector_python.py (-h | --help)
+
+Options:
+  -h --help             show this
+  -s --sorted           sort output csv
+  -o --output=OUTFILE   specify output name for csv
+  -f --file=INFILE      specify input for domains from a csv
+  -p --print            Print results to terminal
+
+Notes:
+  If no output file is specified it will be name results.csv
+  If no input file is specified it will take in the domains from command line
+"""
+
+import sys
+from docopt import docopt
+import progressbar as pb
+from site_inspector import parse_args
+
+def main():
+    args = docopt(__doc__, version='v0.0.1')
+
+    if args['--sorted'] == True:
+        args['INPUT'].sort()
+    if not args['--file'] == None:
+        parse_args(args['--file'], args['--file'], args['--output'], args['--print'])
+    else:
+        parse_args(args['INPUT'], args['--file'], args['--output'], args['--print'])
+
+
+
+if __name__=='__main__':
+    main()
