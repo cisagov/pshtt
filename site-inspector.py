@@ -14,6 +14,7 @@ import base64
 import wget
 import json
 import os
+import progressbar
 
 from sslyze.plugins_finder import PluginsFinder
 from sslyze.plugins_process_pool import PluginsProcessPool
@@ -24,9 +25,7 @@ from sslyze.plugins.hsts_plugin import HstsPlugin
 import sslyze.plugins.plugin_base
 
 
-
-def main(url):
-    print url
+def main(url, outputname, str_print):
     http = port80.port80("http://" + url, url)
     httpwww = port80.port80("http://www." + url, url)
     https = port443.port443("https://" + url, url)
@@ -39,7 +38,10 @@ def main(url):
     https_check(https)
     https_check(httpswww)
     x = generate_tostring(http, httpwww, https, httpswww)
-    output_csv(x)
+    if str_print:
+        print_to_stdout(x)
+    else:
+        output_csv(x, outputname)
 
 def basic_check(endpoint):
     #First check if the endpoint is live
@@ -335,27 +337,44 @@ def generate_tostring(http, httpwww, https, httpswww):
     finalstring += str_broken_www(httpwww, httpswww) + "\n"
     return finalstring
 
-def output_csv(row):
+def print_to_stdout(x):
+    temp = ("\nDomain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
+    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+    "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW")
+    y = temp.split(',')
+    z = x.split(',')
+    finalstr = ""
+    for i in range (0,len(y)):
+        finalstr += y[i] + ": " + z[i] + "\n"
+    print finalstr
+
+def output_csv(row, outputname):
     #Appends domains information to csv labeled results
-    output_csv = open("results.csv", "a")
+    if outputname == None:
+        outputname = "results.csv"
+    else:
+        outputname = outputname + ".csv"
+    output_csv = open(outputname, "a")
     output_csv.write(row)
     output_csv.close()
 
+def parse_args(input, isfile, outputname, str_print):
+    preload_list = []
+    create_preload_list()
+    if not str_print:
+        output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
+            "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+            "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n", outputname)
+    if not isfile == None:
+        domains = []
+        with open(input) as f:
+            for line in f:
+                domains.append(line.rstrip('\n').lower())
+        f.close()
+    else:
+        domains = input
+    #pbar = progressbar.ProgressBar()
+    #for i in pbar(domains):
+    for i in domains:
+        main(i, outputname, str_print)
 
-start_time = time.time()
-output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
-    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
-    "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n")
-preload_list = []
-create_preload_list()
-domains = []
-with open('feddomains.csv') as f:
-    for line in f:
-        domains.append(line.rstrip('\n').lower())
-f.close()
-
-
-for i in domains:
-    main(i)
-sec = time.time() - start_time
-print("--- %s minutes, %s seconds ---" % (sec/60, sec))
