@@ -1,0 +1,3 @@
+requests==2.10.0
+SSLyze==0.13.6
+wget==3.2
