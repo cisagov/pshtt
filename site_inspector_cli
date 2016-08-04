@@ -17,20 +17,16 @@ Notes:
   If no input file is specified it will take in the domains from command line
 """
 
-import sys
 from docopt import docopt
-import progressbar as pb
 from site_inspector import parse_args
 
 def main():
     args = docopt(__doc__, version='v0.0.1')
 
-    if args['--sorted'] == True:
-        args['INPUT'].sort()
     if not args['--file'] == None:
-        parse_args(args['--file'], args['--file'], args['--output'], args['--print'])
+        parse_args(args['--file'], args['--file'], args['--sorted'], args['--output'], args['--print'])
     else:
-        parse_args(args['INPUT'], args['--file'], args['--output'], args['--print'])
+        parse_args(args['INPUT'], args['--file'], args['--sorted'], args['--output'], args['--print'])
 
 
 
