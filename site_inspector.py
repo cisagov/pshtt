@@ -36,7 +36,7 @@ def main(url, outputname, str_print):
 def basic_check(endpoint):
     #First check if the endpoint is live
     try:
-        r = requests.get(endpoint.domain, data={'User-Agent': "DHS NCATS (m-15-13)"}, timeout=1)
+        r = requests.get(endpoint.domain, data={'User-Agent': "The Magic Browser"}, timeout=1)
         #If status code starts with a 3 it is a redirect
         if len(r.history) > 0 and  str(r.history[0].status_code).startswith('3'):
             endpoint.redirect = True
