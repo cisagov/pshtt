@@ -1,28 +1,18 @@
 #!/usr/bin/env python
-import httplib
-import urllib2
 import port80
 import port443
 import requests
 import re
-import sslyze
-import socket
-import time
 import datetime
 from time import strptime
 import base64
 import wget
 import json
 import os
-import progressbar
 
-from sslyze.plugins_finder import PluginsFinder
-from sslyze.plugins_process_pool import PluginsProcessPool
-from sslyze.server_connectivity import ServerConnectivityInfo, ServerConnectivityError
-from sslyze.ssl_settings import TlsWrappedProtocolEnum
+from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.hsts_plugin import HstsPlugin
-import sslyze.plugins.plugin_base
 
 
 def main(url, outputname, str_print):
@@ -61,18 +51,16 @@ def basic_check(endpoint):
             endpoint.redirect = True
     #Endpoint is not live
     except:
-        #Endpoint is not live
         pass
 
 
 def https_check(endpoint):
     has_hsts(endpoint)
 
-
 def has_hsts(endpoint):
     #Use sslyze to check for HSTS
     try:
-        #remove the https:// from prefix for sslyze because reasons
+        #remove the https:// from prefix for sslyze
         hostname = endpoint.domain[8:]
         server_info = ServerConnectivityInfo(hostname=hostname, port=443)
         server_info.test_connectivity_to_server()
@@ -81,11 +69,13 @@ def has_hsts(endpoint):
         plugin = HstsPlugin()
         #Run HSTS plugin from sslyze returning HSTS header
         plugin_result = plugin.process_task(server_info, 'hsts')
+        #Sslyze will return OK if HSTS exists
         if "OK" in plugin_result.as_text()[1]:
             endpoint.hsts = "True"
             #Send HSTS header for parsing
             hsts_header_handler(endpoint, plugin_result.as_text()[1])
 
+        #Call plugin directly
         cert_plugin = CertificateInfoPlugin()
         cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
         #Parsing Sslzye output for results by line
@@ -99,7 +89,7 @@ def has_hsts(endpoint):
             #Check if Cert is trusted based on CA Stores
             elif "CA Store" in i:
                 bad_chain(i,endpoint)
-            #Used to avoid iterating through the entire results text
+            #Check for s SHA1 Cert in the Cert Chain
             elif "Weak Signature" in i:
                 weak_signature(i, endpoint)
                 break
@@ -115,14 +105,14 @@ def hsts_header_handler(endpoint, header):
     x =' '.join(var.split())
     #Split sslyze text from header
     endpoint.hsts_header = x.partition("received ")[-1]
-    #print endpoint.hsts_header
     temp = endpoint.hsts_header.split()
+    #Set max age to the string after max-age
     endpoint.hsts_max_age = temp[0][len("max-age="):]
     #check if hsts includes sub domains
     if 'includesubdomains' in endpoint.hsts_header.lower():
         endpoint.hsts_all_subdomains = True
     #Check is hsts is preload
-    if 'preload' in endpoint.hsts_header:
+    if 'preload' in endpoint.hsts_header.lower():
         endpoint.hsts_preload = True
 
 
@@ -132,6 +122,7 @@ def bad_chain(trusted, endpoint):
         endpoint.https_bad_chain = True
 
 def bad_hostname(hostname_validation, endpoint):
+    #If hostname validation fails
     if "FAILED" in hostname_validation:
         endpoint.https_bad_hostname = True
 
@@ -143,6 +134,7 @@ def expired_cert(expired_date, endpoint):
         endpoint.expired_cert = True
 
 def weak_signature(weak_sig, endpoint):
+    #If a SHA1 cert exists in the cert chain
     if "INSECURE" in weak_sig:
         endpoint.weak_signature = True
 
@@ -281,12 +273,13 @@ def str_expired_cert(https, httpswww):
         return "False"
 
 def str_weak_signature(https, httpswww):
+    #Returns true if either https endpoint contains a SHA1 cert in the chain
     if https.weak_signature or httpswww.weak_signature:
         return "True"
     else:
         return "False"
 
-#Preloaded will only be checked if the domain is preload ready
+#Preloaded will only be checked if the domain is preload ready for performance
 def str_hsts_preloaded(https):
     #Returns if a domain is on the chromium preload list
     if https.hsts_preload and https.base_domain in preload_list:
@@ -298,18 +291,22 @@ def str_hsts_preloaded(https):
 def create_preload_list():
     #Downloads the chromium preloaded domain list and sets it to a global set
     file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
-    file_name = wget.download(file_url)
+    file_name = wget.download(file_url, bar=None)
     encoded_string = open(file_name, 'r').read()
+    #Decode base64 representation of preload lsit
     decoded_string = base64.b64decode(encoded_string)
     decoded_lines = decoded_string.splitlines()
     json_string = ""
     for line in decoded_lines:
+        #Regular Expression only returns lines of the json, ignore comment lines
         if re.search("^([ ]*\/\/|$)", line) is None:
             json_string += (line + "\n")
     json_data = json.loads(json_string)
     global preload_list
     preload_list = {entry['name'] for entry in json_data['entries']}
+    #Remove file once the preload list is created
     os.remove(file_name)
+
 
 
 def generate_tostring(http, httpwww, https, httpswww):
@@ -338,6 +335,7 @@ def generate_tostring(http, httpwww, https, httpswww):
     return finalstring
 
 def print_to_stdout(x):
+    #Splits the headers and CSV line and the concatinates them for stdout
     temp = ("\nDomain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
     "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
     "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW")
@@ -354,13 +352,14 @@ def output_csv(row, outputname):
         outputname = "results.csv"
     else:
         outputname = outputname + ".csv"
+    #appends the rows to the csv, this writes the row to the csv as soon as the results are returned
     output_csv = open(outputname, "a")
     output_csv.write(row)
     output_csv.close()
 
-def parse_args(input, isfile, outputname, str_print):
-    preload_list = []
+def parse_args(input, isfile, sorted, outputname, str_print):
     create_preload_list()
+    #If not printing to stdout
     if not str_print:
         output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
             "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
@@ -373,8 +372,10 @@ def parse_args(input, isfile, outputname, str_print):
         f.close()
     else:
         domains = input
-    #pbar = progressbar.ProgressBar()
-    #for i in pbar(domains):
+    #If the user wants the results sorted sort them in place
+    if sorted:
+        domains.sort()
     for i in domains:
         main(i, outputname, str_print)
+
 
