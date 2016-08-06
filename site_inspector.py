@@ -18,6 +18,7 @@ from sslyze.plugins.hsts_plugin import HstsPlugin
 USER_AGENT = "DHS NCATS: M-15-13 reporting tool"
 TIMEOUT = 1
 
+
 def main(url, outputname, str_print):
     http = port80.port80("http://" + url, url)
     httpwww = port80.port80("http://www." + url, url)
@@ -37,6 +38,7 @@ def main(url, outputname, str_print):
     else:
         output_csv(x, outputname)
 
+
 def basic_check(endpoint):
     # First check if the endpoint is live
     try:
@@ -46,7 +48,7 @@ def basic_check(endpoint):
             timeout=TIMEOUT
         )
         # If status code starts with a 3, it is a redirect
-        if len(r.history) > 0 and  str(r.history[0].status_code).startswith('3'):
+        if len(r.history) > 0 and str(r.history[0].status_code).startswith('3'):
             endpoint.redirect = True
             endpoint.redirect_to = r.url
         endpoint.live = True
@@ -64,6 +66,7 @@ def basic_check(endpoint):
 
 def https_check(endpoint):
     has_hsts(endpoint)
+
 
 def has_hsts(endpoint):
     # Use sslyze to check for HSTS
@@ -96,7 +99,7 @@ def has_hsts(endpoint):
                 bad_hostname(i, endpoint)
             # Check if Cert is trusted based on CA Stores
             elif "CA Store" in i:
-                bad_chain(i,endpoint)
+                bad_chain(i, endpoint)
             # Check for s SHA1 Cert in the Cert Chain
             elif "Weak Signature" in i:
                 weak_signature(i, endpoint)
@@ -110,7 +113,7 @@ def hsts_header_handler(endpoint, header):
     # Remove colons, semi colons, and commas from header
     var = re.sub('[;,:]', ' ', header)
     # Removes extra spaces from header
-    x =' '.join(var.split())
+    x = ' '.join(var.split())
     # Split sslyze text from header
     endpoint.hsts_header = x.partition("received ")[-1]
     temp = endpoint.hsts_header.split()
@@ -129,22 +132,26 @@ def bad_chain(trusted, endpoint):
     if "FAILED" in trusted:
         endpoint.https_bad_chain = True
 
+
 def bad_hostname(hostname_validation, endpoint):
     # If hostname validation fails
     if "FAILED" in hostname_validation:
         endpoint.https_bad_hostname = True
 
+
 def expired_cert(expired_date, endpoint):
     # Split the time into an list of subtrings
     temp = expired_date.split()
     # Convert the date returned by sslyze to be comparable to current time
-    if datetime.datetime(int(temp[5]),strptime(temp[2], '%b').tm_mon,int(temp[3])) < datetime.datetime.now():
+    if datetime.datetime(int(temp[5]), strptime(temp[2], '%b').tm_mon, int(temp[3])) < datetime.datetime.now():
         endpoint.expired_cert = True
+
 
 def weak_signature(weak_sig, endpoint):
     # If a SHA1 cert exists in the cert chain
     if "INSECURE" in weak_sig:
         endpoint.weak_signature = True
+
 
 def str_live(http, httpwww, https, httpswww):
     # Domain is live if a single endpoint is live
@@ -153,12 +160,14 @@ def str_live(http, httpwww, https, httpswww):
     else:
         return "False"
 
+
 def str_redirect(http, httpwww, https, httpswww):
     # Domain is a redirect if any of the endpoints redirect
     if http.redirect or httpwww.redirect or https.redirect or httpswww.redirect:
         return "True"
     else:
         return "False"
+
 
 def str_valid_https(http, httpwww, https, httpswww):
     # Domain has valid https if either https enpoints are live or a http redirects to https
@@ -168,6 +177,7 @@ def str_valid_https(http, httpwww, https, httpswww):
         return "True"
     else:
         return "False"
+
 
 def str_defaults_https(http, httpwww):
     # Domain defaults to https if http endpoint forwards to https
@@ -179,6 +189,7 @@ def str_defaults_https(http, httpwww):
     else:
         return "False"
 
+
 def str_downgrades_https(https, httpswww):
     # Domain downgrades if https endpoint redirects to http
     if https.redirect or httpswww.redirect:
@@ -188,6 +199,7 @@ def str_downgrades_https(https, httpswww):
             return "False"
     else:
         return "False"
+
 
 def str_strictly_forces_https(http, httpwww, https, httpswww):
     # Domain Strictly forces https if https is live and http is not,
@@ -203,12 +215,14 @@ def str_strictly_forces_https(http, httpwww, https, httpswww):
     else:
         return "False"
 
+
 def str_bad_chain(https, httpswww):
     # Domain has a bad chain if either https endpoints contain a bad chain
     if https.https_bad_chain or httpswww.https_bad_chain:
         return "True"
     else:
         return "False"
+
 
 def str_bad_hostname(https, httpswww):
     # Domain has a bad hostname if either https endpoint fails hostname validation
@@ -217,12 +231,14 @@ def str_bad_hostname(https, httpswww):
     else:
         return "False"
 
+
 def str_hsts(https):
     # Domain has hsts ONLY if the https and not the www subdomain has strict transport in the header
     if https.hsts:
         return "True"
     else:
         return "False"
+
 
 def str_hsts_header(https):
     # Returns the https HSTS header
@@ -231,12 +247,14 @@ def str_hsts_header(https):
     else:
         return ""
 
+
 def str_max_age(https):
     # Returns the https HSTS max age
     if https.hsts:
         return https.hsts_max_age
     else:
         return ""
+
 
 def str_hsts_all_subdomains(https):
     # Returns if the https endpoint has "includesubdomains"
@@ -245,12 +263,14 @@ def str_hsts_all_subdomains(https):
     else:
         return "False"
 
+
 def str_hsts_preload_ready(https):
     # returns if the hsts header exists, has a max age, includes subdomains, and includes preload
     if https.hsts and https.hsts_max_age != "" and https.hsts_all_subdomains and https.hsts_preload:
         return "True"
     else:
         return "False"
+
 
 def str_hsts_preload(https):
     # Returns if https endpoint has preload in hsts header
@@ -259,12 +279,14 @@ def str_hsts_preload(https):
     else:
         return "False"
 
+
 def str_broken_root(http, https):
     # Returns if both root domains are unreachable
     if not http.live and not https.live:
         return "True"
     else:
         return "False"
+
 
 def str_broken_www(httpwww, httpswww):
     # Returns if both www sub domains are unreachable
@@ -273,6 +295,7 @@ def str_broken_www(httpwww, httpswww):
     else:
         return "False"
 
+
 def str_expired_cert(https, httpswww):
     # Returns if the either https endpoint has an expired cert
     if https.expired_cert or httpswww.expired_cert:
@@ -280,12 +303,14 @@ def str_expired_cert(https, httpswww):
     else:
         return "False"
 
+
 def str_weak_signature(https, httpswww):
     # Returns true if either https endpoint contains a SHA1 cert in the chain
     if https.weak_signature or httpswww.weak_signature:
         return "True"
     else:
         return "False"
+
 
 # Preloaded will only be checked if the domain is preload ready for performance
 def str_hsts_preloaded(https):
@@ -316,47 +341,48 @@ def create_preload_list():
     os.remove(file_name)
 
 
-
 def generate_tostring(http, httpwww, https, httpswww):
     # Converts all the domains attributes to a string
     finalstring = ""
     finalstring += http.base_domain + ","
     finalstring += str_live(http, httpwww, https, httpswww) + ","
     finalstring += str_redirect(http, httpwww, https, httpswww) + ","
-    finalstring += str_valid_https(http, httpwww, https, httpswww)+ ","
-    finalstring += str_defaults_https(http, httpwww)+ ","
-    finalstring += str_downgrades_https(https, httpswww)+ ","
-    finalstring += str_strictly_forces_https(http, httpwww, https, httpswww)+ ","
-    finalstring += str_bad_chain(https, httpswww)+ ","
-    finalstring += str_bad_hostname(https, httpswww)+ ","
+    finalstring += str_valid_https(http, httpwww, https, httpswww) + ","
+    finalstring += str_defaults_https(http, httpwww) + ","
+    finalstring += str_downgrades_https(https, httpswww) + ","
+    finalstring += str_strictly_forces_https(http, httpwww, https, httpswww) + ","
+    finalstring += str_bad_chain(https, httpswww) + ","
+    finalstring += str_bad_hostname(https, httpswww) + ","
     finalstring += str_expired_cert(https, httpswww) + ","
     finalstring += str_weak_signature(https, httpswww) + ","
-    finalstring += str_hsts(https)+ ","
-    finalstring += str_hsts_header(https)+ ","
-    finalstring += str_max_age(https)+ ","
-    finalstring += str_hsts_all_subdomains(https)+ ","
+    finalstring += str_hsts(https) + ","
+    finalstring += str_hsts_header(https) + ","
+    finalstring += str_max_age(https) + ","
+    finalstring += str_hsts_all_subdomains(https) + ","
     finalstring += str_hsts_preload(https) + ","
-    finalstring += str_hsts_preload_ready(https)+ ","
-    finalstring += str_hsts_preloaded(https)+ ","
-    finalstring += str_broken_root(http, https)+ ","
+    finalstring += str_hsts_preload_ready(https) + ","
+    finalstring += str_hsts_preloaded(https) + ","
+    finalstring += str_broken_root(http, https) + ","
     finalstring += str_broken_www(httpwww, httpswww) + "\n"
     return finalstring
+
 
 def print_to_stdout(x):
     # Splits the headers and CSV line and the concatinates them for stdout
     temp = ("\nDomain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
-    "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
-    "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW")
+            "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+            "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW")
     y = temp.split(',')
     z = x.split(',')
     finalstr = ""
-    for i in range (0,len(y)):
+    for i in range(0, len(y)):
         finalstr += y[i] + ": " + z[i] + "\n"
     print finalstr
 
+
 def output_csv(row, outputname):
     # Appends domains information to csv labeled results
-    if outputname == None:
+    if outputname is None:
         outputname = "results.csv"
     else:
         outputname = outputname + ".csv"
@@ -365,14 +391,15 @@ def output_csv(row, outputname):
     output_csv.write(row)
     output_csv.close()
 
+
 def parse_args(input, isfile, sorted, outputname, str_print):
     create_preload_list()
     # If not printing to stdout
     if not str_print:
         output_csv("Domain,Live,Redirect,Valid HTTPS,Defaults HTTPS,Downgrades HTTPS," +
-            "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
-            "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n", outputname)
-    if not isfile == None:
+                   "Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Host Name,Expired Cert,Weak Signature Chain,HSTS,HTST Header,HSTS Max Age,HSTS All Subdomains," +
+                   "HSTS Preload,HSTS Preload Ready,HSTS Preloaded,Broken Root,Broken WWW\n", outputname)
+    if isfile is not None:
         domains = []
         with open(input) as f:
             for line in f:
@@ -385,5 +412,3 @@ def parse_args(input, isfile, sorted, outputname, str_print):
         domains.sort()
     for i in domains:
         main(i, outputname, str_print)
-
-
