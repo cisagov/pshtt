@@ -1,0 +1,13 @@
+language: python
+
+sudo: false
+
+python:
+  - '2.7'
+
+install:
+  - pip install flake8
+
+script:
+  - flake8 . --ignore E501,F999
+
