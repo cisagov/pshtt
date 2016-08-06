@@ -1,6 +1,3 @@
-#!/usr/bin/python
-import httplib
-import urllib2
 
 class port80:
 
