@@ -343,7 +343,6 @@ def is_weak_signature(http, httpwww, https, httpswww):
     return https.weak_signature or httpswww.weak_signature
 
 
-# Preloaded will only be checked if the domain is preload ready for performance
 def is_hsts_preloaded(http, httpwww, https, httpswww):
     # Returns if a domain is on the Chromium preload list
     return https.base_domain in preload_list
