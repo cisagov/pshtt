@@ -48,8 +48,10 @@ def inspect(domain):
     basic_check(https)
     basic_check(httpswww)
 
-    https_check(https)
-    https_check(httpswww)
+    if https.live:
+        https_check(https)
+    if httpswww.live:
+        https_check(httpswww)
 
     return {
         'Domain': domain,
@@ -91,13 +93,14 @@ def basic_check(endpoint):
         endpoint.live = True
     # The endpoint is live but there is a bad cert
     except requests.exceptions.SSLError:
-        # TODO: this is too broad, won't always be chain
+        # TODO: this is too broad, won't always be chain error.
         endpoint.https_bad_chain = True
         endpoint.live = True
         # If there is a bad cert and the domain is not an https endpoint it is a redirect
         if endpoint.endpoint[5:] == "http:":
             endpoint.redirect = True
     # Endpoint is not live
+    # TODO: Too broad, shouldn't swallow all errors.
     except:
         pass
 
@@ -119,9 +122,11 @@ def https_check(endpoint):
 
         # Sslyze will return OK if HSTS exists
         if "OK" in plugin_result.as_text()[1]:
-            endpoint.hsts = "True"
+            endpoint.hsts = True
             # Send HSTS header for parsing
             hsts_header_handler(endpoint, plugin_result.as_text()[1])
+        else:
+            endpoint.hsts = False
 
         # Call plugin directly
         cert_plugin = CertificateInfoPlugin()
@@ -192,172 +197,127 @@ def weak_signature(weak_sig, endpoint):
 
 ##
 # Judgment calls based on observed endpoint data.
+##
 
+# Domain is live if a single endpoint is live
 def is_live(http, httpwww, https, httpswww):
-    # Domain is live if a single endpoint is live
-    if http.live or httpwww.live or https.live or httpswww.live:
-        return "True"
-    else:
-        return "False"
+    return http.live or httpwww.live or https.live or httpswww.live
 
 
+# Domain is a redirect if any of the endpoints redirect
 def is_redirect(http, httpwww, https, httpswww):
-    # Domain is a redirect if any of the endpoints redirect
-    if http.redirect or httpwww.redirect or https.redirect or httpswww.redirect:
-        return "True"
-    else:
-        return "False"
+    return http.redirect or httpwww.redirect or https.redirect or httpswww.redirect
 
 
+# Domain has valid https if either https enpoints are live or a http redirects to https
 def is_valid_https(http, httpwww, https, httpswww):
-    # Domain has valid https if either https enpoints are live or a http redirects to https
     if https.live or httpswww.live:
-        return "True"
-    elif http.redirect_to[:5] == "https" or httpwww.redirect_to[:5] == "https":
-        return "True"
+        return True
+    elif (http.redirect_to[:5] == "https") or (httpwww.redirect_to[:5] == "https"):
+        return True
     else:
-        return "False"
+        return False
 
 
+# Domain defaults to https if http endpoint forwards to https
 def is_defaults_to_https(http, httpwww, https, httpswww):
-    # Domain defaults to https if http endpoint forwards to https
     if http.redirect or httpwww.redirect:
-        if http.redirect_to[:5] == "https" or httpwww.redirect_to[:5] == "https":
-            return "True"
-        else:
-            return "False"
+        return (http.redirect_to[:5] == "https") or (httpwww.redirect_to[:5] == "https")
     else:
-        return "False"
+        return False
 
 
+# Domain downgrades if https endpoint redirects to http
 def is_downgrades_https(http, httpwww, https, httpswww):
-    # Domain downgrades if https endpoint redirects to http
     if https.redirect or httpswww.redirect:
-        if https.redirect_to[:5] == "http:" or httpswww.redirect_to[:5] == "http:":
-            return "True"
-        else:
-            return "False"
+        return (https.redirect_to[:5] == "http:") or (httpswww.redirect_to[:5] == "http:")
     else:
-        return "False"
+        return False
 
 
-def is_strictly_forces_https(http, httpwww, https, httpswww):
-    # Domain Strictly forces https if https is live and http is not,
+# A domain strictly forces https if https is live and http is not,
     # if both http forward to https endpoints or if one http forwards to https and the other is not live
-    if ((not http.live and not httpwww.live) and (https.live or httpswww.live)):
-        return "True"
-    elif http.redirect_to[:5] == "https" and httpwww.redirect_to[:5] == "https":
-        return "True"
-    elif http.redirect_to[:5] == "https" and not httpwww.live:
-        return "True"
-    elif httpwww.redirect_to[:5] == "https" and not http.live:
-        return "True"
+def is_strictly_forces_https(http, httpwww, https, httpswww):
+    if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
+        return True
+    elif (http.redirect_to[:5] == "https") and (httpwww.redirect_to[:5] == "https"):
+        return True
+    elif (http.redirect_to[:5] == "https") and (not httpwww.live):
+        return True
+    elif (httpwww.redirect_to[:5] == "https") and (not http.live):
+        return True
     else:
-        return "False"
+        return False
 
 
+# Domain has a bad chain if either https endpoints contain a bad chain
 def is_bad_chain(http, httpwww, https, httpswww):
-    # Domain has a bad chain if either https endpoints contain a bad chain
-    if https.https_bad_chain or httpswww.https_bad_chain:
-        return "True"
-    else:
-        return "False"
+    return https.https_bad_chain or httpswww.https_bad_chain
 
 
+# Domain has a bad hostname if either https endpoint fails hostname validation
 def is_bad_hostname(http, httpwww, https, httpswww):
-    # Domain has a bad hostname if either https endpoint fails hostname validation
-    if https.https_bad_hostname or httpswww.https_bad_hostname:
-        return "True"
-    else:
-        return "False"
+    return https.https_bad_hostname or httpswww.https_bad_hostname
 
 
+# Domain has hsts ONLY if the https (and not the www subdomain) has strict transport in the header
 def is_hsts(http, httpwww, https, httpswww):
-    # Domain has hsts ONLY if the https and not the www subdomain has strict transport in the header
-    if https.hsts:
-        return "True"
-    else:
-        return "False"
+    return https.hsts
+
 
 def hsts_header(http, httpwww, https, httpswww):
-    # Returns the https HSTS header
     if https.hsts:
         return https.hsts_header
     else:
-        return ""
+        return None
 
 
 def hsts_max_age(http, httpwww, https, httpswww):
-    # Returns the https HSTS max age
     if https.hsts:
         return https.hsts_max_age
     else:
-        return ""
+        return None
 
 
 def is_hsts_all_subdomains(http, httpwww, https, httpswww):
     # Returns if the https endpoint has "includesubdomains"
-    if https.hsts_all_subdomains:
-        return "True"
-    else:
-        return "False"
+    return https.hsts_all_subdomains
 
 
 def is_hsts_preload_ready(http, httpwww, https, httpswww):
     # returns if the hsts header exists, has a max age, includes subdomains, and includes preload
-    if https.hsts and https.hsts_max_age != "" and https.hsts_all_subdomains and https.hsts_preload:
-        return "True"
-    else:
-        return "False"
+    return (https.hsts and https.hsts_max_age != "" and https.hsts_all_subdomains and https.hsts_preload)
 
 
 def is_hsts_preload(http, httpwww, https, httpswww):
     # Returns if https endpoint has preload in hsts header
-    if https.hsts_preload:
-        return "True"
-    else:
-        return "False"
+    return https.hsts_preload
 
 
 def is_broken_root(http, httpwww, https, httpswww):
     # Returns if both root domains are unreachable
-    if not http.live and not https.live:
-        return "True"
-    else:
-        return "False"
+    return (not http.live) and (not https.live)
 
 
 def is_broken_www(http, httpwww, https, httpswww):
     # Returns if both www sub domains are unreachable
-    if not httpwww.live and not httpswww.live:
-        return "True"
-    else:
-        return "False"
+    return (not httpwww.live) and (not httpswww.live)
 
 
 def is_expired_cert(http, httpwww, https, httpswww):
     # Returns if the either https endpoint has an expired cert
-    if https.https_expired_cert or httpswww.https_expired_cert:
-        return "True"
-    else:
-        return "False"
+    return https.https_expired_cert or httpswww.https_expired_cert
 
 
 def is_weak_signature(http, httpwww, https, httpswww):
     # Returns true if either https endpoint contains a SHA1 cert in the chain
-    if https.weak_signature or httpswww.weak_signature:
-        return "True"
-    else:
-        return "False"
+    return https.weak_signature or httpswww.weak_signature
 
 
 # Preloaded will only be checked if the domain is preload ready for performance
 def is_hsts_preloaded(http, httpwww, https, httpswww):
-    # Returns if a domain is on the chromium preload list
-    if https.hsts_preload and https.base_domain in preload_list:
-        return "True"
-    else:
-        return "False"
+    # Returns if a domain is on the Chromium preload list
+    return https.hsts_preload and (https.base_domain in preload_list)
 
 
 def create_preload_list():
