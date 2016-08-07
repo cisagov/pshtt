@@ -36,6 +36,7 @@ HEADERS = [
     "Broken Root", "Broken WWW"
 ]
 
+PRELOAD_CACHE = None
 preload_list = None
 
 
@@ -95,7 +96,7 @@ def result_for(domain, http, httpwww, https, httpswww):
 
 
 def basic_check(endpoint):
-    logging.info("pinging %s..." % endpoint.endpoint)
+    logging.debug("pinging %s..." % endpoint.endpoint)
     # First check if the endpoint is live
     try:
         r = requests.get(
@@ -133,7 +134,7 @@ def basic_check(endpoint):
 
 
 def https_check(endpoint):
-    logging.info("sslyzing %s..." % endpoint.endpoint)
+    logging.debug("sslyzing %s..." % endpoint.endpoint)
 
     # Use sslyze to check for HSTS
     try:
@@ -348,22 +349,22 @@ def is_hsts_preloaded(http, httpwww, https, httpswww):
 
 
 def create_preload_list():
-    logging.info("Downloading preload list...")
+    logging.debug("Downloading preload list...")
 
-    preload_cache = "./preload-list.json"
     preload_json = None
 
-    if os.path.exists(preload_cache):
-        logging.info("Using cached Chrome preload list. Delete %s to clear the cache." % preload_cache)
-        preload_json = json.loads(open(preload_cache).read())
+    if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
+        logging.debug("Using cached Chrome preload list.")
+        preload_json = json.loads(open(PRELOAD_CACHE).read())
     else:
-        logging.info("Fetching Chrome preload list from source...")
+        logging.debug("Fetching Chrome preload list from source...")
 
         # Downloads the chromium preloaded domain list and sets it to a global set
         file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
-        wget.download(file_url, out=preload_cache, bar=None)
 
-        raw = open(preload_cache, 'r').read()
+        # TODO: proper try/except around this network request
+        request = requests.get(file_url)
+        raw = request.content
 
         # To avoid parsing the contents of the file out of the source tree viewer's
         # HTML, we download it as a raw file. googlesource.com Base64-encodes the
@@ -377,7 +378,10 @@ def create_preload_list():
                        for line in raw.splitlines()])
 
         preload_json = json.loads(raw)
-        utils.write(utils.json_for(preload_json), preload_cache)
+
+        if PRELOAD_CACHE:
+            logging.debug("Caching preload list at %s" % PRELOAD_CACHE)
+            utils.write(utils.json_for(preload_json), PRELOAD_CACHE)
 
     return {entry['name'] for entry in preload_json['entries']}
 
@@ -400,16 +404,18 @@ def csv_for(results, out_filename):
 
 
 def inspect_domains(domains, options):
-    # Download HSTS preload list, caches locally.
-    global preload_list
-    preload_list = create_preload_list()
-
-    # Override timeout, user agent.
-    global TIMEOUT, USER_AGENT
+    # Override timeout, user agent, preload cache.
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
         USER_AGENT = options['user_agent']
+    if options.get('preload_cache'):
+        PRELOAD_CACHE = options['preload_cache']
+
+    # Download HSTS preload list, caches locally.
+    global preload_list
+    preload_list = create_preload_list()
 
     # For every given domain, get inspect data.
     results = []

@@ -3,17 +3,18 @@
 """Scan a domain. Example: dhs.gov
 
 Usage:
-  site_inspector_python.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT]
+  site_inspector_python.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache CACHE]
   site_inspector_python.py (-h | --help)
 
 Options:
-  -h --help             Show this message.
-  -s --sorted           Sort output by domain, A-Z.
-  -o --output=OUTFILE   Write to file. (Defaults to STDOUT.)
-  -j --json             Get results in JSON. (Defaults to CSV.)
-  -d --debug            Print debug output.
-  --user-agent=AGENT    Override user agent
-  --timeout=TIMEOUT     Override timeout (in seconds)
+  -h --help                 Show this message.
+  -s --sorted               Sort output by domain, A-Z.
+  -o --output=OUTFILE       Write to file. (Defaults to STDOUT.)
+  -j --json                 Get results in JSON. (Defaults to CSV.)
+  -d --debug                Print debug output.
+  -u --user-agent=AGENT     Override user agent
+  -t --timeout=TIMEOUT      Override timeout (in seconds)
+  -p --preload-cache=CACHE  Cache preload list, and where to cache it.
 
 Notes:
   If the first INPUT ends with .csv, domains will be read from CSV.
@@ -44,7 +45,8 @@ def main():
 
     options = {
       'user_agent': args['--user-agent'],
-      'timeout': args['--timeout']
+      'timeout': args['--timeout'],
+      'preload_cache': args['--preload-cache']
     }
     results = site_inspector.inspect_domains(domains, options)
 
