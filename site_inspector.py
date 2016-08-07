@@ -349,8 +349,6 @@ def is_hsts_preloaded(http, httpwww, https, httpswww):
 
 
 def create_preload_list():
-    logging.debug("Downloading preload list...")
-
     preload_json = None
 
     if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
