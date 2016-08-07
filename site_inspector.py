@@ -141,16 +141,14 @@ def basic_check(endpoint):
 def https_check(endpoint):
     logging.debug("sslyzing %s..." % endpoint.endpoint)
 
-    # Use sslyze to check for HSTS
+    # Use sslyze to check for HSTS and certificate errors
     try:
         # remove the https:// from prefix for sslyze
         hostname = endpoint.endpoint[8:]
         server_info = ServerConnectivityInfo(hostname=hostname, port=443)
         server_info.test_connectivity_to_server()
 
-        # Call Plugin directly
         hsts_plugin = HstsPlugin()
-        # Run HSTS plugin from sslyze returning HSTS header
         hsts_plugin_result = hsts_plugin.process_task(server_info, 'hsts')
 
         # Sslyze will return OK if HSTS exists
@@ -164,7 +162,7 @@ def https_check(endpoint):
         # Call plugin directly
         cert_plugin = CertificateInfoPlugin()
         cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
-        # Parsing Sslzye output for results by line
+        # Parsing sslyze output for results by line
         for i in cert_plugin_result.as_text():
             # Check for cert expiration
             if "Not After" in i:
@@ -348,7 +346,7 @@ def is_weak_signature(http, httpwww, https, httpswww):
 # Preloaded will only be checked if the domain is preload ready for performance
 def is_hsts_preloaded(http, httpwww, https, httpswww):
     # Returns if a domain is on the Chromium preload list
-    return https.hsts_preload and (https.base_domain in preload_list)
+    return https.base_domain in preload_list
 
 
 def create_preload_list():
@@ -384,7 +382,13 @@ def create_preload_list():
             logging.debug("Caching preload list at %s" % PRELOAD_CACHE)
             utils.write(utils.json_for(preload_json), PRELOAD_CACHE)
 
-    return {entry['name'] for entry in preload_json['entries']}
+    # For our purposes, we only care about entries that includeSubDomains
+    fully_preloaded = []
+    for entry in preload_json['entries']:
+        if entry.get('include_subdomains', False) is True:
+            fully_preloaded.append(entry['name'])
+
+    return fully_preloaded
 
 
 # Output a CSV string for an array of results, with a
