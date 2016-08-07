@@ -1,6 +1,7 @@
 import os
 import json
 import errno
+import csv
 
 # mkdir -p in python, from:
 # http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
@@ -36,4 +37,17 @@ def format_datetime(obj):
         return obj
     else:
         return None
+
+# Load domains from a CSV, skip a header row
+def load_domains(domain_csv):
+    domains = []
+    with open(domain_csv) as csvfile:
+        for row in csv.reader(csvfile):
+            if (not row[0]) or (row[0].lower().startswith("domain")):
+                continue
+
+            row[0] = row[0].lower()
+
+            domains.append(row[0])
+    return domains
 
