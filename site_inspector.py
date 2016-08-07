@@ -12,6 +12,7 @@ import json
 import csv
 import os
 import utils
+import logging
 
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
@@ -78,7 +79,7 @@ def inspect(domain):
 
 
 def basic_check(endpoint):
-    print("pinging %s..." % endpoint.endpoint)
+    logging.info("pinging %s..." % endpoint.endpoint)
     # First check if the endpoint is live
     try:
         r = requests.get(
@@ -106,7 +107,7 @@ def basic_check(endpoint):
 
 
 def https_check(endpoint):
-    print("sslyzing %s..." % endpoint.endpoint)
+    logging.info("sslyzing %s..." % endpoint.endpoint)
 
     # Use sslyze to check for HSTS
     try:
@@ -321,16 +322,16 @@ def is_hsts_preloaded(http, httpwww, https, httpswww):
 
 
 def create_preload_list():
-    print("Downloading preload list...")
+    logging.info("Downloading preload list...")
 
     preload_cache = "./preload-list.json"
     preload_json = None
 
     if os.path.exists(preload_cache):
-        print("Using cached Chrome preload list. Delete %s to clear the cache." % preload_cache)
+        logging.info("Using cached Chrome preload list. Delete %s to clear the cache." % preload_cache)
         preload_json = json.loads(open(preload_cache).read())
     else:
-        print("Fetching Chrome preload list from source...")
+        logging.info("Fetching Chrome preload list from source...")
 
         # Downloads the chromium preloaded domain list and sets it to a global set
         file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'

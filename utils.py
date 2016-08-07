@@ -2,6 +2,7 @@ import os
 import json
 import errno
 import csv
+import logging
 
 # mkdir -p in python, from:
 # http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
@@ -50,4 +51,13 @@ def load_domains(domain_csv):
 
             domains.append(row[0])
     return domains
+
+# Configure logging level, so logging.debug can hinge on --debug.
+def configure_logging(debug=False):
+    if debug:
+        log_level = "debug"
+    else:
+        log_level = "warn"
+
+    logging.basicConfig(format='%(message)s', level=log_level.upper())
 
