@@ -18,11 +18,11 @@ from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.hsts_plugin import HstsPlugin
 
-DEFAULT_USER_AGENT = "pshtt, https scanning"
-USER_AGENT = os.environ.get("USER_AGENT", DEFAULT_USER_AGENT)
+# Default, overrideable via --user-agent
+USER_AGENT = "pshtt, https scanning"
 
-# Defaults to 1 second, overrideable via env
-TIMEOUT = int(os.environ.get("TIMEOUT", 1))
+# Defaults to 1 second, overrideable via --timeout
+TIMEOUT = 1
 
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
@@ -399,10 +399,17 @@ def csv_for(results, out_filename):
     out_file.close()
 
 
-def inspect_domains(domains):
+def inspect_domains(domains, options):
     # Download HSTS preload list, caches locally.
     global preload_list
     preload_list = create_preload_list()
+
+    # Override timeout, user agent.
+    global TIMEOUT, USER_AGENT
+    if options.get('timeout'):
+        TIMEOUT = int(options['timeout'])
+    if options.get('user_agent'):
+        USER_AGENT = options['user_agent']
 
     # For every given domain, get inspect data.
     results = []

@@ -3,7 +3,7 @@
 """Scan a domain. Example: dhs.gov
 
 Usage:
-  site_inspector_python.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug]
+  site_inspector_python.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT]
   site_inspector_python.py (-h | --help)
 
 Options:
@@ -12,6 +12,8 @@ Options:
   -o --output=OUTFILE   Write to file. (Defaults to STDOUT.)
   -j --json             Get results in JSON. (Defaults to CSV.)
   -d --debug            Print debug output.
+  --user-agent=AGENT    Override user agent
+  --timeout=TIMEOUT     Override timeout (in seconds)
 
 Notes:
   If the first INPUT ends with .csv, domains will be read from CSV.
@@ -40,7 +42,11 @@ def main():
     if args['--sorted']:
         domains.sort()
 
-    results = site_inspector.inspect_domains(domains)
+    options = {
+      'user_agent': args['--user-agent'],
+      'timeout': args['--timeout']
+    }
+    results = site_inspector.inspect_domains(domains, options)
 
     # JSON can go to STDOUT, or to a file.
     if args['--json']:
