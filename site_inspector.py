@@ -21,8 +21,8 @@ from sslyze.plugins.hsts_plugin import HstsPlugin
 DEFAULT_USER_AGENT = "pshtt, https scanning"
 USER_AGENT = os.environ.get("USER_AGENT", DEFAULT_USER_AGENT)
 
-# Defaults to 1 second
-TIMEOUT = 1
+# Defaults to 1 second, overrideable via env
+TIMEOUT = int(os.environ.get("TIMEOUT", 1))
 
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
@@ -37,6 +37,7 @@ HEADERS = [
 ]
 
 preload_list = None
+
 
 def inspect(domain):
     http = port80.port80("http://%s" % domain, domain)
@@ -54,7 +55,12 @@ def inspect(domain):
     if httpswww.live:
         https_check(httpswww)
 
-    return {
+    return result_for(domain, http, httpwww, https, httpswww)
+
+
+def result_for(domain, http, httpwww, https, httpswww):
+    # First, the basic fields the CSV will use.
+    result = {
         'Domain': domain,
         'Live': is_live(http, httpwww, https, httpswww),
         'Redirect': is_redirect(http, httpwww, https, httpswww),
@@ -77,6 +83,16 @@ def inspect(domain):
         'Broken WWW': is_broken_www(http, httpwww, https, httpswww)
     }
 
+    # But also capture the extended data for those who want it.
+    result['endpoints'] = {
+        'http': http.to_object(),
+        'httpwww': httpwww.to_object(),
+        'https': https.to_object(),
+        'httpswww': httpswww.to_object()
+    }
+
+    return result
+
 
 def basic_check(endpoint):
     logging.info("pinging %s..." % endpoint.endpoint)
@@ -92,6 +108,15 @@ def basic_check(endpoint):
             endpoint.redirect = True
             endpoint.redirect_to = r.url
         endpoint.live = True
+
+        # Store original headers and status code.
+        if len(r.history) > 0:
+            endpoint.headers = dict(r.history[0].headers)
+            endpoint.status = r.history[0].status_code
+        else:
+            endpoint.headers = dict(r.headers)
+            endpoint.status = r.status_code
+
     # The endpoint is live but there is a bad cert
     except requests.exceptions.SSLError:
         # TODO: this is too broad, won't always be chain error.
@@ -103,6 +128,7 @@ def basic_check(endpoint):
     # Endpoint is not live
     # TODO: Too broad, shouldn't swallow all errors.
     except:
+        logging.debug("Endpoint is not live: %s" % endpoint.endpoint)
         pass
 
 
@@ -210,11 +236,11 @@ def is_redirect(http, httpwww, https, httpswww):
     return http.redirect or httpwww.redirect or https.redirect or httpswww.redirect
 
 
-# Domain has valid https if either https enpoints are live or a http redirects to https
+# Domain has valid https if either https endpoints are live or a http redirects to https
 def is_valid_https(http, httpwww, https, httpswww):
     if https.live or httpswww.live:
         return True
-    elif (http.redirect_to[:5] == "https") or (httpwww.redirect_to[:5] == "https"):
+    elif (http.redirect and (http.redirect_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_to[:5] == "https")):
         return True
     else:
         return False
@@ -223,7 +249,7 @@ def is_valid_https(http, httpwww, https, httpswww):
 # Domain defaults to https if http endpoint forwards to https
 def is_defaults_to_https(http, httpwww, https, httpswww):
     if http.redirect or httpwww.redirect:
-        return (http.redirect_to[:5] == "https") or (httpwww.redirect_to[:5] == "https")
+        return (http.redirect and (http.redirect_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_to[:5] == "https"))
     else:
         return False
 
@@ -231,7 +257,7 @@ def is_defaults_to_https(http, httpwww, https, httpswww):
 # Domain downgrades if https endpoint redirects to http
 def is_downgrades_https(http, httpwww, https, httpswww):
     if https.redirect or httpswww.redirect:
-        return (https.redirect_to[:5] == "http:") or (httpswww.redirect_to[:5] == "http:")
+        return (https.redirect and (https.redirect_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_to[:5] == "http:"))
     else:
         return False
 
@@ -241,11 +267,11 @@ def is_downgrades_https(http, httpwww, https, httpswww):
 def is_strictly_forces_https(http, httpwww, https, httpswww):
     if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
         return True
-    elif (http.redirect_to[:5] == "https") and (httpwww.redirect_to[:5] == "https"):
+    elif (http.redirect and (http.redirect_to[:5] == "https")) and (httpwww.redirect and (httpwww.redirect_to[:5] == "https")):
         return True
-    elif (http.redirect_to[:5] == "https") and (not httpwww.live):
+    elif (http.redirect and (http.redirect_to[:5] == "https")) and (not httpwww.live):
         return True
-    elif (httpwww.redirect_to[:5] == "https") and (not http.live):
+    elif (httpwww.redirect and (httpwww.redirect_to[:5] == "https")) and (not http.live):
         return True
     else:
         return False
@@ -371,6 +397,7 @@ def csv_for(results, out_filename):
         writer.writerow(row)
 
     out_file.close()
+
 
 def inspect_domains(domains):
     # Download HSTS preload list, caches locally.

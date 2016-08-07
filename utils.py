@@ -5,6 +5,7 @@ import csv
 import logging
 import datetime
 
+
 # mkdir -p in python, from:
 # http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
 def mkdir_p(path):
@@ -21,13 +22,14 @@ def json_for(object):
     return json.dumps(object, sort_keys=True,
                       indent=2, default=format_datetime)
 
+
 def write(content, destination, binary=False):
     mkdir_p(os.path.dirname(destination))
 
     if binary:
         f = open(destination, 'bw')
     else:
-        f = open(destination, 'w') # no utf-8 in python 2
+        f = open(destination, 'w')  # no utf-8 in python 2
     f.write(content)
     f.close()
 
@@ -39,6 +41,7 @@ def format_datetime(obj):
         return obj
     else:
         return None
+
 
 # Load domains from a CSV, skip a header row
 def load_domains(domain_csv):
@@ -53,6 +56,7 @@ def load_domains(domain_csv):
             domains.append(row[0])
     return domains
 
+
 # Configure logging level, so logging.debug can hinge on --debug.
 def configure_logging(debug=False):
     if debug:
@@ -61,4 +65,3 @@ def configure_logging(debug=False):
         log_level = "warn"
 
     logging.basicConfig(format='%(message)s', level=log_level.upper())
-
