@@ -24,7 +24,9 @@ def json_for(object):
 
 
 def write(content, destination, binary=False):
-    mkdir_p(os.path.dirname(destination))
+    parent = os.path.dirname(destination)
+    if parent is not "":
+        mkdir_p(parent)
 
     if binary:
         f = open(destination, 'bw')
