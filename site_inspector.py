@@ -13,10 +13,14 @@ import csv
 import os
 import utils
 import logging
+import requests_cache
 
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.hsts_plugin import HstsPlugin
+
+# whether/where to cache, set via --cache
+WEB_CACHE = None
 
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
@@ -97,6 +101,7 @@ def result_for(domain, http, httpwww, https, httpswww):
 
 def basic_check(endpoint):
     logging.debug("pinging %s..." % endpoint.endpoint)
+
     # First check if the endpoint is live
     try:
         r = requests.get(
@@ -144,15 +149,15 @@ def https_check(endpoint):
         server_info.test_connectivity_to_server()
 
         # Call Plugin directly
-        plugin = HstsPlugin()
+        hsts_plugin = HstsPlugin()
         # Run HSTS plugin from sslyze returning HSTS header
-        plugin_result = plugin.process_task(server_info, 'hsts')
+        hsts_plugin_result = hsts_plugin.process_task(server_info, 'hsts')
 
         # Sslyze will return OK if HSTS exists
-        if "OK" in plugin_result.as_text()[1]:
+        if "OK" in hsts_plugin_result.as_text()[1]:
             endpoint.hsts = True
             # Send HSTS header for parsing
-            hsts_header_handler(endpoint, plugin_result.as_text()[1])
+            hsts_header_handler(endpoint, hsts_plugin_result.hsts_header)
         else:
             endpoint.hsts = False
 
@@ -180,19 +185,17 @@ def https_check(endpoint):
 
 
 def hsts_header_handler(endpoint, header):
-    # Remove colons, semi colons, and commas from header
-    var = re.sub('[;,:]', ' ', header)
-    # Removes extra spaces from header
-    x = ' '.join(var.split())
-    # Split sslyze text from header
-    endpoint.hsts_header = x.partition("received ")[-1]
+    endpoint.hsts_header = header
     temp = endpoint.hsts_header.split()
+
     # Set max age to the string after max-age
     endpoint.hsts_max_age = temp[0][len("max-age="):]
+
     # check if hsts includes sub domains
     if 'includesubdomains' in endpoint.hsts_header.lower():
         endpoint.hsts_all_subdomains = True
-    # Check is hsts is preload
+
+    # Check is hsts has the preload flag
     if 'preload' in endpoint.hsts_header.lower():
         endpoint.hsts_preload = True
 
@@ -403,13 +406,17 @@ def csv_for(results, out_filename):
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache.
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
         USER_AGENT = options['user_agent']
     if options.get('preload_cache'):
         PRELOAD_CACHE = options['preload_cache']
+    if options.get('cache'):
+        cache_dir = ".cache"
+        utils.mkdir_p(cache_dir)
+        requests_cache.install_cache("%s/cache" % cache_dir)
 
     # Download HSTS preload list, caches locally.
     global preload_list
