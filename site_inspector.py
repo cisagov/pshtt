@@ -13,10 +13,14 @@ import csv
 import os
 import utils
 import logging
+import requests_cache
 
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 from sslyze.plugins.hsts_plugin import HstsPlugin
+
+# whether/where to cache, set via --cache
+WEB_CACHE = None
 
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
@@ -97,6 +101,7 @@ def result_for(domain, http, httpwww, https, httpswww):
 
 def basic_check(endpoint):
     logging.debug("pinging %s..." % endpoint.endpoint)
+
     # First check if the endpoint is live
     try:
         r = requests.get(
@@ -107,6 +112,9 @@ def basic_check(endpoint):
         # If status code starts with a 3, it is a redirect
         if len(r.history) > 0 and str(r.history[0].status_code).startswith('3'):
             endpoint.redirect = True
+
+            # TODO: handle relative redirects (where Location header omits origin)
+            endpoint.redirect_immediately_to = r.history[0].headers['Location']
             endpoint.redirect_to = r.url
         endpoint.live = True
 
@@ -136,30 +144,28 @@ def basic_check(endpoint):
 def https_check(endpoint):
     logging.debug("sslyzing %s..." % endpoint.endpoint)
 
-    # Use sslyze to check for HSTS
+    # Use sslyze to check for HSTS and certificate errors
     try:
         # remove the https:// from prefix for sslyze
         hostname = endpoint.endpoint[8:]
         server_info = ServerConnectivityInfo(hostname=hostname, port=443)
         server_info.test_connectivity_to_server()
 
-        # Call Plugin directly
-        plugin = HstsPlugin()
-        # Run HSTS plugin from sslyze returning HSTS header
-        plugin_result = plugin.process_task(server_info, 'hsts')
+        hsts_plugin = HstsPlugin()
+        hsts_plugin_result = hsts_plugin.process_task(server_info, 'hsts')
 
         # Sslyze will return OK if HSTS exists
-        if "OK" in plugin_result.as_text()[1]:
+        if "OK" in hsts_plugin_result.as_text()[1]:
             endpoint.hsts = True
             # Send HSTS header for parsing
-            hsts_header_handler(endpoint, plugin_result.as_text()[1])
+            hsts_header_handler(endpoint, hsts_plugin_result.hsts_header)
         else:
             endpoint.hsts = False
 
         # Call plugin directly
         cert_plugin = CertificateInfoPlugin()
         cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
-        # Parsing Sslzye output for results by line
+        # Parsing sslyze output for results by line
         for i in cert_plugin_result.as_text():
             # Check for cert expiration
             if "Not After" in i:
@@ -180,19 +186,17 @@ def https_check(endpoint):
 
 
 def hsts_header_handler(endpoint, header):
-    # Remove colons, semi colons, and commas from header
-    var = re.sub('[;,:]', ' ', header)
-    # Removes extra spaces from header
-    x = ' '.join(var.split())
-    # Split sslyze text from header
-    endpoint.hsts_header = x.partition("received ")[-1]
+    endpoint.hsts_header = header
     temp = endpoint.hsts_header.split()
+
     # Set max age to the string after max-age
     endpoint.hsts_max_age = temp[0][len("max-age="):]
+
     # check if hsts includes sub domains
     if 'includesubdomains' in endpoint.hsts_header.lower():
         endpoint.hsts_all_subdomains = True
-    # Check is hsts is preload
+
+    # Check is hsts has the preload flag
     if 'preload' in endpoint.hsts_header.lower():
         endpoint.hsts_preload = True
 
@@ -227,24 +231,30 @@ def weak_signature(weak_sig, endpoint):
 # Judgment calls based on observed endpoint data.
 ##
 
-# Domain is live if a single endpoint is live
+# Domain is live if *any* endpoint is live.
 def is_live(http, httpwww, https, httpswww):
     return http.live or httpwww.live or https.live or httpswww.live
 
 
-# Domain is a redirect if any of the endpoints redirect
+# TODO: Loosen this definition to check if:
+# at least one endpoint is a redirect, and
+# all endpoints are either redirects or down.
 def is_redirect(http, httpwww, https, httpswww):
     return http.redirect or httpwww.redirect or https.redirect or httpswww.redirect
 
 
-# Domain has valid https if either https endpoints are live or a http redirects to https
 def is_valid_https(http, httpwww, https, httpswww):
-    if https.live or httpswww.live:
-        return True
-    elif (http.redirect and (http.redirect_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_to[:5] == "https")):
-        return True
-    else:
-        return False
+    # One of the HTTPS endpoints has to be up,
+    # and has to have a cert for a valid hostname,
+    # and has to not downgrade the user to HTTP (either doesn't redirect, or if it does redirect it stays at HTTPS).
+    # TODO: only evaluate canonical endpoint.
+
+    def supports_https(endpoint):
+        return endpoint.live and \
+            (not endpoint.https_bad_hostname) and \
+            (not (endpoint.redirect and (endpoint.redirect_immediately_to[:5] != "https")))
+
+    return supports_https(https) or supports_https(httpswww)
 
 
 # Domain defaults to https if http endpoint forwards to https
@@ -257,14 +267,11 @@ def is_defaults_to_https(http, httpwww, https, httpswww):
 
 # Domain downgrades if https endpoint redirects to http
 def is_downgrades_https(http, httpwww, https, httpswww):
-    if https.redirect or httpswww.redirect:
-        return (https.redirect and (https.redirect_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_to[:5] == "http:"))
-    else:
-        return False
+    return (https.redirect and (https.redirect_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_to[:5] == "http:"))
 
 
 # A domain strictly forces https if https is live and http is not,
-    # if both http forward to https endpoints or if one http forwards to https and the other is not live
+# if both http forward to https endpoints or if one http forwards to https and the other is not live
 def is_strictly_forces_https(http, httpwww, https, httpswww):
     if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
         return True
@@ -342,10 +349,9 @@ def is_weak_signature(http, httpwww, https, httpswww):
     return https.weak_signature or httpswww.weak_signature
 
 
-# Preloaded will only be checked if the domain is preload ready for performance
 def is_hsts_preloaded(http, httpwww, https, httpswww):
     # Returns if a domain is on the Chromium preload list
-    return https.hsts_preload and (https.base_domain in preload_list)
+    return https.base_domain in preload_list
 
 
 def create_preload_list():
@@ -381,7 +387,13 @@ def create_preload_list():
             logging.debug("Caching preload list at %s" % PRELOAD_CACHE)
             utils.write(utils.json_for(preload_json), PRELOAD_CACHE)
 
-    return {entry['name'] for entry in preload_json['entries']}
+    # For our purposes, we only care about entries that includeSubDomains
+    fully_preloaded = []
+    for entry in preload_json['entries']:
+        if entry.get('include_subdomains', False) is True:
+            fully_preloaded.append(entry['name'])
+
+    return fully_preloaded
 
 
 # Output a CSV string for an array of results, with a
@@ -403,13 +415,17 @@ def csv_for(results, out_filename):
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache.
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
         USER_AGENT = options['user_agent']
     if options.get('preload_cache'):
         PRELOAD_CACHE = options['preload_cache']
+    if options.get('cache'):
+        cache_dir = ".cache"
+        utils.mkdir_p(cache_dir)
+        requests_cache.install_cache("%s/cache" % cache_dir)
 
     # Download HSTS preload list, caches locally.
     global preload_list
