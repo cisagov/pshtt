@@ -23,7 +23,7 @@ Notes:
 """
 
 import docopt
-import site_inspector
+import pshtt
 import utils
 import logging
 
