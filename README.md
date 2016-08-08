@@ -46,24 +46,41 @@ What's Checked:
 
   Domain- A domain is checked on it's four endpoints http://example.com, http://www.example.com, 
   https://example.com, https://www.example.com 
+  
   Live-If any of the endpoint respond it is True
-  Redirect- If any of the endpoints redirect it is True
+  Redirect- If any of the endpoints redirect it is True 
+  
   Valid HTTPS- True if a either HTTPS endpoint is live or HTTP endpoints forward to HTTPS
+  
   Defaults HTTPS-If the HTTP endpoint forwards to a HTTPS
   Downgrades HTTPS- If a HTTPS endpoint forwards to HTTP
+  
   Strictly Forces HTTPS- If only HTTPS endpoints are live or if a HTTP endpoint is live it forwards to HTTPS
+  
   HTTPS Bad Chain- If the cert is not trusted based on CA stores 
+  
   HTTPS Bad Host Name- If the cert fails hostname validation
+  
   Expired Cert- If the cert has expired
+  
   Weak Signature Chain-A SHA1 cert exists in the cert chain
+  
   HSTS- If Strict Transport is in the header of the HTTPS endpoint (not the https://www subdomain)
+  
   HSTS Header- The contents of the HSTS Header
+  
   HSTS Max Age- The Max Age of the HSTS Header
+  
   HSTS All Subdomain-If "include sub subdomains" is in the HSTS header
+  
   HSTS Preload- If "preload" is in the HSTS Header
+  
   HSTS Preload Ready- If the domains has HSTS, HSTS Max Age, HSTS All Subdomains, and HSTS Preload
+  
   HSTS Preloaded- If the domain is on the Google Chrome Preload list
+  
   Broken Root- If the http:// and https:// domains are no live
+  
   Broken WWW- if the http://www. and https://www. are not live
   
   ______________________________________________________________________________________
