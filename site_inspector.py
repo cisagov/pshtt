@@ -112,6 +112,9 @@ def basic_check(endpoint):
         # If status code starts with a 3, it is a redirect
         if len(r.history) > 0 and str(r.history[0].status_code).startswith('3'):
             endpoint.redirect = True
+
+            # TODO: handle relative redirects (where Location header omits origin)
+            endpoint.redirect_immediately_to = r.history[0].headers['Location']
             endpoint.redirect_to = r.url
         endpoint.live = True
 
@@ -228,24 +231,30 @@ def weak_signature(weak_sig, endpoint):
 # Judgment calls based on observed endpoint data.
 ##
 
-# Domain is live if a single endpoint is live
+# Domain is live if *any* endpoint is live.
 def is_live(http, httpwww, https, httpswww):
     return http.live or httpwww.live or https.live or httpswww.live
 
 
-# Domain is a redirect if any of the endpoints redirect
+# TODO: Loosen this definition to check if:
+# at least one endpoint is a redirect, and
+# all endpoints are either redirects or down.
 def is_redirect(http, httpwww, https, httpswww):
     return http.redirect or httpwww.redirect or https.redirect or httpswww.redirect
 
 
-# Domain has valid https if either https endpoints are live or a http redirects to https
 def is_valid_https(http, httpwww, https, httpswww):
-    if https.live or httpswww.live:
-        return True
-    elif (http.redirect and (http.redirect_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_to[:5] == "https")):
-        return True
-    else:
-        return False
+    # One of the HTTPS endpoints has to be up,
+    # and has to have a cert for a valid hostname,
+    # and has to not downgrade the user to HTTP (either doesn't redirect, or if it does redirect it stays at HTTPS).
+    # TODO: only evaluate canonical endpoint.
+
+    def supports_https(endpoint):
+        return endpoint.live and \
+            (not endpoint.https_bad_hostname) and \
+            (not (endpoint.redirect and (endpoint.redirect_immediately_to[:5] != "https")))
+
+    return supports_https(https) or supports_https(httpswww)
 
 
 # Domain defaults to https if http endpoint forwards to https
@@ -258,14 +267,11 @@ def is_defaults_to_https(http, httpwww, https, httpswww):
 
 # Domain downgrades if https endpoint redirects to http
 def is_downgrades_https(http, httpwww, https, httpswww):
-    if https.redirect or httpswww.redirect:
-        return (https.redirect and (https.redirect_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_to[:5] == "http:"))
-    else:
-        return False
+    return (https.redirect and (https.redirect_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_to[:5] == "http:"))
 
 
 # A domain strictly forces https if https is live and http is not,
-    # if both http forward to https endpoints or if one http forwards to https and the other is not live
+# if both http forward to https endpoints or if one http forwards to https and the other is not live
 def is_strictly_forces_https(http, httpwww, https, httpswww):
     if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
         return True
