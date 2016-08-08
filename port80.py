@@ -6,9 +6,9 @@ class port80:
         self.base_domain = base_domain
         self.headers = {}
         self.status = None
-        self.canonical = None
         self.live = False
         self.redirect = False
+        self.redirect_immediately_to = None
         self.redirect_to = None
 
     # The fields we want to save as extended metadata.
@@ -19,5 +19,6 @@ class port80:
             'status': self.status,
             'live': self.live,
             'redirect': self.redirect,
-            'redirect_to': self.redirect_to
+            'redirect_to': self.redirect_to,
+            'redirect_immediately_to': self.redirect_immediately_to
         }

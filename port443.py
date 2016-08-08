@@ -6,9 +6,9 @@ class port443:
         self.base_domain = base_domain
         self.headers = {}
         self.status = None
-        self.canonical = None
         self.live = False
         self.redirect = False
+        self.redirect_immediately_to = None
         self.redirect_to = None
         self.https_bad_chain = False
         self.https_bad_hostname = False
@@ -30,6 +30,7 @@ class port443:
             'live': self.live,
             'redirect': self.redirect,
             'redirect_to': self.redirect_to,
+            'redirect_immediately_to': self.redirect_immediately_to,
             'https_bad_chain': self.https_bad_chain,
             'https_bad_hostname': self.https_bad_hostname,
             'https_expired_cert': self.https_expired_cert,
