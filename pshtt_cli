@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
-"""Scan a domain. Example: dhs.gov
+"""pshtt ("pushed") is a tool to test domains for HTTPS best practices.
 
 Usage:
-  site_inspector_python.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
-  site_inspector_python.py (-h | --help)
+  pshtt.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
+  pshtt.py (-h | --help)
 
 Options:
   -h --help                   Show this message.
   -s --sorted                 Sort output by domain, A-Z.
-  -o --output=OUTFILE         Write to file. (Defaults to STDOUT.)
+  -o --output=OUTFILE         Name output file. (Defaults to "results".)
   -j --json                   Get results in JSON. (Defaults to CSV.)
   -d --debug                  Print debug output.
   -u --user-agent=AGENT       Override user agent
