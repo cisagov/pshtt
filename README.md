@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ./pshtt_cli (-h | --help)
 
-Options:
+##### Options:
 ```bash
   -h --help                   Show this message.
   -s --sorted                 Sort output by domain, A-Z.
