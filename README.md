@@ -69,10 +69,10 @@ The following values are returned in the results.csv
 * `Broken WWW` - if the http://www. and https://www. are not live
   
 ## What's this for?
-This was developed to help federal .gov domains comply with [M-15-13](https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web services and sites. pshtt also includes data regarding a domain's preloading state. 
+This was developed to help federal .gov domains comply with [M-15-13](https://https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web services and sites. pshtt also includes data regarding a domain's preloading state. 
   
 ## Acknowledgements
-This code was modeled after [site-inspector] "https://github.com/benbalter/site-inspector/tree/erics-mode" with significant guidance from [Konkline](https://github.com/konklone)
+This code was modeled after [site-inspector] "https://github.com/benbalter/site-inspector/tree/erics-mode", with significant guidance from [Konklone](https://github.com/konklone)
 
 ## Public domain
 This project is in the worldwide [public domain](LICENSE.md). As stated in [CONTRIBUTING](CONTRIBUTING.md):
