@@ -54,6 +54,9 @@ def inspect(base_domain):
     basic_check(domain.https)
     basic_check(domain.httpswww)
 
+    hsts_check(domain.https)
+    hsts_check(domain.httpswww)
+
     # TODO: move this into basic_check for HTTPS endpoints
     # if domain.https.live:
     #     https_check(domain.https)
@@ -129,6 +132,7 @@ def basic_check(endpoint):
             endpoint.headers = dict(r.headers)
             endpoint.status = r.status_code
 
+
     # The endpoint is live but there is a bad cert
     except requests.exceptions.SSLError:
         # TODO: this is too broad, won't always be chain error.
@@ -154,17 +158,6 @@ def https_check(endpoint):
         server_info = ServerConnectivityInfo(hostname=hostname, port=443)
         server_info.test_connectivity_to_server()
 
-        hsts_plugin = HstsPlugin()
-        hsts_plugin_result = hsts_plugin.process_task(server_info, 'hsts')
-
-        # Sslyze will return OK if HSTS exists
-        if "OK" in hsts_plugin_result.as_text()[1]:
-            endpoint.hsts = True
-            # Send HSTS header for parsing
-            hsts_header_handler(endpoint, hsts_plugin_result.hsts_header)
-        else:
-            endpoint.hsts = False
-
         # Call plugin directly
         cert_plugin = CertificateInfoPlugin()
         cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
@@ -185,19 +178,28 @@ def https_check(endpoint):
         pass
 
 
-def hsts_header_handler(endpoint, header):
+# Given an endpoint and its detected headers, extract and parse
+# any present HSTS header, decide what HSTS properties are there.
+def hsts_check(endpoint):
+    header = endpoint.headers.get("Strict-Transport-Security")
+
+    if header is None:
+        endpoint.hsts = False
+        return
+
+    endpoint.hsts = True
     endpoint.hsts_header = header
-    temp = endpoint.hsts_header.split()
 
     # Set max age to the string after max-age
+    temp = header.split()
     endpoint.hsts_max_age = temp[0][len("max-age="):]
 
     # check if hsts includes sub domains
-    if 'includesubdomains' in endpoint.hsts_header.lower():
+    if 'includesubdomains' in header.lower():
         endpoint.hsts_all_subdomains = True
 
     # Check is hsts has the preload flag
-    if 'preload' in endpoint.hsts_header.lower():
+    if 'preload' in header.lower():
         endpoint.hsts_preload = True
 
 

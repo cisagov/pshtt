@@ -31,16 +31,18 @@ class Endpoint:
         self.redirect_immediately_to = None
         self.redirect_to = None
 
-        # only HTTPS endpoints have these
-        self.https_bad_chain = False
-        self.https_bad_hostname = False
-        self.https_expired_cert = False
-        self.hsts = False
+        # Only HTTPS endpoints have these.
+        # Initialize all of them to None, so that it's
+        # discernible if they don't get explicitly set.
+        self.https_bad_chain = None
+        self.https_bad_hostname = None
+        self.https_expired_cert = None
+        self.hsts = None
         self.hsts_header = None
         self.hsts_max_age = None
-        self.hsts_all_subdomains = False
-        self.hsts_preload = False
-        self.hsts_preloaded = False
+        self.hsts_all_subdomains = None
+        self.hsts_preload = None
+        self.hsts_preloaded = None
 
     def url_for(self, protocol, host, base_domain):
         if host == "root":
