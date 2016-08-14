@@ -7,7 +7,6 @@ import re
 import datetime
 from time import strptime
 import base64
-import wget
 import json
 import csv
 import os
