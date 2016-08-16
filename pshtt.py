@@ -127,7 +127,7 @@ def basic_check(endpoint):
 
             # TODO: handle relative redirects (where Location header omits origin)
             endpoint.redirect_immediately_to = r.history[0].headers['Location']
-            endpoint.redirect_to = r.url
+            endpoint.redirect_eventually_to = r.url
         endpoint.live = True
 
         # Store original headers and status code.
@@ -232,14 +232,14 @@ def is_valid_https(http, httpwww, https, httpswww):
 # Domain defaults to https if http endpoint forwards to https
 def is_defaults_to_https(http, httpwww, https, httpswww):
     if http.redirect or httpwww.redirect:
-        return (http.redirect and (http.redirect_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_to[:5] == "https"))
+        return (http.redirect and (http.redirect_eventually_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https"))
     else:
         return False
 
 
 # Domain downgrades if https endpoint redirects to http
 def is_downgrades_https(http, httpwww, https, httpswww):
-    return (https.redirect and (https.redirect_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_to[:5] == "http:"))
+    return (https.redirect and (https.redirect_eventually_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_eventually_to[:5] == "http:"))
 
 
 # A domain strictly forces https if https is live and http is not,
@@ -247,11 +247,11 @@ def is_downgrades_https(http, httpwww, https, httpswww):
 def is_strictly_forces_https(http, httpwww, https, httpswww):
     if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
         return True
-    elif (http.redirect and (http.redirect_to[:5] == "https")) and (httpwww.redirect and (httpwww.redirect_to[:5] == "https")):
+    elif (http.redirect and (http.redirect_eventually_to[:5] == "https")) and (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https")):
         return True
-    elif (http.redirect and (http.redirect_to[:5] == "https")) and (not httpwww.live):
+    elif (http.redirect and (http.redirect_eventually_to[:5] == "https")) and (not httpwww.live):
         return True
-    elif (httpwww.redirect and (httpwww.redirect_to[:5] == "https")) and (not http.live):
+    elif (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https")) and (not http.live):
         return True
     else:
         return False

@@ -37,7 +37,7 @@ class Endpoint:
         self.live = False
         self.redirect = False
         self.redirect_immediately_to = None
-        self.redirect_to = None
+        self.redirect_eventually_to = None
 
         # Only HTTPS endpoints have these.
         # Initialize all of them to None, so that it's
@@ -68,7 +68,7 @@ class Endpoint:
             'status': self.status,
             'live': self.live,
             'redirect': self.redirect,
-            'redirect_to': self.redirect_to,
+            'redirect_eventually_to': self.redirect_eventually_to,
             'redirect_immediately_to': self.redirect_immediately_to
         }
 
