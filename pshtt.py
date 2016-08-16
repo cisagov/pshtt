@@ -49,24 +49,28 @@ def inspect(base_domain):
     domain.https = Endpoint("https", "root", base_domain)
     domain.httpswww = Endpoint("https", "www", base_domain)
 
+    # Analyze HTTP endpoint responsiveness and behavior.
     basic_check(domain.http)
     basic_check(domain.httpwww)
     basic_check(domain.https)
     basic_check(domain.httpswww)
 
+    # Analyze HSTS header, if present, on each HTTPS endpoint.
     hsts_check(domain.https)
     hsts_check(domain.httpswww)
 
     # TODO: move this into basic_check for HTTPS endpoints
-    # if domain.https.live:
-    #     https_check(domain.https)
-    # if httpswww.live:
-    #     https_check(domain.httpswww)
+    if domain.https.live:
+        https_check(domain.https)
+    if domain.httpswww.live:
+        https_check(domain.httpswww)
 
     return result_for(domain)
 
 
 def result_for(domain):
+
+    # print(utils.json_for(domain.to_object()))
 
     # TODO:
     # Because it will inform many other judgments, first identify
@@ -91,6 +95,8 @@ def result_for(domain):
         'HSTS All Subdomains': is_hsts_all_subdomains(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HSTS Preload': is_hsts_preload(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HSTS Preload Ready': is_hsts_preload_ready(domain.http, domain.httpwww, domain.https, domain.httpswww),
+
+        # Doesn't use endpoint behavior.
         'HSTS Preloaded': is_hsts_preloaded(domain)
     }
 
