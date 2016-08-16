@@ -81,7 +81,7 @@ This was developed to help federal .gov domains comply with [M-15-13](https://ht
 
 ## Acknowledgements
 
-This code was modeled after [Ben Balter])https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [@konklone](https://github.com/konklone).
+This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [@konklone](https://github.com/konklone).
 
 ## Public domain
 
