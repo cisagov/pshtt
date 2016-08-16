@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import requests
+import requests_cache
 import re
 import datetime
 from time import strptime
@@ -10,13 +11,14 @@ import csv
 import os
 import utils
 import logging
-import requests_cache
-
-from models import Domain, Endpoint
 
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
-from sslyze.plugins.hsts_plugin import HstsPlugin
+
+from models import Domain, Endpoint
+
+# We're going to be making requests with certificates disabled.
+requests.packages.urllib3.disable_warnings()
 
 # whether/where to cache, set via --cache
 WEB_CACHE = None
@@ -58,12 +60,6 @@ def inspect(base_domain):
     # Analyze HSTS header, if present, on each HTTPS endpoint.
     hsts_check(domain.https)
     hsts_check(domain.httpswww)
-
-    # TODO: move this into basic_check for HTTPS endpoints
-    if domain.https.live:
-        https_check(domain.https)
-    if domain.httpswww.live:
-        https_check(domain.httpswww)
 
     return result_for(domain)
 
@@ -110,39 +106,70 @@ def result_for(domain):
 
     return result
 
+def ping(url, allow_redirects=False, verify=True):
+    return requests.get(
+        url,
+
+        allow_redirects=allow_redirects,
+
+        # Validate certificates.
+        verify=verify,
+
+        # set by --user_agent
+        data={'User-Agent': USER_AGENT},
+
+        # set by --timeout
+        timeout=TIMEOUT
+    )
 
 def basic_check(endpoint):
     logging.debug("pinging %s..." % endpoint.url)
 
-    # First check if the endpoint is live
+    # Test the endpoint. At first:
+    #
+    # * Don't follow redirects. (Will only follow if necessary.)
+    #   If it's a 3XX, we'll ping again to follow redirects. This is
+    #   necessary to reliably scope any errors (e.g. TLS errors) to
+    #   the original endpoint.
+    #
+    # * Validate certificates. (Will figure out error if necessary.)
     try:
-        r = requests.get(
-            endpoint.url,
-            data={'User-Agent': USER_AGENT},
-            timeout=TIMEOUT
-        )
-        # If status code starts with a 3, it is a redirect
-        if len(r.history) > 0 and str(r.history[0].status_code).startswith('3'):
-            endpoint.redirect = True
-
-            # TODO: handle relative redirects (where Location header omits origin)
-            endpoint.redirect_immediately_to = r.history[0].headers['Location']
-            endpoint.redirect_eventually_to = r.url
-        endpoint.live = True
-
-        # Store original headers and status code.
-        if len(r.history) > 0:
-            endpoint.headers = dict(r.history[0].headers)
-            endpoint.status = r.history[0].status_code
-        else:
-            endpoint.headers = dict(r.headers)
-            endpoint.status = r.status_code
-
-
-    # The endpoint is live but there is a bad cert
+        req = ping(endpoint.url)
     except requests.exceptions.SSLError:
-        endpoint.https_bad_chain = True
-        endpoint.live = True
+        try:
+            req = ping(endpoint.url, verify=False)
+        except requests.exceptions.SSLError:
+            # If it's a protocol error or other, it's not live.
+            endpoint.live = False
+            return
+
+        # If it was a certificate error of any kind, it's live.
+        # Figure out the error(s).
+        https_check(endpoint)
+
+    # This needs to go last, as a parent error class.
+    except requests.exceptions.ConnectionError:
+        endpoint.live = False
+        return
+
+
+    # Endpoint is live, analyze the response.
+    endpoint.live = True
+    endpoint.headers = dict(req.headers)
+
+    endpoint.status = req.status_code
+    if str(endpoint.status).startswith('3'):
+        endpoint.redirect = True
+
+    if endpoint.redirect:
+
+        # TODO: handle relative redirects (e.g. "Location: /Index.aspx")
+        endpoint.redirect_immediately_to = req.headers.get('Location')
+
+        # Chase down the ultimate destination, ignoring any certificate warnings.
+        # TODO: try/except block on this request, and have checks expect possible None.
+        ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
+        endpoint.redirect_eventually_to = ultimate_req.url
 
 
 
@@ -171,24 +198,44 @@ def hsts_check(endpoint):
         endpoint.hsts_preload = True
 
 
-def bad_chain(trusted, endpoint):
-    # If the cert is not trusted by mozilla it is a bad chain
-    if "FAILED" in trusted:
-        endpoint.https_bad_chain = True
+# Uses sslyze to figure out the reason the endpoint wouldn't verify.
+def https_check(endpoint):
+    logging.debug("sslyzing %s..." % endpoint.url)
 
+    # remove the https:// from prefix for sslyze
+    hostname = endpoint.url[8:]
+    server_info = ServerConnectivityInfo(hostname=hostname, port=443)
+    server_info.test_connectivity_to_server()
 
-def bad_hostname(hostname_validation, endpoint):
-    # If hostname validation fails
-    if "FAILED" in hostname_validation:
-        endpoint.https_bad_hostname = True
+    cert_plugin = CertificateInfoPlugin()
+    cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
 
+    # A certificate can have multiple issues.
+    for msg in cert_plugin_result.as_text():
 
-def expired_cert(expired_date, endpoint):
-    # Split the time into an list of subtrings
-    temp = expired_date.split()
-    # Convert the date returned by sslyze to be comparable to current time
-    if datetime.datetime(int(temp[5]), strptime(temp[2], '%b').tm_mon, int(temp[3])) < datetime.datetime.now():
-        endpoint.https_expired_cert = True
+        # Check for certifcate expiration.
+        if (
+            (("Mozilla NSS CA Store") in msg) and
+            (("FAILED") in msg) and
+            (("certificate has expired") in msg)
+            ):
+            endpoint.https_expired_cert = True
+
+        # Check for whether there's a valid chain to Mozilla.
+        if (
+            (("Mozilla NSS CA Store") in msg) and
+            (("FAILED") in msg) and
+            (("unable to get local issuer certificate") in msg)
+            ):
+            endpoint.https_bad_chain = True
+
+        # Check for whether the hostname validates.
+        if (
+            (("Hostname Validation") in msg) and
+            (("FAILED") in msg) and
+            (("Certificate does NOT match") in msg)
+            ):
+            endpoint.https_bad_hostname = True
 
 
 ##
