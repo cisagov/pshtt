@@ -13,6 +13,14 @@ class Domain:
         # Filled in after analyzing each endpoint.
         self.canonical = None
 
+    def to_object(self):
+        return {
+            'https': self.https.to_object(),
+            'httpswww': self.httpswww.to_object(),
+            'http': self.http.to_object(),
+            'httpwww': self.httpwww.to_object()
+        }
+
 
 class Endpoint:
 
