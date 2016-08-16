@@ -141,47 +141,9 @@ def basic_check(endpoint):
 
     # The endpoint is live but there is a bad cert
     except requests.exceptions.SSLError:
-        # TODO: this is too broad, won't always be chain error.
         endpoint.https_bad_chain = True
         endpoint.live = True
-        # If there is a bad cert and the domain is not an https endpoint it is a redirect
-        if endpoint.protocol == "http":
-            endpoint.redirect = True
-    # Endpoint is not live
-    # TODO: Too broad, shouldn't swallow all errors.
-    # except:
-    #     logging.debug("Endpoint is not live: %s" % endpoint.url)
-    #     pass
 
-
-def https_check(endpoint):
-    logging.debug("sslyzing %s..." % endpoint.url)
-
-    # Use sslyze to check for HSTS and certificate errors
-    try:
-        # remove the https:// from prefix for sslyze
-        hostname = endpoint.url[8:]
-        server_info = ServerConnectivityInfo(hostname=hostname, port=443)
-        server_info.test_connectivity_to_server()
-
-        # Call plugin directly
-        cert_plugin = CertificateInfoPlugin()
-        cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
-        # Parsing sslyze output for results by line
-        for i in cert_plugin_result.as_text():
-            # Check for cert expiration
-            if "Not After" in i:
-                expired_cert(i, endpoint)
-            # Check for Hostname validation
-            elif "Hostname Validation" in i:
-                bad_hostname(i, endpoint)
-            # Check if Cert is trusted based on CA Stores
-            elif "CA Store" in i:
-                bad_chain(i, endpoint)
-                break
-    except:
-        # No valid hsts
-        pass
 
 
 # Given an endpoint and its detected headers, extract and parse
