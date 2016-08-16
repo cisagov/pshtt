@@ -34,8 +34,8 @@ class Endpoint:
         # all HTTP/HTTPS endpoints have these
         self.headers = {}
         self.status = None
-        self.live = False
-        self.redirect = False
+        self.live = None
+        self.redirect = None
         self.redirect_immediately_to = None
         self.redirect_eventually_to = None
 
