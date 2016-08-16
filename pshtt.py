@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
-import port80
-import port443
 import requests
 import re
 import datetime
 from time import strptime
 import base64
-import wget
 import json
 import csv
 import os
 import utils
 import logging
 import requests_cache
+
+from models import Domain, Endpoint
 
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
@@ -36,76 +35,89 @@ HEADERS = [
     "Strictly Forces HTTPS", "HTTPS Bad Chain", "HTTPS Bad Host Name",
     "Expired Cert", "Weak Signature Chain", "HSTS", "HSTS Header",
     "HSTS Max Age", "HSTS All Subdomains", "HSTS Preload",
-    "HSTS Preload Ready", "HSTS Preloaded",
-    "Broken Root", "Broken WWW"
+    "HSTS Preload Ready", "HSTS Preloaded"
 ]
 
 PRELOAD_CACHE = None
 preload_list = None
 
 
-def inspect(domain):
-    http = port80.port80("http://%s" % domain, domain)
-    httpwww = port80.port80("http://www.%s" % domain, domain)
-    https = port443.port443("https://%s" % domain, domain)
-    httpswww = port443.port443("https://www.%s" % domain, domain)
+def inspect(base_domain):
+    domain = Domain(base_domain)
+    domain.http = Endpoint("http", "root", base_domain)
+    domain.httpwww = Endpoint("http", "www", base_domain)
+    domain.https = Endpoint("https", "root", base_domain)
+    domain.httpswww = Endpoint("https", "www", base_domain)
 
-    basic_check(http)
-    basic_check(httpwww)
-    basic_check(https)
-    basic_check(httpswww)
+    # Analyze HTTP endpoint responsiveness and behavior.
+    basic_check(domain.http)
+    basic_check(domain.httpwww)
+    basic_check(domain.https)
+    basic_check(domain.httpswww)
 
-    if https.live:
-        https_check(https)
-    if httpswww.live:
-        https_check(httpswww)
+    # Analyze HSTS header, if present, on each HTTPS endpoint.
+    hsts_check(domain.https)
+    hsts_check(domain.httpswww)
 
-    return result_for(domain, http, httpwww, https, httpswww)
+    # TODO: move this into basic_check for HTTPS endpoints
+    if domain.https.live:
+        https_check(domain.https)
+    if domain.httpswww.live:
+        https_check(domain.httpswww)
+
+    return result_for(domain)
 
 
-def result_for(domain, http, httpwww, https, httpswww):
+def result_for(domain):
+
+    # print(utils.json_for(domain.to_object()))
+
+    # TODO:
+    # Because it will inform many other judgments, first identify
+    # an acceptable "canonical" URL for the domain.
+    # canonical = canonical_endpoint(http, httpwww, https, httpswww)
+
     # First, the basic fields the CSV will use.
     result = {
-        'Domain': domain,
-        'Live': is_live(http, httpwww, https, httpswww),
-        'Redirect': is_redirect(http, httpwww, https, httpswww),
-        'Valid HTTPS': is_valid_https(http, httpwww, https, httpswww),
-        'Defaults HTTPS': is_defaults_to_https(http, httpwww, https, httpswww),
-        'Downgrades HTTPS': is_downgrades_https(http, httpwww, https, httpswww),
-        'Strictly Forces HTTPS': is_strictly_forces_https(http, httpwww, https, httpswww),
-        'HTTPS Bad Chain': is_bad_chain(http, httpwww, https, httpswww),
-        'HTTPS Bad Host Name': is_bad_hostname(http, httpwww, https, httpswww),
-        'Expired Cert': is_expired_cert(http, httpwww, https, httpswww),
-        'Weak Signature Chain': is_weak_signature(http, httpwww, https, httpswww),
-        'HSTS': is_hsts(http, httpwww, https, httpswww),
-        'HSTS Header': hsts_header(http, httpwww, https, httpswww),
-        'HSTS Max Age': hsts_max_age(http, httpwww, https, httpswww),
-        'HSTS All Subdomains': is_hsts_all_subdomains(http, httpwww, https, httpswww),
-        'HSTS Preload': is_hsts_preload(http, httpwww, https, httpswww),
-        'HSTS Preload Ready': is_hsts_preload_ready(http, httpwww, https, httpswww),
-        'HSTS Preloaded': is_hsts_preloaded(http, httpwww, https, httpswww),
-        'Broken Root': is_broken_root(http, httpwww, https, httpswww),
-        'Broken WWW': is_broken_www(http, httpwww, https, httpswww)
+        'Domain': domain.domain,
+        'Live': is_live(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Redirect': is_redirect(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Valid HTTPS': is_valid_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Defaults HTTPS': is_defaults_to_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Downgrades HTTPS': is_downgrades_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Strictly Forces HTTPS': is_strictly_forces_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HTTPS Bad Chain': is_bad_chain(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HTTPS Bad Host Name': is_bad_hostname(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Expired Cert': is_expired_cert(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HSTS': is_hsts(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HSTS Header': hsts_header(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HSTS Max Age': hsts_max_age(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HSTS All Subdomains': is_hsts_all_subdomains(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HSTS Preload': is_hsts_preload(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HSTS Preload Ready': is_hsts_preload_ready(domain.http, domain.httpwww, domain.https, domain.httpswww),
+
+        # Doesn't use endpoint behavior.
+        'HSTS Preloaded': is_hsts_preloaded(domain)
     }
 
     # But also capture the extended data for those who want it.
     result['endpoints'] = {
-        'http': http.to_object(),
-        'httpwww': httpwww.to_object(),
-        'https': https.to_object(),
-        'httpswww': httpswww.to_object()
+        'http': domain.http.to_object(),
+        'httpwww': domain.httpwww.to_object(),
+        'https': domain.https.to_object(),
+        'httpswww': domain.httpswww.to_object()
     }
 
     return result
 
 
 def basic_check(endpoint):
-    logging.debug("pinging %s..." % endpoint.endpoint)
+    logging.debug("pinging %s..." % endpoint.url)
 
     # First check if the endpoint is live
     try:
         r = requests.get(
-            endpoint.endpoint,
+            endpoint.url,
             data={'User-Agent': USER_AGENT},
             timeout=TIMEOUT
         )
@@ -126,41 +138,31 @@ def basic_check(endpoint):
             endpoint.headers = dict(r.headers)
             endpoint.status = r.status_code
 
+
     # The endpoint is live but there is a bad cert
     except requests.exceptions.SSLError:
         # TODO: this is too broad, won't always be chain error.
         endpoint.https_bad_chain = True
         endpoint.live = True
         # If there is a bad cert and the domain is not an https endpoint it is a redirect
-        if endpoint.endpoint[5:] == "http:":
+        if endpoint.protocol == "http":
             endpoint.redirect = True
     # Endpoint is not live
     # TODO: Too broad, shouldn't swallow all errors.
-    except:
-        logging.debug("Endpoint is not live: %s" % endpoint.endpoint)
-        pass
+    # except:
+    #     logging.debug("Endpoint is not live: %s" % endpoint.url)
+    #     pass
 
 
 def https_check(endpoint):
-    logging.debug("sslyzing %s..." % endpoint.endpoint)
+    logging.debug("sslyzing %s..." % endpoint.url)
 
     # Use sslyze to check for HSTS and certificate errors
     try:
         # remove the https:// from prefix for sslyze
-        hostname = endpoint.endpoint[8:]
+        hostname = endpoint.url[8:]
         server_info = ServerConnectivityInfo(hostname=hostname, port=443)
         server_info.test_connectivity_to_server()
-
-        hsts_plugin = HstsPlugin()
-        hsts_plugin_result = hsts_plugin.process_task(server_info, 'hsts')
-
-        # Sslyze will return OK if HSTS exists
-        if "OK" in hsts_plugin_result.as_text()[1]:
-            endpoint.hsts = True
-            # Send HSTS header for parsing
-            hsts_header_handler(endpoint, hsts_plugin_result.hsts_header)
-        else:
-            endpoint.hsts = False
 
         # Call plugin directly
         cert_plugin = CertificateInfoPlugin()
@@ -176,28 +178,34 @@ def https_check(endpoint):
             # Check if Cert is trusted based on CA Stores
             elif "CA Store" in i:
                 bad_chain(i, endpoint)
-            # Check for s SHA1 Cert in the Cert Chain
-            elif "Weak Signature" in i:
-                weak_signature(i, endpoint)
                 break
     except:
         # No valid hsts
         pass
 
 
-def hsts_header_handler(endpoint, header):
+# Given an endpoint and its detected headers, extract and parse
+# any present HSTS header, decide what HSTS properties are there.
+def hsts_check(endpoint):
+    header = endpoint.headers.get("Strict-Transport-Security")
+
+    if header is None:
+        endpoint.hsts = False
+        return
+
+    endpoint.hsts = True
     endpoint.hsts_header = header
-    temp = endpoint.hsts_header.split()
 
     # Set max age to the string after max-age
+    temp = header.split()
     endpoint.hsts_max_age = temp[0][len("max-age="):]
 
     # check if hsts includes sub domains
-    if 'includesubdomains' in endpoint.hsts_header.lower():
+    if 'includesubdomains' in header.lower():
         endpoint.hsts_all_subdomains = True
 
     # Check is hsts has the preload flag
-    if 'preload' in endpoint.hsts_header.lower():
+    if 'preload' in header.lower():
         endpoint.hsts_preload = True
 
 
@@ -221,15 +229,17 @@ def expired_cert(expired_date, endpoint):
         endpoint.https_expired_cert = True
 
 
-def weak_signature(weak_sig, endpoint):
-    # If a SHA-1 cert exists in the cert chain
-    if "INSECURE" in weak_sig:
-        endpoint.weak_signature = True
-
+##
+# Given behavior for the 4 endpoints, make a best guess
+# as to which is the "canonical" site for the domain.
+##
+def canonical_endpoint(http, httpwww, https, httpswww):
+    pass
 
 ##
 # Judgment calls based on observed endpoint data.
 ##
+
 
 # Domain is live if *any* endpoint is live.
 def is_live(http, httpwww, https, httpswww):
@@ -329,29 +339,14 @@ def is_hsts_preload(http, httpwww, https, httpswww):
     return https.hsts_preload
 
 
-def is_broken_root(http, httpwww, https, httpswww):
-    # Returns if both root domains are unreachable
-    return (not http.live) and (not https.live)
-
-
-def is_broken_www(http, httpwww, https, httpswww):
-    # Returns if both www sub domains are unreachable
-    return (not httpwww.live) and (not httpswww.live)
-
-
 def is_expired_cert(http, httpwww, https, httpswww):
     # Returns if the either https endpoint has an expired cert
     return https.https_expired_cert or httpswww.https_expired_cert
 
 
-def is_weak_signature(http, httpwww, https, httpswww):
-    # Returns true if either https endpoint contains a SHA1 cert in the chain
-    return https.weak_signature or httpswww.weak_signature
-
-
-def is_hsts_preloaded(http, httpwww, https, httpswww):
+def is_hsts_preloaded(domain):
     # Returns if a domain is on the Chromium preload list
-    return https.base_domain in preload_list
+    return domain in preload_list
 
 
 def create_preload_list():
