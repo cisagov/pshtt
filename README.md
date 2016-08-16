@@ -65,7 +65,7 @@ The following values are returned in the results.csv
 * `HSTS Preload` - If "preload" is in the HSTS Header
 * `HSTS Preload Ready` - If the domains has HSTS, HSTS Max Age, HSTS All Subdomains, and HSTS Preload
 * `HSTS Preloaded` - If the domain is on the Google Chrome Preload list
-* `Broken Root` - If the http:// and https:// domains are no live
+* `Broken Root` - If the http:// and https:// domains are not live
 * `Broken WWW` - if the http://www. and https://www. are not live
   
 ## What's this for?
