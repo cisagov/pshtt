@@ -12,12 +12,17 @@ import os
 import utils
 import logging
 
+try:
+    from urllib import parse as urlparse # Python 3
+except ImportError:
+    import urlparse # Python 2
+
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 
 from models import Domain, Endpoint
 
-# We're going to be making requests with certificates disabled.
+# We're going to be making requests with certificate validation disabled.
 requests.packages.urllib3.disable_warnings()
 
 # whether/where to cache, set via --cache
@@ -97,12 +102,7 @@ def result_for(domain):
     }
 
     # But also capture the extended data for those who want it.
-    result['endpoints'] = {
-        'http': domain.http.to_object(),
-        'httpwww': domain.httpwww.to_object(),
-        'https': domain.https.to_object(),
-        'httpswww': domain.httpswww.to_object()
-    }
+    result['endpoints'] = domain.to_object()
 
     return result
 
@@ -134,8 +134,11 @@ def basic_check(endpoint):
     #
     # * Validate certificates. (Will figure out error if necessary.)
     try:
+
         req = ping(endpoint.url)
+
     except requests.exceptions.SSLError:
+        # Retry with certificate validation disabled.
         try:
             req = ping(endpoint.url, verify=False)
         except requests.exceptions.SSLError:
@@ -163,12 +166,23 @@ def basic_check(endpoint):
 
     if endpoint.redirect:
 
-        # TODO: handle relative redirects (e.g. "Location: /Index.aspx")
-        endpoint.redirect_immediately_to = req.headers.get('Location')
+        location_header = req.headers.get('Location')
+        # Absolute redirects (e.g. "https://example.com/Index.aspx")
+        if location_header.startswith("http:") or location_header.startswith("https:"):
+            endpoint.redirect_immediately_to = location_header
+
+        # Relative redirects (e.g. "Location: /Index.aspx").
+        # Construct absolute URI, relative to original request.
+        else:
+            endpoint.redirect_immediately_to = urlparse.urljoin(endpoint.url, location_header)
+
 
         # Chase down the ultimate destination, ignoring any certificate warnings.
         # TODO: try/except block on this request, and have checks expect possible None.
         ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
+
+        # For ultimate destination, use the URL we arrived at,
+        # not Location header. Auto-resolves relative redirects.
         endpoint.redirect_eventually_to = ultimate_req.url
 
 
@@ -358,6 +372,12 @@ def is_hsts_preloaded(domain):
     return domain in preload_list
 
 
+# For "x.y.domain.gov", return "domain.gov".
+# TODO: use Public Suffix list to do this properly.
+def parent_domain_for(hostname):
+    return str.join(".", hostname.split(".")[-2:])
+
+
 def create_preload_list():
     preload_json = None
 
@@ -427,9 +447,16 @@ def inspect_domains(domains, options):
     if options.get('preload_cache'):
         PRELOAD_CACHE = options['preload_cache']
     if options.get('cache'):
-        cache_dir = ".cache"
-        utils.mkdir_p(cache_dir)
-        requests_cache.install_cache("%s/cache" % cache_dir)
+        # TODO: requests-cache has a blocking bug for us, now
+        # that we're tweaking allow_redirects and verify parameters.
+        # Caching disabled until bug is fixed, or routed around.
+        #
+        # https://github.com/reclosedev/requests-cache/issues/70
+        #
+        # cache_dir = ".cache"
+        # utils.mkdir_p(cache_dir)
+        # requests_cache.install_cache("%s/cache" % cache_dir)
+        logging.warn("WARNING: Caching disabled.")
 
     # Download HSTS preload list, caches locally.
     global preload_list
