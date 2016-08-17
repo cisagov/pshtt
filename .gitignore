@@ -1,6 +1,7 @@
 *.csv
 todo.txt
 *.json
+*.sqlite
 
 .cache/
 

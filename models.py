@@ -34,10 +34,19 @@ class Endpoint:
         # all HTTP/HTTPS endpoints have these
         self.headers = {}
         self.status = None
-        self.live = False
-        self.redirect = False
+        self.live = None
+        self.redirect = None
+
+        # If an endpoint redirects, characterize the redirect behavior
         self.redirect_immediately_to = None
-        self.redirect_to = None
+        self.redirect_immediately_to_www = None
+        self.redirect_immediately_to_https = None
+        self.redirect_immediately_to_external = None
+        self.redirect_immediately_to_subdomain = None
+        self.redirect_eventually_to = None
+        self.redirect_eventually_to_https = None
+        self.redirect_eventually_to_external = None
+        self.redirect_eventually_to_subdomain = None
 
         # Only HTTPS endpoints have these.
         # Initialize all of them to None, so that it's
@@ -68,8 +77,15 @@ class Endpoint:
             'status': self.status,
             'live': self.live,
             'redirect': self.redirect,
-            'redirect_to': self.redirect_to,
-            'redirect_immediately_to': self.redirect_immediately_to
+            'redirect_eventually_to': self.redirect_eventually_to,
+            'redirect_immediately_to': self.redirect_immediately_to,
+            'redirect_immediately_to_www': self.redirect_immediately_to_www,
+            'redirect_immediately_to_https': self.redirect_immediately_to_https,
+            'redirect_immediately_to_external': self.redirect_immediately_to_external,
+            'redirect_immediately_to_subdomain': self.redirect_immediately_to_subdomain,
+            'redirect_eventually_to_https': self.redirect_eventually_to_https,
+            'redirect_eventually_to_external': self.redirect_eventually_to_external,
+            'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain
         }
 
         if self.protocol == "https":
