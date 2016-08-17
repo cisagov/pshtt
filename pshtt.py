@@ -75,14 +75,15 @@ def result_for(domain):
 
     # Because it will inform many other judgments, first identify
     # an acceptable "canonical" URL for the domain.
-    canonical = canonical_endpoint(domain.http, domain.httpwww, domain.https, domain.httpswww)
+    domain.canonical = canonical_endpoint(domain.http, domain.httpwww, domain.https, domain.httpswww)
 
     # First, the basic fields the CSV will use.
     result = {
         'Domain': domain.domain,
-        'Canonical URL': canonical.url,
-        'Live': is_live(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Redirect': is_redirect(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Canonical URL': domain.canonical.url,
+        'Live': is_live(domain),
+        'Redirect': is_redirect(domain),
+
         'Valid HTTPS': is_valid_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Defaults HTTPS': is_defaults_to_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Downgrades HTTPS': is_downgrades_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
@@ -403,16 +404,41 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 ##
 
 
-# Domain is live if *any* endpoint is live.
-def is_live(http, httpwww, https, httpswww):
+# Domain is "live" if *any* endpoint is live.
+def is_live(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
     return http.live or httpwww.live or https.live or httpswww.live
 
 
-# TODO: Loosen this definition to check if:
-# at least one endpoint is a redirect, and
-# all endpoints are either redirects or down.
-def is_redirect(http, httpwww, https, httpswww):
-    return http.redirect or httpwww.redirect or https.redirect or httpswww.redirect
+# Domain is "a redirect domain" if at least one endpoint is
+# a redirect, and all endpoints are either redirects or down.
+def is_redirect(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    return is_live(domain) and (
+        (
+            https.redirect_eventually_to_external or
+            (not https.live) or
+            https.https_bad_hostname or
+            https.status >= 400
+        ) and
+        (
+            httpswww.redirect_eventually_to_external or
+            (not httpswww.live) or
+            httpswww.https_bad_hostname or
+            httpswww.status >= 400
+        ) and
+        (
+            httpwww.redirect_eventually_to_external or
+            (not httpwww.live) or
+            httpwww.status >= 400
+        ) and
+        (
+            http.redirect_eventually_to_external or
+            (not http.live) or
+            http.status >= 400
+        ))
 
 
 def is_valid_https(http, httpwww, https, httpswww):
