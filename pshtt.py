@@ -37,7 +37,7 @@ TIMEOUT = 1
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
 HEADERS = [
-    "Domain", "Live", "Redirect",
+    "Domain", "Canonical URL", "Live", "Redirect",
     "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS",
     "Strictly Forces HTTPS", "HTTPS Bad Chain", "HTTPS Bad Host Name",
     "Expired Cert", "HSTS", "HSTS Header",
@@ -73,14 +73,14 @@ def result_for(domain):
 
     # print(utils.json_for(domain.to_object()))
 
-    # TODO:
     # Because it will inform many other judgments, first identify
     # an acceptable "canonical" URL for the domain.
-    # canonical = canonical_endpoint(http, httpwww, https, httpswww)
+    canonical = canonical_endpoint(domain.http, domain.httpwww, domain.https, domain.httpswww)
 
     # First, the basic fields the CSV will use.
     result = {
         'Domain': domain.domain,
+        'Canonical URL': canonical.url,
         'Live': is_live(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Redirect': is_redirect(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Valid HTTPS': is_valid_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
@@ -293,7 +293,110 @@ def https_check(endpoint):
 # as to which is the "canonical" site for the domain.
 ##
 def canonical_endpoint(http, httpwww, https, httpswww):
-    pass
+
+    # A domain is "canonically" at www if:
+    #  * at least one of its www endpoints responds
+    #  * both root endpoints are either down or redirect *somewhere*
+    #  * either both root endpoints are down, *or* at least one
+    #    root endpoint redirect should immediately go to
+    #    an *internal* www endpoint
+    # This is meant to affirm situations like:
+    #   http:// -> https:// -> https://www
+    #   https:// -> http:// -> https://www
+    # and meant to avoid affirming situations like:
+    #   http:// -> http://non-www,
+    #   http://www -> http://non-www
+    # or like:
+    #   https:// -> 200, http:// -> http://www
+
+    is_www = (
+      (
+        httpswww.live or httpwww.live
+      ) and (
+        (
+          https.redirect or
+          (not https.live) or
+          https.https_bad_hostname or
+          (not str(https.status).startswith("2"))
+        ) and (
+          http.redirect or
+          (not http.live) or
+          (not str(http.status).startswith("2"))
+        )
+      ) and (
+        (
+          (
+            (not https.live) or
+            https.https_bad_hostname or
+            (not str(https.status).startswith("2"))
+          ) and
+          (
+            (not http.live) or
+            (not str(http.status).startswith("2"))
+          )
+        ) or
+        (
+          https.redirect_immediately_to_www and
+          (not https.redirect_immediately_to_external)
+        ) or
+        (
+          http.redirect_immediately_to_www and
+          (not http.redirect_immediately_to_external)
+        )
+      )
+    )
+
+    # A domain is "canonically" at https if:
+    #  * at least one of its https endpoints is live and
+    #    doesn't have an invalid hostname
+    #  * both http endpoints are either down or redirect *somewhere*
+    #  * at least one http endpoint redirects immediately to
+    #    an *internal* https endpoint
+    # This is meant to affirm situations like:
+    #   http:// -> http://www -> https://
+    #   https:// -> http:// -> https://www
+    # and meant to avoid affirming situations like:
+    #   http:// -> http://non-www
+    #   http://www -> http://non-www
+    # or:
+    #   http:// -> 200, http://www -> https://www
+    #
+    # It allows a site to be canonically HTTPS if the cert has
+    # a valid hostname but invalid chain issues.
+
+    is_https = (
+      (
+        (https.live and (not https.https_bad_hostname)) or
+        (httpswww.live and (not https.https_bad_hostname))
+      ) and (
+        (
+          http.redirect or
+          (not http.live) or
+          (not str(http.status).startswith("2"))
+        ) and (
+          httpwww.redirect or
+          (not httpwww.live) or
+          (not str(httpwww.status).startswith("2"))
+        )
+      ) and (
+        (
+          http.redirect_immediately_to_https and
+          (not http.redirect_immediately_to_external)
+        ) or (
+          httpwww.redirect_immediately_to_https and
+          (not httpwww.redirect_immediately_to_external)
+        )
+      )
+    )
+
+    if is_www and is_https:
+        return httpswww
+    elif is_www and (not is_https):
+        return httpwww
+    elif (not is_www) and is_https:
+        return https
+    elif (not is_www) and (not is_https):
+        return http
 
 ##
 # Judgment calls based on observed endpoint data.
