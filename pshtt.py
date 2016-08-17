@@ -40,7 +40,7 @@ HEADERS = [
     "Domain", "Live", "Redirect",
     "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS",
     "Strictly Forces HTTPS", "HTTPS Bad Chain", "HTTPS Bad Host Name",
-    "Expired Cert", "Weak Signature Chain", "HSTS", "HSTS Header",
+    "Expired Cert", "HSTS", "HSTS Header",
     "HSTS Max Age", "HSTS All Subdomains", "HSTS Preload",
     "HSTS Preload Ready", "HSTS Preloaded"
 ]
@@ -169,13 +169,12 @@ def basic_check(endpoint):
         location_header = req.headers.get('Location')
         # Absolute redirects (e.g. "https://example.com/Index.aspx")
         if location_header.startswith("http:") or location_header.startswith("https:"):
-            endpoint.redirect_immediately_to = location_header
+            immediate = location_header
 
         # Relative redirects (e.g. "Location: /Index.aspx").
         # Construct absolute URI, relative to original request.
         else:
-            endpoint.redirect_immediately_to = urlparse.urljoin(endpoint.url, location_header)
-
+            immediate = urlparse.urljoin(endpoint.url, location_header)
 
         # Chase down the ultimate destination, ignoring any certificate warnings.
         # TODO: try/except block on this request, and have checks expect possible None.
@@ -183,8 +182,45 @@ def basic_check(endpoint):
 
         # For ultimate destination, use the URL we arrived at,
         # not Location header. Auto-resolves relative redirects.
-        endpoint.redirect_eventually_to = ultimate_req.url
+        eventual = ultimate_req.url
 
+        # Now establish whether the redirects were:
+        # * internal (same exact hostname),
+        # * within the zone (any subdomain within the parent domain)
+        # * external (on some other parent domain)
+
+        # The hostname of the endpoint (e.g. "www.agency.gov")
+        subdomain_original = urlparse.urlparse(endpoint.url).hostname
+        # The parent domain of the endpoint (e.g. "agency.gov")
+        base_original = parent_domain_for(subdomain_original)
+
+        # The hostname of the immediate redirect.
+        # The parent domain of the immediate redirect.
+        subdomain_immediate = urlparse.urlparse(immediate).hostname
+        base_immediate = parent_domain_for(subdomain_immediate)
+
+        # The hostname of the eventual destination.
+        # The parent domain of the eventual destination.
+        subdomain_eventual = urlparse.urlparse(eventual).hostname
+        base_eventual = parent_domain_for(subdomain_eventual)
+
+
+        endpoint.redirect_immediately_to = immediate
+        endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
+        endpoint.redirect_immediately_to_https = immediate.startswith("https://")
+        endpoint.redirect_immediately_to_external = (base_original != base_immediate)
+        endpoint.redirect_immediately_to_subdomain = (
+            (base_original == base_immediate) and
+            (subdomain_original != subdomain_immediate)
+        )
+
+        endpoint.redirect_eventually_to = eventual
+        endpoint.redirect_eventually_to_https = eventual.startswith("https://")
+        endpoint.redirect_eventually_to_external = (base_original != base_eventual)
+        endpoint.redirect_eventually_to_subdomain = (
+            (base_original == base_eventual) and
+            (subdomain_original != subdomain_eventual)
+        )
 
 
 # Given an endpoint and its detected headers, extract and parse
