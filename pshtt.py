@@ -254,8 +254,8 @@ def hsts_check(endpoint):
 
     # Set max age to the string after max-age
     # TODO: make this more resilient to pathological HSTS headers.
-    temp = header.split()
-    endpoint.hsts_max_age = int(re.sub(";", "", temp[0][len("max-age="):]))
+    temp = re.split(';\s?', header)
+    endpoint.hsts_max_age = int(temp[0][len("max-age="):])
 
     # check if hsts includes sub domains
     if 'includesubdomains' in header.lower():
