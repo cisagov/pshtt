@@ -88,9 +88,10 @@ def result_for(domain):
         'Downgrades HTTPS': is_downgrades_https(domain),
         'Strictly Forces HTTPS': is_strictly_forces_https(domain),
 
-        'HTTPS Bad Chain': is_bad_chain(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HTTPS Bad Host Name': is_bad_hostname(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Expired Cert': is_expired_cert(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'HTTPS Bad Chain': is_bad_chain(domain),
+        'HTTPS Bad Host Name': is_bad_hostname(domain),
+        'Expired Cert': is_expired_cert(domain),
+
         'HSTS': is_hsts(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HSTS Header': hsts_header(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HSTS Max Age': hsts_max_age(domain.http, domain.httpwww, domain.https, domain.httpswww),
@@ -520,13 +521,39 @@ def is_strictly_forces_https(domain):
 
 
 # Domain has a bad chain if either https endpoints contain a bad chain
-def is_bad_chain(http, httpwww, https, httpswww):
-    return https.https_bad_chain or httpswww.https_bad_chain
+def is_bad_chain(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_bad_chain
 
 
 # Domain has a bad hostname if either https endpoint fails hostname validation
-def is_bad_hostname(http, httpwww, https, httpswww):
-    return https.https_bad_hostname or httpswww.https_bad_hostname
+def is_bad_hostname(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_bad_hostname
+
+
+# Returns if the either https endpoint has an expired cert
+def is_expired_cert(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_expired_cert
 
 
 # Domain has hsts ONLY if the https (and not the www subdomain) has strict transport in the header
@@ -561,11 +588,6 @@ def is_hsts_preload_ready(http, httpwww, https, httpswww):
 def is_hsts_preload(http, httpwww, https, httpswww):
     # Returns if https endpoint has preload in hsts header
     return https.hsts_preload
-
-
-def is_expired_cert(http, httpwww, https, httpswww):
-    # Returns if the either https endpoint has an expired cert
-    return https.https_expired_cert or httpswww.https_expired_cert
 
 
 def is_hsts_preloaded(domain):
