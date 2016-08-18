@@ -41,10 +41,12 @@ class Endpoint:
         self.redirect_immediately_to = None
         self.redirect_immediately_to_www = None
         self.redirect_immediately_to_https = None
+        self.redirect_immediately_to_http = None
         self.redirect_immediately_to_external = None
         self.redirect_immediately_to_subdomain = None
         self.redirect_eventually_to = None
         self.redirect_eventually_to_https = None
+        self.redirect_eventually_to_http = None
         self.redirect_eventually_to_external = None
         self.redirect_eventually_to_subdomain = None
 
@@ -82,9 +84,11 @@ class Endpoint:
             'redirect_immediately_to': self.redirect_immediately_to,
             'redirect_immediately_to_www': self.redirect_immediately_to_www,
             'redirect_immediately_to_https': self.redirect_immediately_to_https,
+            'redirect_immediately_to_http': self.redirect_immediately_to_http,
             'redirect_immediately_to_external': self.redirect_immediately_to_external,
             'redirect_immediately_to_subdomain': self.redirect_immediately_to_subdomain,
             'redirect_eventually_to_https': self.redirect_eventually_to_https,
+            'redirect_eventually_to_http': self.redirect_eventually_to_http,
             'redirect_eventually_to_external': self.redirect_eventually_to_external,
             'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain
         }

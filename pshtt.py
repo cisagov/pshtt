@@ -84,9 +84,9 @@ def result_for(domain):
         'Live': is_live(domain),
         'Redirect': is_redirect(domain),
         'Valid HTTPS': is_valid_https(domain),
+        'Defaults HTTPS': is_defaults_to_https(domain),
+        'Downgrades HTTPS': is_downgrades_https(domain),
 
-        'Defaults HTTPS': is_defaults_to_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Downgrades HTTPS': is_downgrades_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Strictly Forces HTTPS': is_strictly_forces_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HTTPS Bad Chain': is_bad_chain(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HTTPS Bad Host Name': is_bad_hostname(domain.http, domain.httpwww, domain.https, domain.httpswww),
@@ -216,6 +216,7 @@ def basic_check(endpoint):
         endpoint.redirect_immediately_to = immediate
         endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
         endpoint.redirect_immediately_to_https = immediate.startswith("https://")
+        endpoint.redirect_immediately_to_http = immediate.startswith("http://")
         endpoint.redirect_immediately_to_external = (base_original != base_immediate)
         endpoint.redirect_immediately_to_subdomain = (
             (base_original == base_immediate) and
@@ -224,6 +225,7 @@ def basic_check(endpoint):
 
         endpoint.redirect_eventually_to = eventual
         endpoint.redirect_eventually_to_https = eventual.startswith("https://")
+        endpoint.redirect_eventually_to_http = eventual.startswith("http://")
         endpoint.redirect_eventually_to_external = (base_original != base_eventual)
         endpoint.redirect_eventually_to_subdomain = (
             (base_original == base_eventual) and
@@ -299,6 +301,8 @@ def https_check(endpoint):
 ##
 # Given behavior for the 4 endpoints, make a best guess
 # as to which is the "canonical" site for the domain.
+#
+# Most of the domain-level decisions rely on this guess in some way.
 ##
 def canonical_endpoint(http, httpwww, https, httpswww):
 
@@ -451,7 +455,7 @@ def is_redirect(domain):
         ))
 
 
-# A site has "valid HTTPS" if it responds on port 443 at its canonical
+# A domain has "valid HTTPS" if it responds on port 443 at its canonical
 # hostname with an unexpired valid certificate for the hostname.
 def is_valid_https(domain):
     canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
@@ -465,17 +469,32 @@ def is_valid_https(domain):
     return evaluate.live and evaluate.https_valid
 
 
-# Domain defaults to https if http endpoint forwards to https
-def is_defaults_to_https(http, httpwww, https, httpswww):
-    if http.redirect or httpwww.redirect:
-        return (http.redirect and (http.redirect_eventually_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https"))
+# A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
+def is_defaults_to_https(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    return (canonical.protocol == "https")
+
+
+# Domain downgrades if HTTPS is supported in some way, but
+# its canonical HTTPS endpoint immediately redirects to HTTP.
+def is_downgrades_https(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    # The domain "supports" HTTPS if any HTTPS endpoint responds with
+    # a certificate valid for its hostname.
+    supports_https = (
+        https.live and (not https.https_bad_hostname)
+      ) or (
+        httpswww.live and (not httpswww.https_bad_hostname)
+      )
+
+    if canonical.host == "www":
+        canonical_https = httpswww
     else:
-        return False
+        canonical_https = https
 
-
-# Domain downgrades if https endpoint redirects to http
-def is_downgrades_https(http, httpwww, https, httpswww):
-    return (https.redirect and (https.redirect_eventually_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_eventually_to[:5] == "http:"))
+    return (supports_https and canonical_https.redirect_immediately_to_http)
 
 
 # A domain strictly forces https if https is live and http is not,
