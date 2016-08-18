@@ -153,13 +153,17 @@ def basic_check(endpoint):
         # Figure out the error(s).
         https_check(endpoint)
 
-    except requests.exceptions.ReadTimeout:
-        endpoint.live = False
-        return
-
     # This needs to go last, as a parent error class.
     except requests.exceptions.ConnectionError:
         endpoint.live = False
+        return
+
+    # And this is the parent of ConnectionError and other things.
+    # For example, "too many redirects".
+    # See https://github.com/kennethreitz/requests/blob/master/requests/exceptions.py
+    except requests.exceptions.RequestException:
+        endpoint.live = False
+        logging.warn("Unexpected requests exception.")
         return
 
 
@@ -186,7 +190,7 @@ def basic_check(endpoint):
         ultimate_req = None
         try:
             ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             # Swallow connection errors, but we won't be saving redirect info.
             pass
 
