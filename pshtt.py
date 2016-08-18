@@ -148,15 +148,14 @@ def basic_check(endpoint):
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
             return
+        except requests.exceptions.RequestException:
+            endpoint.live = False
+            logging.warn("Unexpected requests exception during retry.")
+            return
 
         # If it was a certificate error of any kind, it's live.
         # Figure out the error(s).
         https_check(endpoint)
-
-    # This needs to go last, as a parent error class.
-    except requests.exceptions.ConnectionError:
-        endpoint.live = False
-        return
 
     # And this is the parent of ConnectionError and other things.
     # For example, "too many redirects".
