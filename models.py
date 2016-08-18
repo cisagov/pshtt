@@ -27,7 +27,7 @@ class Endpoint:
     def __init__(self, protocol, host, base_domain):
         # Basic endpoint description
         self.protocol = protocol
-        self.host = host
+        self.host = host # "www" or "root"
         self.base_domain = base_domain
         self.url = self.url_for(protocol, host, base_domain)
 
@@ -51,6 +51,7 @@ class Endpoint:
         # Only HTTPS endpoints have these.
         # Initialize all of them to None, so that it's
         # discernible if they don't get explicitly set.
+        self.https_valid = None
         self.https_bad_chain = None
         self.https_bad_hostname = None
         self.https_expired_cert = None
@@ -89,6 +90,7 @@ class Endpoint:
         }
 
         if self.protocol == "https":
+            obj['https_valid'] = self.https_valid
             obj['https_bad_chain'] = self.https_bad_chain
             obj['https_bad_hostname'] = self.https_bad_hostname
             obj['https_expired_cert'] = self.https_expired_cert

@@ -83,8 +83,8 @@ def result_for(domain):
         'Canonical URL': domain.canonical.url,
         'Live': is_live(domain),
         'Redirect': is_redirect(domain),
+        'Valid HTTPS': is_valid_https(domain),
 
-        'Valid HTTPS': is_valid_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Defaults HTTPS': is_defaults_to_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Downgrades HTTPS': is_downgrades_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Strictly Forces HTTPS': is_strictly_forces_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
@@ -138,6 +138,10 @@ def basic_check(endpoint):
 
         req = ping(endpoint.url)
 
+        endpoint.live = True
+        if endpoint.protocol == "https":
+            endpoint.https_valid = True
+
     except requests.exceptions.SSLError:
         # Retry with certificate validation disabled.
         try:
@@ -151,6 +155,10 @@ def basic_check(endpoint):
         # Figure out the error(s).
         https_check(endpoint)
 
+    except requests.exceptions.ReadTimeout:
+        endpoint.live = False
+        return
+
     # This needs to go last, as a parent error class.
     except requests.exceptions.ConnectionError:
         endpoint.live = False
@@ -158,7 +166,6 @@ def basic_check(endpoint):
 
 
     # Endpoint is live, analyze the response.
-    endpoint.live = True
     endpoint.headers = dict(req.headers)
 
     endpoint.status = req.status_code
@@ -416,6 +423,9 @@ def is_live(domain):
 def is_redirect(domain):
     canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
 
+    # TODO: make sub-function of the conditional below.
+    # def is_redirect_or_down(endpoint):
+
     return is_live(domain) and (
         (
             https.redirect_eventually_to_external or
@@ -441,18 +451,18 @@ def is_redirect(domain):
         ))
 
 
-def is_valid_https(http, httpwww, https, httpswww):
-    # One of the HTTPS endpoints has to be up,
-    # and has to have a cert for a valid hostname,
-    # and has to not downgrade the user to HTTP (either doesn't redirect, or if it does redirect it stays at HTTPS).
-    # TODO: only evaluate canonical endpoint.
+# A site has "valid HTTPS" if it responds on port 443 at its canonical
+# hostname with an unexpired valid certificate for the hostname.
+def is_valid_https(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
 
-    def supports_https(endpoint):
-        return endpoint.live and \
-            (not endpoint.https_bad_hostname) and \
-            (not (endpoint.redirect and (endpoint.redirect_immediately_to[:5] != "https")))
+    # Evaluate the HTTPS version of the canonical hostname
+    if canonical.host == "root":
+        evaluate = https
+    else:
+        evaluate = httpswww
 
-    return supports_https(https) or supports_https(httpswww)
+    return evaluate.live and evaluate.https_valid
 
 
 # Domain defaults to https if http endpoint forwards to https
