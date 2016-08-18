@@ -258,7 +258,6 @@ def hsts_check(endpoint):
     first_pass = re.split(',\s?', header)[0]
 
     temp = re.split(';\s?', first_pass)
-    print(endpoint.headers)
 
     if "max-age" in header.lower():
         endpoint.hsts_max_age = int(temp[0][len("max-age="):])
