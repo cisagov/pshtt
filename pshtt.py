@@ -261,7 +261,9 @@ def hsts_check(endpoint):
 
     temp = re.split(';\s?', first_pass)
     print(endpoint.headers)
-    endpoint.hsts_max_age = int(temp[0][len("max-age="):])
+
+    if "max-age" in header.lower():
+        endpoint.hsts_max_age = int(temp[0][len("max-age="):])
 
     # check if hsts includes sub domains
     if 'includesubdomains' in header.lower():
