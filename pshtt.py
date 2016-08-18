@@ -38,10 +38,9 @@ TIMEOUT = 1
 # column headers in CSV.
 HEADERS = [
     "Domain", "Canonical URL", "Live", "Redirect",
-    "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS",
-    "Strictly Forces HTTPS", "HTTPS Bad Chain", "HTTPS Bad Host Name",
-    "Expired Cert", "HSTS", "HSTS Header",
-    "HSTS Max Age", "HSTS All Subdomains", "HSTS Preload",
+    "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
+    "HTTPS Bad Chain", "HTTPS Bad Host Name", "HTTPS Expired Cert",
+    "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preloaded"
 ]
 
@@ -83,6 +82,7 @@ def result_for(domain):
         'Canonical URL': domain.canonical.url,
         'Live': is_live(domain),
         'Redirect': is_redirect(domain),
+
         'Valid HTTPS': is_valid_https(domain),
         'Defaults HTTPS': is_defaults_to_https(domain),
         'Downgrades HTTPS': is_downgrades_https(domain),
@@ -90,16 +90,13 @@ def result_for(domain):
 
         'HTTPS Bad Chain': is_bad_chain(domain),
         'HTTPS Bad Host Name': is_bad_hostname(domain),
-        'Expired Cert': is_expired_cert(domain),
+        'HTTPS Expired Cert': is_expired_cert(domain),
 
-        'HSTS': is_hsts(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Header': hsts_header(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Max Age': hsts_max_age(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS All Subdomains': is_hsts_all_subdomains(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Preload': is_hsts_preload(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Preload Ready': is_hsts_preload_ready(domain.http, domain.httpwww, domain.https, domain.httpswww),
-
-        # Doesn't use endpoint behavior.
+        'HSTS': is_hsts(domain),
+        'HSTS Header': hsts_header(domain),
+        'HSTS Max Age': hsts_max_age(domain),
+        'HSTS Entire Domain': is_hsts_entire_domain(domain),
+        'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain)
     }
 
@@ -247,8 +244,9 @@ def hsts_check(endpoint):
     endpoint.hsts_header = header
 
     # Set max age to the string after max-age
+    # TODO: make this more resilient to pathological HSTS headers.
     temp = header.split()
-    endpoint.hsts_max_age = temp[0][len("max-age="):]
+    endpoint.hsts_max_age = int(re.sub(";", "", temp[0][len("max-age="):]))
 
     # check if hsts includes sub domains
     if 'includesubdomains' in header.lower():
@@ -556,43 +554,62 @@ def is_expired_cert(domain):
     return canonical_https.https_expired_cert
 
 
-# Domain has hsts ONLY if the https (and not the www subdomain) has strict transport in the header
-def is_hsts(http, httpwww, https, httpswww):
-    return https.hsts
+# Domain has HSTS if its canonical HTTPS endpoint has HSTS.
+def is_hsts(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
 
-
-def hsts_header(http, httpwww, https, httpswww):
-    if https.hsts:
-        return https.hsts_header
+    if canonical.host == "www":
+        canonical_https = httpswww
     else:
-        return None
+        canonical_https = https
+
+    return canonical_https.hsts
 
 
-def hsts_max_age(http, httpwww, https, httpswww):
-    if https.hsts:
-        return https.hsts_max_age
+# Domain's HSTS header is its canonical endpoint's header.
+def hsts_header(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
     else:
-        return None
+        canonical_https = https
+
+    return canonical_https.hsts_header
 
 
-def is_hsts_all_subdomains(http, httpwww, https, httpswww):
-    # Returns if the https endpoint has "includesubdomains"
+# Domain's HSTS max-age is its canonical endpoint's max-age.
+def hsts_max_age(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.hsts_max_age
+
+
+# Whether a domain's ROOT endpoint includes all subdomains.
+def is_hsts_entire_domain(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
     return https.hsts_all_subdomains
 
 
-def is_hsts_preload_ready(http, httpwww, https, httpswww):
-    # returns if the hsts header exists, has a max age, includes subdomains, and includes preload
-    return (https.hsts and https.hsts_max_age != "" and https.hsts_all_subdomains and https.hsts_preload)
+# Whether a domain's ROOT endpoint is preload-ready.
+def is_hsts_preload_ready(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    eighteen_weeks = (https.hsts_max_age and (https.hsts_max_age >= 10886400))
+    preload_ready = (eighteen_weeks and https.hsts_all_subdomains and https.hsts_preload)
+
+    return preload_ready
 
 
-def is_hsts_preload(http, httpwww, https, httpswww):
-    # Returns if https endpoint has preload in hsts header
-    return https.hsts_preload
-
-
+# Whether a domain is contained in Chrome's HSTS preload list.
 def is_hsts_preloaded(domain):
-    # Returns if a domain is on the Chromium preload list
-    return domain in preload_list
+    return domain.domain in preload_list
 
 
 # For "x.y.domain.gov", return "domain.gov".
