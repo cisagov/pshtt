@@ -37,7 +37,7 @@ TIMEOUT = 1
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
 HEADERS = [
-    "Domain", "Canonical URL", "Live", "Redirect",
+    "Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
     "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Host Name", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
@@ -82,6 +82,7 @@ def result_for(domain):
         'Canonical URL': domain.canonical.url,
         'Live': is_live(domain),
         'Redirect': is_redirect(domain),
+        'Redirect To': redirects_to(domain),
 
         'Valid HTTPS': is_valid_https(domain),
         'Defaults HTTPS': is_defaults_to_https(domain),
@@ -479,6 +480,16 @@ def is_redirect(domain):
             (not http.live) or
             http.status >= 400
         ))
+
+
+# If a domain is a "redirect domain", where does it redirect to?
+def redirects_to(domain):
+    canonical = domain.canonical
+
+    if is_redirect(domain):
+        return canonical.redirect_eventually_to
+    else:
+        return None
 
 
 # A domain has "valid HTTPS" if it responds on port 443 at its canonical
