@@ -1,8 +1,8 @@
 ## Pushing HTTPS
 
-`pshtt` (_"pushed"_) is a tool to test domains for HTTPS best practices. _It's also the sound you make when you're feeling mildly astonished._
+`pshtt` (_"pushed"_) is a tool to test domains for HTTPS best practices. It's also the sound you make when you feel mildly astonished.
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government— to adopt HTTPS across their enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016.
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us:— to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Hitting that target will be an astonishing achievement.
 
 ### Getting Started
 
@@ -27,8 +27,8 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -o --output=OUTFILE         Name output file. (Defaults to "results".)
   -j --json                   Get results in JSON. (Defaults to CSV.)
   -d --debug                  Print debug output.
-  -u --user-agent=AGENT       Override user agent
-  -t --timeout=TIMEOUT        Override timeout (in seconds)
+  -u --user-agent=AGENT       Override user agent.
+  -t --timeout=TIMEOUT        Override timeout (in seconds).
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
 ```
 
@@ -50,7 +50,8 @@ A domain is checked on its four endpoints:
 * `https://www`
 
 The following values are returned in `results.csv`:
-
+!* `Domain` - 
+!* `Canonical URL` - 
 * `Live` - If any of the endpoint respond it is True
 * `Redirect` - If any of the endpoints redirect it is True
 * `Valid HTTPS` - True if a either HTTPS endpoint is live or HTTP endpoints forward to HTTPS
@@ -60,16 +61,13 @@ The following values are returned in `results.csv`:
 * `HTTPS Bad Chain` - If the cert is not trusted based on CA stores
 * `HTTPS Bad Host Name` - If the cert fails hostname validation
 * `Expired Cert` - If the cert has expired
-* `Weak Signature Chain` - A SHA-1 cert exists in the cert chain
 * `HSTS` - If a Strict Transport Security header is found in the HTTPS endpoint (not the https://www subdomain)
 * `HSTS Header` - The contents of the HSTS Header
 * `HSTS Max Age` - The Max Age of the HSTS Header
-* `HSTS All Subdomain` -If "include sub subdomains" is in the HSTS header
+* `HSTS All Subdomains` -If "include sub subdomains" is in the HSTS header
 * `HSTS Preload` - If "preload" is in the HSTS Header
 * `HSTS Preload Ready` - If the domains has HSTS, HSTS Max Age, HSTS All Subdomains, and HSTS Preload
 * `HSTS Preloaded` - If the domain is on the Google Chrome Preload list
-* `Broken Root` - If the http:// and https:// domains are not live
-* `Broken WWW` - if the http://www. and https://www. are not live
 
 ## Acknowledgements
 
