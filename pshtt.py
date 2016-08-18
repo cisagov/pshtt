@@ -293,8 +293,14 @@ def https_check(endpoint):
         logging.warn("Error in sslyze cert info plugin")
         return
 
+    try:
+        cert_response = cert_plugin_result.as_text()
+    except TypeError:
+        logging.warn("sslyze exception parsing issuer, see https://github.com/nabla-c0d3/sslyze/issues/167")
+        return
+
     # A certificate can have multiple issues.
-    for msg in cert_plugin_result.as_text():
+    for msg in cert_response:
 
         # Check for certifcate expiration.
         if (
