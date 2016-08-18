@@ -183,12 +183,13 @@ def basic_check(endpoint):
             immediate = urlparse.urljoin(endpoint.url, location_header)
 
         # Chase down the ultimate destination, ignoring any certificate warnings.
-        # TODO: try/except block on this request, and have checks expect possible None.
-        ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
+        ultimate_req = None
+        try:
+            ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
+        except requests.exceptions.ConnectionError:
+            # Swallow connection errors, but we won't be saving redirect info.
+            pass
 
-        # For ultimate destination, use the URL we arrived at,
-        # not Location header. Auto-resolves relative redirects.
-        eventual = ultimate_req.url
 
         # Now establish whether the redirects were:
         # * internal (same exact hostname),
@@ -205,12 +206,6 @@ def basic_check(endpoint):
         subdomain_immediate = urlparse.urlparse(immediate).hostname
         base_immediate = parent_domain_for(subdomain_immediate)
 
-        # The hostname of the eventual destination.
-        # The parent domain of the eventual destination.
-        subdomain_eventual = urlparse.urlparse(eventual).hostname
-        base_eventual = parent_domain_for(subdomain_eventual)
-
-
         endpoint.redirect_immediately_to = immediate
         endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
         endpoint.redirect_immediately_to_https = immediate.startswith("https://")
@@ -221,14 +216,24 @@ def basic_check(endpoint):
             (subdomain_original != subdomain_immediate)
         )
 
-        endpoint.redirect_eventually_to = eventual
-        endpoint.redirect_eventually_to_https = eventual.startswith("https://")
-        endpoint.redirect_eventually_to_http = eventual.startswith("http://")
-        endpoint.redirect_eventually_to_external = (base_original != base_eventual)
-        endpoint.redirect_eventually_to_subdomain = (
-            (base_original == base_eventual) and
-            (subdomain_original != subdomain_eventual)
-        )
+        if ultimate_req is not None:
+            # For ultimate destination, use the URL we arrived at,
+            # not Location header. Auto-resolves relative redirects.
+            eventual = ultimate_req.url
+
+            # The hostname of the eventual destination.
+            # The parent domain of the eventual destination.
+            subdomain_eventual = urlparse.urlparse(eventual).hostname
+            base_eventual = parent_domain_for(subdomain_eventual)
+
+            endpoint.redirect_eventually_to = eventual
+            endpoint.redirect_eventually_to_https = eventual.startswith("https://")
+            endpoint.redirect_eventually_to_http = eventual.startswith("http://")
+            endpoint.redirect_eventually_to_external = (base_original != base_eventual)
+            endpoint.redirect_eventually_to_subdomain = (
+                (base_original == base_eventual) and
+                (subdomain_original != subdomain_eventual)
+            )
 
 
 # Given an endpoint and its detected headers, extract and parse
