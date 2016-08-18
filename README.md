@@ -1,22 +1,25 @@
 ## Pushing HTTPS
 
-pshtt (_"pushed"_) is a tool to test domains for HTTPS best practices.
+`pshtt` (_"pushed"_) is a tool to test domains for HTTPS best practices. _It's also the sound you make when you're feeling mildly astonished._
+
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government— to adopt HTTPS across their enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016.
 
 ### Getting Started
 
-After downloading, you must first install all dependencies via pip:
+Download the repository, then install all dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
 #### Usage
+```bash
+./pshtt_cli [options] <domain>...
+./pshtt_cli [options] INPUT
+```
+Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to `results.csv`.
 
-./pshtt_cli (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
-
-./pshtt_cli (-h | --help)
-
-##### Options:
+##### Options
 
 ```bash
   -h --help                   Show this message.
@@ -27,20 +30,15 @@ pip install -r requirements.txt
   -u --user-agent=AGENT       Override user agent
   -t --timeout=TIMEOUT        Override timeout (in seconds)
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
-  -c --cache                  Cache network requests to a directory.
 ```
 
 ##### Examples
 
 ```bash
 ./pshtt_cli dhs.gov
-./pshtt wh.gov dhs.gov us-cert.gov
-./pshtt_cli current-federal.csv --sorted
+./pshtt dhs.gov us-cert.gov
+./pshtt_cli --sorted current-federal.csv
 ```
-
-##### Notes
-
-If the first INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to results.csv.
 
 ## What's Checked?
 
@@ -72,12 +70,6 @@ The following values are returned in `results.csv`:
 * `HSTS Preloaded` - If the domain is on the Google Chrome Preload list
 * `Broken Root` - If the http:// and https:// domains are not live
 * `Broken WWW` - if the http://www. and https://www. are not live
-
-## What's this for?
-
-This was developed to help federal .gov domains comply with [M-15-13](https://https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web sites and services.
-
-`pshtt` also includes data regarding a domain's state in the [HSTS preload list](https://hstspreload.appspot.com).
 
 ## Acknowledgements
 
