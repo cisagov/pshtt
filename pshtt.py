@@ -18,6 +18,7 @@ except ImportError:
     import urlparse # Python 2
 
 import nassl
+import sslyze
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 
@@ -278,13 +279,18 @@ def https_check(endpoint):
     # remove the https:// from prefix for sslyze
     hostname = endpoint.url[8:]
     server_info = ServerConnectivityInfo(hostname=hostname, port=443)
-    server_info.test_connectivity_to_server()
+
+    try:
+        server_info.test_connectivity_to_server()
+    except sslyze.server_connectivity.ServerConnectivityError:
+        logging.warn("Error in sslyze server connectivity check")
+        return
 
     cert_plugin = CertificateInfoPlugin()
     try:
         cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
     except nassl._nassl.OpenSSLError:
-        logging.warn("Error sslyzing %s" % endpoint.url)
+        logging.warn("Error in sslyze cert info plugin")
         return
 
     # A certificate can have multiple issues.
