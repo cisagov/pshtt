@@ -27,7 +27,7 @@ class Endpoint:
     def __init__(self, protocol, host, base_domain):
         # Basic endpoint description
         self.protocol = protocol
-        self.host = host # "www" or "root"
+        self.host = host  # "www" or "root"
         self.base_domain = base_domain
         self.url = self.url_for(protocol, host, base_domain)
 
