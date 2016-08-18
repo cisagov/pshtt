@@ -38,7 +38,7 @@ TIMEOUT = 1
 # column headers in CSV.
 HEADERS = [
     "Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
-    "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
+    "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Host Name", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preloaded"
@@ -85,7 +85,7 @@ def result_for(domain):
         'Redirect To': redirects_to(domain),
 
         'Valid HTTPS': is_valid_https(domain),
-        'Defaults HTTPS': is_defaults_to_https(domain),
+        'Defaults to HTTPS': is_defaults_to_https(domain),
         'Downgrades HTTPS': is_downgrades_https(domain),
         'Strictly Forces HTTPS': is_strictly_forces_https(domain),
 
