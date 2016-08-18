@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 import requests
-import requests_cache
+# import requests_cache
 import re
-import datetime
-from time import strptime
 import base64
 import json
 import csv
@@ -13,10 +11,12 @@ import utils
 import logging
 
 try:
-    from urllib import parse as urlparse # Python 3
+    from urllib import parse as urlparse  # Python 3
 except ImportError:
-    import urlparse # Python 2
+    import urlparse  # Python 2
 
+import nassl
+import sslyze
 from sslyze.server_connectivity import ServerConnectivityInfo
 from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
 
@@ -38,10 +38,9 @@ TIMEOUT = 1
 # column headers in CSV.
 HEADERS = [
     "Domain", "Canonical URL", "Live", "Redirect",
-    "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS",
-    "Strictly Forces HTTPS", "HTTPS Bad Chain", "HTTPS Bad Host Name",
-    "Expired Cert", "HSTS", "HSTS Header",
-    "HSTS Max Age", "HSTS All Subdomains", "HSTS Preload",
+    "Valid HTTPS", "Defaults HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
+    "HTTPS Bad Chain", "HTTPS Bad Host Name", "HTTPS Expired Cert",
+    "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preloaded"
 ]
 
@@ -75,29 +74,29 @@ def result_for(domain):
 
     # Because it will inform many other judgments, first identify
     # an acceptable "canonical" URL for the domain.
-    canonical = canonical_endpoint(domain.http, domain.httpwww, domain.https, domain.httpswww)
+    domain.canonical = canonical_endpoint(domain.http, domain.httpwww, domain.https, domain.httpswww)
 
     # First, the basic fields the CSV will use.
     result = {
         'Domain': domain.domain,
-        'Canonical URL': canonical.url,
-        'Live': is_live(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Redirect': is_redirect(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Valid HTTPS': is_valid_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Defaults HTTPS': is_defaults_to_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Downgrades HTTPS': is_downgrades_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Strictly Forces HTTPS': is_strictly_forces_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HTTPS Bad Chain': is_bad_chain(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HTTPS Bad Host Name': is_bad_hostname(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'Expired Cert': is_expired_cert(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS': is_hsts(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Header': hsts_header(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Max Age': hsts_max_age(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS All Subdomains': is_hsts_all_subdomains(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Preload': is_hsts_preload(domain.http, domain.httpwww, domain.https, domain.httpswww),
-        'HSTS Preload Ready': is_hsts_preload_ready(domain.http, domain.httpwww, domain.https, domain.httpswww),
+        'Canonical URL': domain.canonical.url,
+        'Live': is_live(domain),
+        'Redirect': is_redirect(domain),
 
-        # Doesn't use endpoint behavior.
+        'Valid HTTPS': is_valid_https(domain),
+        'Defaults HTTPS': is_defaults_to_https(domain),
+        'Downgrades HTTPS': is_downgrades_https(domain),
+        'Strictly Forces HTTPS': is_strictly_forces_https(domain),
+
+        'HTTPS Bad Chain': is_bad_chain(domain),
+        'HTTPS Bad Host Name': is_bad_hostname(domain),
+        'HTTPS Expired Cert': is_expired_cert(domain),
+
+        'HSTS': is_hsts(domain),
+        'HSTS Header': hsts_header(domain),
+        'HSTS Max Age': hsts_max_age(domain),
+        'HSTS Entire Domain': is_hsts_entire_domain(domain),
+        'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain)
     }
 
@@ -105,6 +104,7 @@ def result_for(domain):
     result['endpoints'] = domain.to_object()
 
     return result
+
 
 def ping(url, allow_redirects=False, verify=True):
     return requests.get(
@@ -122,6 +122,7 @@ def ping(url, allow_redirects=False, verify=True):
         timeout=TIMEOUT
     )
 
+
 def basic_check(endpoint):
     logging.debug("pinging %s..." % endpoint.url)
 
@@ -137,6 +138,10 @@ def basic_check(endpoint):
 
         req = ping(endpoint.url)
 
+        endpoint.live = True
+        if endpoint.protocol == "https":
+            endpoint.https_valid = True
+
     except requests.exceptions.SSLError:
         # Retry with certificate validation disabled.
         try:
@@ -145,19 +150,24 @@ def basic_check(endpoint):
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
             return
+        except requests.exceptions.RequestException:
+            endpoint.live = False
+            logging.warn("Unexpected requests exception during retry.")
+            return
 
         # If it was a certificate error of any kind, it's live.
         # Figure out the error(s).
         https_check(endpoint)
 
-    # This needs to go last, as a parent error class.
-    except requests.exceptions.ConnectionError:
+    # And this is the parent of ConnectionError and other things.
+    # For example, "too many redirects".
+    # See https://github.com/kennethreitz/requests/blob/master/requests/exceptions.py
+    except requests.exceptions.RequestException:
         endpoint.live = False
+        logging.warn("Unexpected requests exception.")
         return
 
-
     # Endpoint is live, analyze the response.
-    endpoint.live = True
     endpoint.headers = dict(req.headers)
 
     endpoint.status = req.status_code
@@ -177,12 +187,12 @@ def basic_check(endpoint):
             immediate = urlparse.urljoin(endpoint.url, location_header)
 
         # Chase down the ultimate destination, ignoring any certificate warnings.
-        # TODO: try/except block on this request, and have checks expect possible None.
-        ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
-
-        # For ultimate destination, use the URL we arrived at,
-        # not Location header. Auto-resolves relative redirects.
-        eventual = ultimate_req.url
+        ultimate_req = None
+        try:
+            ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
+        except requests.exceptions.RequestException:
+            # Swallow connection errors, but we won't be saving redirect info.
+            pass
 
         # Now establish whether the redirects were:
         # * internal (same exact hostname),
@@ -199,28 +209,34 @@ def basic_check(endpoint):
         subdomain_immediate = urlparse.urlparse(immediate).hostname
         base_immediate = parent_domain_for(subdomain_immediate)
 
-        # The hostname of the eventual destination.
-        # The parent domain of the eventual destination.
-        subdomain_eventual = urlparse.urlparse(eventual).hostname
-        base_eventual = parent_domain_for(subdomain_eventual)
-
-
         endpoint.redirect_immediately_to = immediate
         endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
         endpoint.redirect_immediately_to_https = immediate.startswith("https://")
+        endpoint.redirect_immediately_to_http = immediate.startswith("http://")
         endpoint.redirect_immediately_to_external = (base_original != base_immediate)
         endpoint.redirect_immediately_to_subdomain = (
             (base_original == base_immediate) and
             (subdomain_original != subdomain_immediate)
         )
 
-        endpoint.redirect_eventually_to = eventual
-        endpoint.redirect_eventually_to_https = eventual.startswith("https://")
-        endpoint.redirect_eventually_to_external = (base_original != base_eventual)
-        endpoint.redirect_eventually_to_subdomain = (
-            (base_original == base_eventual) and
-            (subdomain_original != subdomain_eventual)
-        )
+        if ultimate_req is not None:
+            # For ultimate destination, use the URL we arrived at,
+            # not Location header. Auto-resolves relative redirects.
+            eventual = ultimate_req.url
+
+            # The hostname of the eventual destination.
+            # The parent domain of the eventual destination.
+            subdomain_eventual = urlparse.urlparse(eventual).hostname
+            base_eventual = parent_domain_for(subdomain_eventual)
+
+            endpoint.redirect_eventually_to = eventual
+            endpoint.redirect_eventually_to_https = eventual.startswith("https://")
+            endpoint.redirect_eventually_to_http = eventual.startswith("http://")
+            endpoint.redirect_eventually_to_external = (base_original != base_eventual)
+            endpoint.redirect_eventually_to_subdomain = (
+                (base_original == base_eventual) and
+                (subdomain_original != subdomain_eventual)
+            )
 
 
 # Given an endpoint and its detected headers, extract and parse
@@ -236,8 +252,15 @@ def hsts_check(endpoint):
     endpoint.hsts_header = header
 
     # Set max age to the string after max-age
-    temp = header.split()
-    endpoint.hsts_max_age = temp[0][len("max-age="):]
+    # TODO: make this more resilient to pathological HSTS headers.
+
+    # handle multiple HSTS headers, requests comma-separates them
+    first_pass = re.split(',\s?', header)[0]
+
+    temp = re.split(';\s?', first_pass)
+
+    if "max-age" in header.lower():
+        endpoint.hsts_max_age = int(temp[0][len("max-age="):])
 
     # check if hsts includes sub domains
     if 'includesubdomains' in header.lower():
@@ -255,20 +278,35 @@ def https_check(endpoint):
     # remove the https:// from prefix for sslyze
     hostname = endpoint.url[8:]
     server_info = ServerConnectivityInfo(hostname=hostname, port=443)
-    server_info.test_connectivity_to_server()
+
+    try:
+        server_info.test_connectivity_to_server()
+    except sslyze.server_connectivity.ServerConnectivityError:
+        logging.warn("Error in sslyze server connectivity check")
+        return
 
     cert_plugin = CertificateInfoPlugin()
-    cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
+    try:
+        cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
+    except nassl._nassl.OpenSSLError:
+        logging.warn("Error in sslyze cert info plugin")
+        return
+
+    try:
+        cert_response = cert_plugin_result.as_text()
+    except TypeError:
+        logging.warn("sslyze exception parsing issuer, see https://github.com/nabla-c0d3/sslyze/issues/167")
+        return
 
     # A certificate can have multiple issues.
-    for msg in cert_plugin_result.as_text():
+    for msg in cert_response:
 
         # Check for certifcate expiration.
         if (
             (("Mozilla NSS CA Store") in msg) and
             (("FAILED") in msg) and
             (("certificate has expired") in msg)
-            ):
+        ):
             endpoint.https_expired_cert = True
 
         # Check for whether there's a valid chain to Mozilla.
@@ -276,7 +314,7 @@ def https_check(endpoint):
             (("Mozilla NSS CA Store") in msg) and
             (("FAILED") in msg) and
             (("unable to get local issuer certificate") in msg)
-            ):
+        ):
             endpoint.https_bad_chain = True
 
         # Check for whether the hostname validates.
@@ -284,13 +322,15 @@ def https_check(endpoint):
             (("Hostname Validation") in msg) and
             (("FAILED") in msg) and
             (("Certificate does NOT match") in msg)
-            ):
+        ):
             endpoint.https_bad_hostname = True
 
 
 ##
 # Given behavior for the 4 endpoints, make a best guess
 # as to which is the "canonical" site for the domain.
+#
+# Most of the domain-level decisions rely on this guess in some way.
 ##
 def canonical_endpoint(http, httpwww, https, httpswww):
 
@@ -310,40 +350,38 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     #   https:// -> 200, http:// -> http://www
 
     is_www = (
-      (
-        httpswww.live or httpwww.live
-      ) and (
-        (
-          https.redirect or
-          (not https.live) or
-          https.https_bad_hostname or
-          (not str(https.status).startswith("2"))
+        (httpswww.live or httpwww.live) and (
+            (
+                https.redirect or
+                (not https.live) or
+                https.https_bad_hostname or
+                (not str(https.status).startswith("2"))
+            ) and (
+                http.redirect or
+                (not http.live) or
+                (not str(http.status).startswith("2"))
+            )
         ) and (
-          http.redirect or
-          (not http.live) or
-          (not str(http.status).startswith("2"))
+            (
+                (
+                    (not https.live) or
+                    https.https_bad_hostname or
+                    (not str(https.status).startswith("2"))
+                ) and
+                (
+                    (not http.live) or
+                    (not str(http.status).startswith("2"))
+                )
+            ) or
+            (
+                https.redirect_immediately_to_www and
+                (not https.redirect_immediately_to_external)
+            ) or
+            (
+                http.redirect_immediately_to_www and
+                (not http.redirect_immediately_to_external)
+            )
         )
-      ) and (
-        (
-          (
-            (not https.live) or
-            https.https_bad_hostname or
-            (not str(https.status).startswith("2"))
-          ) and
-          (
-            (not http.live) or
-            (not str(http.status).startswith("2"))
-          )
-        ) or
-        (
-          https.redirect_immediately_to_www and
-          (not https.redirect_immediately_to_external)
-        ) or
-        (
-          http.redirect_immediately_to_www and
-          (not http.redirect_immediately_to_external)
-        )
-      )
     )
 
     # A domain is "canonically" at https if:
@@ -365,28 +403,28 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     # a valid hostname but invalid chain issues.
 
     is_https = (
-      (
-        (https.live and (not https.https_bad_hostname)) or
-        (httpswww.live and (not https.https_bad_hostname))
-      ) and (
         (
-          http.redirect or
-          (not http.live) or
-          (not str(http.status).startswith("2"))
+            (https.live and (not https.https_bad_hostname)) or
+            (httpswww.live and (not https.https_bad_hostname))
         ) and (
-          httpwww.redirect or
-          (not httpwww.live) or
-          (not str(httpwww.status).startswith("2"))
+            (
+                http.redirect or
+                (not http.live) or
+                (not str(http.status).startswith("2"))
+            ) and (
+                httpwww.redirect or
+                (not httpwww.live) or
+                (not str(httpwww.status).startswith("2"))
+            )
+        ) and (
+            (
+                http.redirect_immediately_to_https and
+                (not http.redirect_immediately_to_external)
+            ) or (
+                httpwww.redirect_immediately_to_https and
+                (not httpwww.redirect_immediately_to_external)
+            )
         )
-      ) and (
-        (
-          http.redirect_immediately_to_https and
-          (not http.redirect_immediately_to_external)
-        ) or (
-          httpwww.redirect_immediately_to_https and
-          (not httpwww.redirect_immediately_to_external)
-        )
-      )
     )
 
     if is_www and is_https:
@@ -403,112 +441,202 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 ##
 
 
-# Domain is live if *any* endpoint is live.
-def is_live(http, httpwww, https, httpswww):
+# Domain is "live" if *any* endpoint is live.
+def is_live(domain):
+    http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
+
     return http.live or httpwww.live or https.live or httpswww.live
 
 
-# TODO: Loosen this definition to check if:
-# at least one endpoint is a redirect, and
-# all endpoints are either redirects or down.
-def is_redirect(http, httpwww, https, httpswww):
-    return http.redirect or httpwww.redirect or https.redirect or httpswww.redirect
+# Domain is "a redirect domain" if at least one endpoint is
+# a redirect, and all endpoints are either redirects or down.
+def is_redirect(domain):
+    http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    # TODO: make sub-function of the conditional below.
+    # def is_redirect_or_down(endpoint):
+
+    return is_live(domain) and (
+        (
+            https.redirect_eventually_to_external or
+            (not https.live) or
+            https.https_bad_hostname or
+            https.status >= 400
+        ) and
+        (
+            httpswww.redirect_eventually_to_external or
+            (not httpswww.live) or
+            httpswww.https_bad_hostname or
+            httpswww.status >= 400
+        ) and
+        (
+            httpwww.redirect_eventually_to_external or
+            (not httpwww.live) or
+            httpwww.status >= 400
+        ) and
+        (
+            http.redirect_eventually_to_external or
+            (not http.live) or
+            http.status >= 400
+        ))
 
 
-def is_valid_https(http, httpwww, https, httpswww):
-    # One of the HTTPS endpoints has to be up,
-    # and has to have a cert for a valid hostname,
-    # and has to not downgrade the user to HTTP (either doesn't redirect, or if it does redirect it stays at HTTPS).
-    # TODO: only evaluate canonical endpoint.
+# A domain has "valid HTTPS" if it responds on port 443 at its canonical
+# hostname with an unexpired valid certificate for the hostname.
+def is_valid_https(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    def supports_https(endpoint):
-        return endpoint.live and \
-            (not endpoint.https_bad_hostname) and \
-            (not (endpoint.redirect and (endpoint.redirect_immediately_to[:5] != "https")))
-
-    return supports_https(https) or supports_https(httpswww)
-
-
-# Domain defaults to https if http endpoint forwards to https
-def is_defaults_to_https(http, httpwww, https, httpswww):
-    if http.redirect or httpwww.redirect:
-        return (http.redirect and (http.redirect_eventually_to[:5] == "https")) or (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https"))
+    # Evaluate the HTTPS version of the canonical hostname
+    if canonical.host == "root":
+        evaluate = https
     else:
-        return False
+        evaluate = httpswww
+
+    return evaluate.live and evaluate.https_valid
 
 
-# Domain downgrades if https endpoint redirects to http
-def is_downgrades_https(http, httpwww, https, httpswww):
-    return (https.redirect and (https.redirect_eventually_to[:5] == "http:")) or (httpswww.redirect and (httpswww.redirect_eventually_to[:5] == "http:"))
+# A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
+def is_defaults_to_https(domain):
+    canonical = domain.canonical
+
+    return (canonical.protocol == "https")
 
 
-# A domain strictly forces https if https is live and http is not,
-# if both http forward to https endpoints or if one http forwards to https and the other is not live
-def is_strictly_forces_https(http, httpwww, https, httpswww):
-    if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
-        return True
-    elif (http.redirect and (http.redirect_eventually_to[:5] == "https")) and (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https")):
-        return True
-    elif (http.redirect and (http.redirect_eventually_to[:5] == "https")) and (not httpwww.live):
-        return True
-    elif (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https")) and (not http.live):
-        return True
+# Domain downgrades if HTTPS is supported in some way, but
+# its canonical HTTPS endpoint immediately redirects to HTTP.
+def is_downgrades_https(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    # The domain "supports" HTTPS if any HTTPS endpoint responds with
+    # a certificate valid for its hostname.
+    supports_https = (
+        https.live and (not https.https_bad_hostname)
+    ) or (
+        httpswww.live and (not httpswww.https_bad_hostname)
+    )
+
+    if canonical.host == "www":
+        canonical_https = httpswww
     else:
-        return False
+        canonical_https = https
+
+    return (supports_https and canonical_https.redirect_immediately_to_http)
+
+
+# A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is
+# "live", and if both *HTTP* endpoints are either:
+#
+#  * down, or
+#  * redirect immediately to an HTTPS URI.
+#
+# This is different than whether a domain "Defaults" to HTTPS.
+#
+# * An HTTP redirect can go to HTTPS on another domain, as long
+#   as it's immediate.
+# * A domain with an invalid cert can still be enforcing HTTPS.
+def is_strictly_forces_https(domain):
+    http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    def down_or_redirects(endpoint):
+        return ((not endpoint.live) or endpoint.redirect_immediately_to_https)
+
+    https_somewhere = https.live or httpswww.live
+
+    return https_somewhere and down_or_redirects(http) and down_or_redirects(httpwww)
 
 
 # Domain has a bad chain if either https endpoints contain a bad chain
-def is_bad_chain(http, httpwww, https, httpswww):
-    return https.https_bad_chain or httpswww.https_bad_chain
+def is_bad_chain(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_bad_chain
 
 
 # Domain has a bad hostname if either https endpoint fails hostname validation
-def is_bad_hostname(http, httpwww, https, httpswww):
-    return https.https_bad_hostname or httpswww.https_bad_hostname
+def is_bad_hostname(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-
-# Domain has hsts ONLY if the https (and not the www subdomain) has strict transport in the header
-def is_hsts(http, httpwww, https, httpswww):
-    return https.hsts
-
-
-def hsts_header(http, httpwww, https, httpswww):
-    if https.hsts:
-        return https.hsts_header
+    if canonical.host == "www":
+        canonical_https = httpswww
     else:
-        return None
+        canonical_https = https
+
+    return canonical_https.https_bad_hostname
 
 
-def hsts_max_age(http, httpwww, https, httpswww):
-    if https.hsts:
-        return https.hsts_max_age
+# Returns if the either https endpoint has an expired cert
+def is_expired_cert(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
     else:
-        return None
+        canonical_https = https
+
+    return canonical_https.https_expired_cert
 
 
-def is_hsts_all_subdomains(http, httpwww, https, httpswww):
-    # Returns if the https endpoint has "includesubdomains"
+# Domain has HSTS if its canonical HTTPS endpoint has HSTS.
+def is_hsts(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.hsts
+
+
+# Domain's HSTS header is its canonical endpoint's header.
+def hsts_header(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.hsts_header
+
+
+# Domain's HSTS max-age is its canonical endpoint's max-age.
+def hsts_max_age(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.hsts_max_age
+
+
+# Whether a domain's ROOT endpoint includes all subdomains.
+def is_hsts_entire_domain(domain):
+    https = domain.https
+
     return https.hsts_all_subdomains
 
 
-def is_hsts_preload_ready(http, httpwww, https, httpswww):
-    # returns if the hsts header exists, has a max age, includes subdomains, and includes preload
-    return (https.hsts and https.hsts_max_age != "" and https.hsts_all_subdomains and https.hsts_preload)
+# Whether a domain's ROOT endpoint is preload-ready.
+def is_hsts_preload_ready(domain):
+    https = domain.https
+
+    eighteen_weeks = (https.hsts_max_age and (https.hsts_max_age >= 10886400))
+    preload_ready = (eighteen_weeks and https.hsts_all_subdomains and https.hsts_preload)
+
+    return preload_ready
 
 
-def is_hsts_preload(http, httpwww, https, httpswww):
-    # Returns if https endpoint has preload in hsts header
-    return https.hsts_preload
-
-
-def is_expired_cert(http, httpwww, https, httpswww):
-    # Returns if the either https endpoint has an expired cert
-    return https.https_expired_cert or httpswww.https_expired_cert
-
-
+# Whether a domain is contained in Chrome's HSTS preload list.
 def is_hsts_preloaded(domain):
-    # Returns if a domain is on the Chromium preload list
-    return domain in preload_list
+    return domain.domain in preload_list
 
 
 # For "x.y.domain.gov", return "domain.gov".

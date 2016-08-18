@@ -27,7 +27,7 @@ class Endpoint:
     def __init__(self, protocol, host, base_domain):
         # Basic endpoint description
         self.protocol = protocol
-        self.host = host
+        self.host = host  # "www" or "root"
         self.base_domain = base_domain
         self.url = self.url_for(protocol, host, base_domain)
 
@@ -41,16 +41,19 @@ class Endpoint:
         self.redirect_immediately_to = None
         self.redirect_immediately_to_www = None
         self.redirect_immediately_to_https = None
+        self.redirect_immediately_to_http = None
         self.redirect_immediately_to_external = None
         self.redirect_immediately_to_subdomain = None
         self.redirect_eventually_to = None
         self.redirect_eventually_to_https = None
+        self.redirect_eventually_to_http = None
         self.redirect_eventually_to_external = None
         self.redirect_eventually_to_subdomain = None
 
         # Only HTTPS endpoints have these.
         # Initialize all of them to None, so that it's
         # discernible if they don't get explicitly set.
+        self.https_valid = None
         self.https_bad_chain = None
         self.https_bad_hostname = None
         self.https_expired_cert = None
@@ -81,14 +84,17 @@ class Endpoint:
             'redirect_immediately_to': self.redirect_immediately_to,
             'redirect_immediately_to_www': self.redirect_immediately_to_www,
             'redirect_immediately_to_https': self.redirect_immediately_to_https,
+            'redirect_immediately_to_http': self.redirect_immediately_to_http,
             'redirect_immediately_to_external': self.redirect_immediately_to_external,
             'redirect_immediately_to_subdomain': self.redirect_immediately_to_subdomain,
             'redirect_eventually_to_https': self.redirect_eventually_to_https,
+            'redirect_eventually_to_http': self.redirect_eventually_to_http,
             'redirect_eventually_to_external': self.redirect_eventually_to_external,
             'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain
         }
 
         if self.protocol == "https":
+            obj['https_valid'] = self.https_valid
             obj['https_bad_chain'] = self.https_bad_chain
             obj['https_bad_hostname'] = self.https_bad_hostname
             obj['https_expired_cert'] = self.https_expired_cert
