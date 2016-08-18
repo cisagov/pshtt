@@ -11,10 +11,11 @@ pip install -r requirements.txt
 ```
 
 #### Usage
-
-./pshtt_cli (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
-
-./pshtt_cli (-h | --help)
+```bash
+./pshtt_cli [options] <domain>
+./pshtt_cli [options] INPUT
+```
+If the first INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to results.csv.
 
 ##### Options:
 
@@ -27,20 +28,15 @@ pip install -r requirements.txt
   -u --user-agent=AGENT       Override user agent
   -t --timeout=TIMEOUT        Override timeout (in seconds)
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
-  -c --cache                  Cache network requests to a directory.
 ```
 
 ##### Examples
 
 ```bash
 ./pshtt_cli dhs.gov
-./pshtt wh.gov dhs.gov us-cert.gov
-./pshtt_cli current-federal.csv --sorted
+./pshtt dhs.gov us-cert.gov
+./pshtt_cli --sorted current-federal.csv
 ```
-
-##### Notes
-
-If the first INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to results.csv.
 
 ## What's Checked?
 
