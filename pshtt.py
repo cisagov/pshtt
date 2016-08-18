@@ -86,8 +86,8 @@ def result_for(domain):
         'Valid HTTPS': is_valid_https(domain),
         'Defaults HTTPS': is_defaults_to_https(domain),
         'Downgrades HTTPS': is_downgrades_https(domain),
+        'Strictly Forces HTTPS': is_strictly_forces_https(domain),
 
-        'Strictly Forces HTTPS': is_strictly_forces_https(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HTTPS Bad Chain': is_bad_chain(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'HTTPS Bad Host Name': is_bad_hostname(domain.http, domain.httpwww, domain.https, domain.httpswww),
         'Expired Cert': is_expired_cert(domain.http, domain.httpwww, domain.https, domain.httpswww),
@@ -497,19 +497,26 @@ def is_downgrades_https(domain):
     return (supports_https and canonical_https.redirect_immediately_to_http)
 
 
-# A domain strictly forces https if https is live and http is not,
-# if both http forward to https endpoints or if one http forwards to https and the other is not live
-def is_strictly_forces_https(http, httpwww, https, httpswww):
-    if ((not http.live) and (not httpwww.live)) and (https.live or httpswww.live):
-        return True
-    elif (http.redirect and (http.redirect_eventually_to[:5] == "https")) and (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https")):
-        return True
-    elif (http.redirect and (http.redirect_eventually_to[:5] == "https")) and (not httpwww.live):
-        return True
-    elif (httpwww.redirect and (httpwww.redirect_eventually_to[:5] == "https")) and (not http.live):
-        return True
-    else:
-        return False
+# A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is
+# "live", and if both *HTTP* endpoints are either:
+#
+#  * down, or
+#  * redirect immediately to an HTTPS URI.
+#
+# This is different than whether a domain "Defaults" to HTTPS.
+#
+# * An HTTP redirect can go to HTTPS on another domain, as long
+#   as it's immediate.
+# * A domain with an invalid cert can still be enforcing HTTPS.
+def is_strictly_forces_https(domain):
+    canonical, http, httpwww, https, httpswww = domain.canonical, domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    def down_or_redirects(endpoint):
+        return ((not endpoint.live) or endpoint.redirect_immediately_to_https)
+
+    https_somewhere = https.live or httpswww.live
+
+    return https_somewhere and down_or_redirects(http) and down_or_redirects(httpwww)
 
 
 # Domain has a bad chain if either https endpoints contain a bad chain
