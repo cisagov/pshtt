@@ -51,7 +51,7 @@ The following values are returned in `results.csv`:
 * `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at its canonical hostname with an unexpired valid certificate for the hostname.
 * `Defaults to HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
 * `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects internally to HTTP.
-* `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both *HTTP* endpoints are either down or redirect immediately to an HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long s it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
+* `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both HTTP endpoints are either down or redirect immediately to an HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long as it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
 * `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
 * `HTTPS Expired Cert` - A domain has an expired certificate if the either HTTPS endpoint has an expired certificate.
@@ -59,7 +59,7 @@ The following values are returned in `results.csv`:
 * `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
 * `HSTS Entire Domain` - Whether a domain's root endpoint (e.g., https://domain[.]gov) has the HSTS directive `includeSubDomains`.
-* `HSTS Preload Ready` - Whether a domain's ROOT endpoint is preload-ready.
+* `HSTS Preload Ready` - Whether a domain's root endpoint is preload-ready.
 * `HSTS Preloaded` - Whether a domain is contained in Chrome's [HSTS preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json).
 
 ## Acknowledgements
