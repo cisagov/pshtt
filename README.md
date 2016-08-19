@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ./pshtt_cli --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
 ./pshtt_cli --sorted current-federal.csv
 ```
-Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to `results.csv`.
+Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
 
 #### Options
 ```bash
