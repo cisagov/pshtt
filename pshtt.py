@@ -157,6 +157,8 @@ def basic_check(endpoint):
             return
 
         # If it was a certificate error of any kind, it's live.
+        endpoint.live = True
+
         # Figure out the error(s).
         https_check(endpoint)
 
