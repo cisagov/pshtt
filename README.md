@@ -1,10 +1,9 @@
 ## Pushing HTTPS
-
 "pshtt" is the sound you make when you feel mildly astonished. `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
 `pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Hitting that target will be an astonishing achievement.
 
-### Getting Started
+## Getting Started
 
 Download the repository, then install all dependencies:
 
@@ -12,15 +11,18 @@ Download the repository, then install all dependencies:
 pip install -r requirements.txt
 ```
 
-#### Usage
+#### Usage and examples
 ```bash
 ./pshtt_cli [options] DOMAIN...
 ./pshtt_cli [options] INPUT
+
+./pshtt_cli dhs.gov
+./pshtt_cli --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
+./pshtt_cli --sorted current-federal.csv
 ```
 Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to `results.csv`.
 
-##### Options
-
+#### Options
 ```bash
   -h --help                   Show this message.
   -s --sorted                 Sort output by domain, A-Z.
@@ -32,14 +34,6 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
 ```
 
-##### Examples
-
-```bash
-./pshtt_cli dhs.gov
-./pshtt dhs.gov us-cert.gov
-./pshtt_cli --sorted current-federal.csv
-```
-
 ## What's Checked?
 A domain is checked on its four endpoints:
 * `http://`
@@ -48,20 +42,18 @@ A domain is checked on its four endpoints:
 * `https://www`
 
 The following values are returned in `results.csv`:
-* `Domain` - The domain you're scanning!
-* `Canonical URL` - A judgment call based on the observed redirect logic of the domain
-* `Live` - The domain is "live" if any endpoint is live
-* `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
 
+* `Domain` - The domain you're scanning!
+* `Canonical URL` - A judgment call based on the observed redirect logic of the domain.
+* `Live` - The domain is "live" if any endpoint is live.
+* `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
 * `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at its canonical hostname with an unexpired valid certificate for the hostname.
 * `Defaults HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
 * `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects to HTTP.
 * `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both *HTTP* endpoints are either down or redirect immediately to an HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long s it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
-
 * `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
 * `HTTPS Expired Cert` - A domain has an expired certificate if the either HTTPS endpoint has an expired certificate.
-
 * `HSTS` - A domain has HTTP Strict Transport Security if its canonical HTTPS endpoint has HSTS.
 * `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
@@ -70,11 +62,9 @@ The following values are returned in `results.csv`:
 * `HSTS Preloaded` - Whether a domain is contained in Chrome's [HSTS preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json).
 
 ## Acknowledgements
-
 This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
 
 ## Public domain
-
 This project is in the worldwide [public domain](LICENSE.md).
 
 This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
