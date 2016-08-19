@@ -1,8 +1,8 @@
 ## Pushing HTTPS
 
-`pshtt` (_"pushed"_) is a tool to test domains for HTTPS best practices. It's also the sound you make when you feel mildly astonished.
+"pshtt" is the sound you make when you feel mildly astonished. `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us:— to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), an Office of Management and Budget memorandum that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Hitting that target will be an astonishing achievement.
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Hitting that target will be an astonishing achievement.
 
 ### Getting Started
 
@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 #### Usage
 ```bash
-./pshtt_cli [options] <domain>...
+./pshtt_cli [options] DOMAIN...
 ./pshtt_cli [options] INPUT
 ```
 Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk, defaulting to `results.csv`.
@@ -41,37 +41,37 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
 ```
 
 ## What's Checked?
-
 A domain is checked on its four endpoints:
-
 * `http://`
 * `http://www`
 * `https://`
 * `https://www`
 
 The following values are returned in `results.csv`:
-!* `Domain` - 
-!* `Canonical URL` - 
-* `Live` - If any of the endpoint respond it is True
-* `Redirect` - If any of the endpoints redirect it is True
-* `Valid HTTPS` - True if a either HTTPS endpoint is live or HTTP endpoints forward to HTTPS
-* `Defaults HTTPS` - If the HTTP endpoint forwards to a HTTPS
-* `Downgrades HTTPS` - If a HTTPS endpoint forwards to HTTP
-* `Strictly Forces HTTPS` - If only HTTPS endpoints are live or if a HTTP endpoint is live it forwards to HTTPS
-* `HTTPS Bad Chain` - If the cert is not trusted based on CA stores
-* `HTTPS Bad Host Name` - If the cert fails hostname validation
-* `Expired Cert` - If the cert has expired
-* `HSTS` - If a Strict Transport Security header is found in the HTTPS endpoint (not the https://www subdomain)
-* `HSTS Header` - The contents of the HSTS Header
-* `HSTS Max Age` - The Max Age of the HSTS Header
-* `HSTS All Subdomains` -If "include sub subdomains" is in the HSTS header
-* `HSTS Preload` - If "preload" is in the HSTS Header
-* `HSTS Preload Ready` - If the domains has HSTS, HSTS Max Age, HSTS All Subdomains, and HSTS Preload
-* `HSTS Preloaded` - If the domain is on the Google Chrome Preload list
+* `Domain` - The domain you're scanning!
+* `Canonical URL` - A judgment call based on the observed redirect logic of the domain
+* `Live` - The domain is "live" if any endpoint is live
+* `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
+
+* `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at its canonical hostname with an unexpired valid certificate for the hostname.
+* `Defaults HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
+* `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects to HTTP.
+* `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both *HTTP* endpoints are either down or redirect immediately to an HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long s it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
+
+* `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
+* `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
+* `HTTPS Expired Cert` - A domain has an expired certificate if the either HTTPS endpoint has an expired certificate.
+
+* `HSTS` - A domain has HTTP Strict Transport Security if its canonical HTTPS endpoint has HSTS.
+* `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
+* `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
+* `HSTS Entire Domain` - Whether a domain's root endpoint (e.g., https://domain[.]gov) has the HSTS directive `includeSubDomains`.
+* `HSTS Preload Ready` - Whether a domain's ROOT endpoint is preload-ready.
+* `HSTS Preloaded` - Whether a domain is contained in Chrome's [HSTS preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json).
 
 ## Acknowledgements
 
-This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [@konklone](https://github.com/konklone).
+This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
 
 ## Public domain
 
