@@ -150,10 +150,12 @@ def basic_check(endpoint):
         except requests.exceptions.SSLError:
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
+            logging.warn("Unexpected SSL protocol (or other) error during retry.")
             return
         except requests.exceptions.RequestException:
             endpoint.live = False
             logging.warn("Unexpected requests exception during retry.")
+            logging.warn(utils.format_last_exception())
             return
 
         # If it was a certificate error of any kind, it's live.
