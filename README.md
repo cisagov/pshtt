@@ -47,9 +47,10 @@ The following values are returned in `results.csv`:
 * `Canonical URL` - A judgment call based on the observed redirect logic of the domain.
 * `Live` - The domain is "live" if any endpoint is live.
 * `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
+* `Redirect to` - If a domain is a "redirect domain", where does it redirect to?
 * `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at its canonical hostname with an unexpired valid certificate for the hostname.
-* `Defaults HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
-* `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects to HTTP.
+* `Defaults to HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
+* `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects internally to HTTP.
 * `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both *HTTP* endpoints are either down or redirect immediately to an HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long s it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
 * `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
