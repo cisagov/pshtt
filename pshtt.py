@@ -522,7 +522,7 @@ def is_defaults_to_https(domain):
 
 
 # Domain downgrades if HTTPS is supported in some way, but
-# its canonical HTTPS endpoint immediately redirects to HTTP.
+# its canonical HTTPS endpoint immediately redirects internally to HTTP.
 def is_downgrades_https(domain):
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -539,7 +539,11 @@ def is_downgrades_https(domain):
     else:
         canonical_https = https
 
-    return (supports_https and canonical_https.redirect_immediately_to_http)
+    return (
+        supports_https and
+        canonical_https.redirect_immediately_to_http and
+        (not canonical_https.redirect_immediately_to_external)
+    )
 
 
 # A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is
