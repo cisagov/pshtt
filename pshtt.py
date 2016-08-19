@@ -117,7 +117,7 @@ def ping(url, allow_redirects=False, verify=True):
         verify=verify,
 
         # set by --user_agent
-        data={'User-Agent': USER_AGENT},
+        headers={'User-Agent': USER_AGENT},
 
         # set by --timeout
         timeout=TIMEOUT
