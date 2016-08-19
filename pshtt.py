@@ -656,7 +656,7 @@ def is_hsts_entire_domain(domain):
 def is_hsts_preload_ready(domain):
     https = domain.https
 
-    eighteen_weeks = (https.hsts_max_age and (https.hsts_max_age >= 10886400))
+    eighteen_weeks = ((https.hsts_max_age is not None) and (https.hsts_max_age >= 10886400))
     preload_ready = (eighteen_weeks and https.hsts_all_subdomains and https.hsts_preload)
 
     return preload_ready
