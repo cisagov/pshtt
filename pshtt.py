@@ -310,7 +310,7 @@ def https_check(endpoint):
     # A certificate can have multiple issues.
     for msg in cert_response:
 
-        # Check for certifcate expiration.
+        # Check for certificate expiration.
         if (
             (("Mozilla NSS CA Store") in msg) and
             (("FAILED") in msg) and
@@ -319,10 +319,11 @@ def https_check(endpoint):
             endpoint.https_expired_cert = True
 
         # Check for whether there's a valid chain to Mozilla.
+        # Note: this will also catch expired certs, but this is okay.
         if (
             (("Mozilla NSS CA Store") in msg) and
             (("FAILED") in msg) and
-            (("unable to get local issuer certificate") in msg)
+            (("Certificate is NOT Trusted") in msg)
         ):
             endpoint.https_bad_chain = True
 
