@@ -10,8 +10,9 @@ import traceback
 
 # Display exception without re-throwing it.
 def format_last_exception():
-  exc_type, exc_value, exc_traceback = sys.exc_info()
-  return "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    return "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+
 
 # mkdir -p in python, from:
 # http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python

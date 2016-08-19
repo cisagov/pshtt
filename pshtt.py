@@ -358,8 +358,10 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     # or like:
     #   https:// -> 200, http:// -> http://www
 
+    at_least_one_www_used = httpswww.live or httpwww.live
+
     is_www = (
-        (httpswww.live or httpwww.live) and (
+        at_least_one_www_used and (
             (
                 https.redirect or
                 (not https.live) or
@@ -411,24 +413,25 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     # It allows a site to be canonically HTTPS if the cert has
     # a valid hostname but invalid chain issues.
 
-    def endpoint_used(endpoint):
+    def https_used(endpoint):
         return endpoint.live and (not endpoint.https_bad_hostname)
 
-    def endpoint_unused(endpoint):
-        return (endpoint.redirect or
+    def http_unused(endpoint):
+        return (
+            endpoint.redirect or
             (not endpoint.live) or
             (not str(endpoint.status).startswith("2"))
         )
 
-    def endpoint_upgrades(endpoint):
+    def http_upgrades(endpoint):
         return (
             endpoint.redirect_immediately_to_https and
             (not http.redirect_immediately_to_external)
         )
 
-    at_least_one_https_endpoint = endpoint_used(https) or endpoint_used(httpswww)
-    all_http_unused = endpoint_unused(http) and endpoint_unused(httpwww)
-    at_least_one_http_upgrades = endpoint_upgrades(http) or endpoint_upgrades(httpwww)
+    at_least_one_https_endpoint = https_used(https) or https_used(httpswww)
+    all_http_unused = http_unused(http) and http_unused(httpwww)
+    at_least_one_http_upgrades = http_upgrades(http) or http_upgrades(httpwww)
 
     is_https = (
         at_least_one_https_endpoint and
@@ -444,6 +447,7 @@ def canonical_endpoint(http, httpwww, https, httpswww):
         return https
     elif (not is_www) and (not is_https):
         return http
+
 
 ##
 # Judgment calls based on observed endpoint data.
