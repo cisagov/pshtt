@@ -411,29 +411,29 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     # It allows a site to be canonically HTTPS if the cert has
     # a valid hostname but invalid chain issues.
 
-    is_https = (
-        (
-            (https.live and (not https.https_bad_hostname)) or
-            (httpswww.live and (not https.https_bad_hostname))
-        ) and (
-            (
-                http.redirect or
-                (not http.live) or
-                (not str(http.status).startswith("2"))
-            ) and (
-                httpwww.redirect or
-                (not httpwww.live) or
-                (not str(httpwww.status).startswith("2"))
-            )
-        ) and (
-            (
-                http.redirect_immediately_to_https and
-                (not http.redirect_immediately_to_external)
-            ) or (
-                httpwww.redirect_immediately_to_https and
-                (not httpwww.redirect_immediately_to_external)
-            )
+    def endpoint_used(endpoint):
+        return endpoint.live and (not endpoint.https_bad_hostname)
+
+    def endpoint_unused(endpoint):
+        return (endpoint.redirect or
+            (not endpoint.live) or
+            (not str(endpoint.status).startswith("2"))
         )
+
+    def endpoint_upgrades(endpoint):
+        return (
+            endpoint.redirect_immediately_to_https and
+            (not http.redirect_immediately_to_external)
+        )
+
+    at_least_one_https_endpoint = endpoint_used(https) or endpoint_used(httpswww)
+    all_http_unused = endpoint_unused(http) and endpoint_unused(httpwww)
+    at_least_one_http_upgrades = endpoint_upgrades(http) or endpoint_upgrades(httpwww)
+
+    is_https = (
+        at_least_one_https_endpoint and
+        all_http_unused and
+        at_least_one_http_upgrades
     )
 
     if is_www and is_https:
