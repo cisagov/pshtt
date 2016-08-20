@@ -247,6 +247,11 @@ def basic_check(endpoint):
 # Given an endpoint and its detected headers, extract and parse
 # any present HSTS header, decide what HSTS properties are there.
 def hsts_check(endpoint):
+    # Disqualify domains with a bad host, they won't work as valid HSTS.
+    if endpoint.https_bad_hostname:
+        endpoint.hsts = False
+        return
+
     header = endpoint.headers.get("Strict-Transport-Security")
 
     if header is None:
