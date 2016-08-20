@@ -261,8 +261,9 @@ def hsts_check(endpoint):
 
     # handle multiple HSTS headers, requests comma-separates them
     first_pass = re.split(',\s?', header)[0]
+    second_pass = re.sub('\'', '', first_pass)
 
-    temp = re.split(';\s?', first_pass)
+    temp = re.split(';\s?', second_pass)
 
     if "max-age" in header.lower():
         endpoint.hsts_max_age = int(temp[0][len("max-age="):])
