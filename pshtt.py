@@ -438,9 +438,6 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     all_http_unused = http_unused(http) and http_unused(httpwww)
     at_least_one_http_upgrades = http_upgrades(http) or http_upgrades(httpwww)
 
-    print(http_upgrades(http))
-    print(http_upgrades(httpwww))
-
     is_https = (
         at_least_one_https_endpoint and
         all_http_unused and
