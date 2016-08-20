@@ -371,38 +371,37 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 
     at_least_one_www_used = httpswww.live or httpwww.live
 
+    def root_unused(endpoint):
+        return (
+            endpoint.redirect or
+            (not endpoint.live) or
+            endpoint.https_bad_hostname or  # harmless for http endpoints
+            (not str(endpoint.status).startswith("2"))
+        )
+
+    def root_down(endpoint):
+        return (
+            (not endpoint.live) or
+            endpoint.https_bad_hostname or
+            (not str(endpoint.status).startswith("2"))
+        )
+
+    def goes_to_www(endpoint):
+        return (
+            endpoint.redirect_immediately_to_www and
+            (not endpoint.redirect_immediately_to_external)
+        )
+
+    all_roots_unused = root_unused(https) and root_unused(http)
+
+    all_roots_down = root_down(https) and root_down(http)
+
     is_www = (
-        at_least_one_www_used and (
-            (
-                https.redirect or
-                (not https.live) or
-                https.https_bad_hostname or
-                (not str(https.status).startswith("2"))
-            ) and (
-                http.redirect or
-                (not http.live) or
-                (not str(http.status).startswith("2"))
-            )
-        ) and (
-            (
-                (
-                    (not https.live) or
-                    https.https_bad_hostname or
-                    (not str(https.status).startswith("2"))
-                ) and
-                (
-                    (not http.live) or
-                    (not str(http.status).startswith("2"))
-                )
-            ) or
-            (
-                https.redirect_immediately_to_www and
-                (not https.redirect_immediately_to_external)
-            ) or
-            (
-                http.redirect_immediately_to_www and
-                (not http.redirect_immediately_to_external)
-            )
+        at_least_one_www_used and
+        all_roots_unused and (
+            all_roots_down or
+            goes_to_www(https) or
+            goes_to_www(http)
         )
     )
 
@@ -579,8 +578,9 @@ def is_strictly_forces_https(domain):
         return ((not endpoint.live) or endpoint.redirect_immediately_to_https)
 
     https_somewhere = https.live or httpswww.live
+    all_http_unused = down_or_redirects(http) and down_or_redirects(httpwww)
 
-    return https_somewhere and down_or_redirects(http) and down_or_redirects(httpwww)
+    return https_somewhere and all_http_unused
 
 
 # Domain has a bad chain if either https endpoints contain a bad chain
