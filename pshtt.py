@@ -154,7 +154,7 @@ def basic_check(endpoint):
             return
         except requests.exceptions.RequestException:
             endpoint.live = False
-            logging.warn("Unexpected requests exception during retry.")
+            logging.warn("Unexpected requests exception during retry. Printing error:")
             logging.warn(utils.format_last_exception())
             return
 
@@ -307,6 +307,10 @@ def https_check(endpoint):
         logging.warn("sslyze exception parsing issuer, see https://github.com/nabla-c0d3/sslyze/issues/167")
         return
 
+    # Debugging
+    for msg in cert_response:
+        print(msg)
+
     # A certificate can have multiple issues.
     for msg in cert_response:
 
@@ -427,12 +431,15 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     def http_upgrades(endpoint):
         return (
             endpoint.redirect_immediately_to_https and
-            (not http.redirect_immediately_to_external)
+            (not endpoint.redirect_immediately_to_external)
         )
 
     at_least_one_https_endpoint = https_used(https) or https_used(httpswww)
     all_http_unused = http_unused(http) and http_unused(httpwww)
     at_least_one_http_upgrades = http_upgrades(http) or http_upgrades(httpwww)
+
+    print(http_upgrades(http))
+    print(http_upgrades(httpwww))
 
     is_https = (
         at_least_one_https_endpoint and
