@@ -32,7 +32,7 @@ class Endpoint:
         self.url = self.url_for(protocol, host, base_domain)
 
         # all HTTP/HTTPS endpoints have these
-        self.headers = {}
+        self.headers = {}  # will be replaced with a requests.structures.CaseInsensitiveDict
         self.status = None
         self.live = None
         self.redirect = None
@@ -76,7 +76,7 @@ class Endpoint:
     def to_object(self):
         obj = {
             'url': self.url,
-            'headers': self.headers,
+            'headers': dict(self.headers),
             'status': self.status,
             'live': self.live,
             'redirect': self.redirect,

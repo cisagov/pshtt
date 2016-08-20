@@ -173,7 +173,7 @@ def basic_check(endpoint):
         return
 
     # Endpoint is live, analyze the response.
-    endpoint.headers = dict(req.headers)
+    endpoint.headers = req.headers
 
     endpoint.status = req.status_code
     if str(endpoint.status).startswith('3'):
