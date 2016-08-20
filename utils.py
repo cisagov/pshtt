@@ -4,6 +4,14 @@ import errno
 import csv
 import logging
 import datetime
+import sys
+import traceback
+
+
+# Display exception without re-throwing it.
+def format_last_exception():
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    return "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
 
 
 # mkdir -p in python, from:
