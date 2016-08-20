@@ -306,6 +306,9 @@ def https_check(endpoint):
     except nassl._nassl.OpenSSLError:
         logging.warn("Error in sslyze cert info plugin")
         return
+    except nassl.x509_certificate.X509HostnameValidationError:
+        logging.warn("Error parsing x.509 certificate.")
+        return
 
     try:
         cert_response = cert_plugin_result.as_text()
