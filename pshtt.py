@@ -308,8 +308,8 @@ def https_check(endpoint):
         return
 
     # Debugging
-    for msg in cert_response:
-        print(msg)
+    # for msg in cert_response:
+    #     print(msg)
 
     # A certificate can have multiple issues.
     for msg in cert_response:
