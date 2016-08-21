@@ -39,7 +39,7 @@ TIMEOUT = 1
 HEADERS = [
     "Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
-    "HTTPS Bad Chain", "HTTPS Bad Host Name", "HTTPS Expired Cert",
+    "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preloaded"
 ]
@@ -90,7 +90,7 @@ def result_for(domain):
         'Strictly Forces HTTPS': is_strictly_forces_https(domain),
 
         'HTTPS Bad Chain': is_bad_chain(domain),
-        'HTTPS Bad Host Name': is_bad_hostname(domain),
+        'HTTPS Bad Hostname': is_bad_hostname(domain),
         'HTTPS Expired Cert': is_expired_cert(domain),
 
         'HSTS': is_hsts(domain),
