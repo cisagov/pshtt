@@ -11,6 +11,18 @@ Download the repository, then install all dependencies.
 pip install -r requirements.txt
 ```
 
+#### Using docker
+```bash
+docker build -t pshtt/cli .
+
+docker run --rm -it \
+  --name pshtt \
+  -v $(pwd):/data \
+  -e UID=1042 \           /* Change the ownership of the files (**e.g** results)
+  -e GID=1042 \           to the user with id 1042 and to the group with id 1042. */
+  pshtt/cli
+```
+
 #### Usage and examples
 ```bash
 ./pshtt_cli [options] DOMAIN...
