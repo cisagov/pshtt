@@ -11,18 +11,6 @@ Download the repository, then install all dependencies.
 pip install -r requirements.txt
 ```
 
-#### Using docker
-```bash
-docker build -t pshtt/cli .
-
-docker run --rm -it \
-  --name pshtt \
-  -v $(pwd):/data \
-  -e UID=1042 \           /* Change the ownership of the files (**e.g** results)
-  -e GID=1042 \           to the user with id 1042 and to the group with id 1042. */
-  pshtt/cli
-```
-
 #### Usage and examples
 ```bash
 ./pshtt_cli [options] DOMAIN...
@@ -44,6 +32,17 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -u --user-agent=AGENT       Override user agent.
   -t --timeout=TIMEOUT        Override timeout (in seconds).
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
+```
+##### Using Docker (optional)
+```bash
+docker build -t pshtt/cli .
+
+docker run --rm -it \
+  --name pshtt \
+  -v $(pwd):/data \
+  -e UID=1042 \           /* Change the ownership of the files (**e.g** results)
+  -e GID=1042 \           to the user with id 1042 and to the group with id 1042. */
+  pshtt/cli
 ```
 
 ## What's Checked?
