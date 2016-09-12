@@ -12,13 +12,14 @@ pip install -r requirements.txt
 ```
 
 #### Usage and examples
-```bash
-./pshtt_cli [options] DOMAIN...
-./pshtt_cli [options] INPUT
 
-./pshtt_cli dhs.gov
-./pshtt_cli --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
-./pshtt_cli --sorted current-federal.csv
+```bash
+python -m pshtt.cli [options] DOMAIN...
+python -m pshtt.cli [options] INPUT
+
+python -m pshtt.cli dhs.gov
+python -m pshtt.cli --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
+python -m pshtt.cli --sorted current-federal.csv
 ```
 Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
 
