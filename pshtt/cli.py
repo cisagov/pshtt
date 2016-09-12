@@ -3,8 +3,8 @@
 """pshtt ("pushed") is a tool to test domains for HTTPS best practices.
 
 Usage:
-  pshtt.py (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
-  pshtt.py (-h | --help)
+  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
+  pshtt (-h | --help)
 
 Options:
   -h --help                   Show this message.
