@@ -60,17 +60,10 @@ setup(
 
     packages=['pshtt'],
 
-    # TODO: Loosen dependency restriction as much as possible while avoiding
-    # potential incompatibility issues.
-    # See https://packaging.python.org/requirements/:
-    # "It is not considered best practice to use install_requires to pin
-    # dependencies to specific versions, or to specify sub-dependencies (i.e.
-    # dependencies of your dependencies). This is overly-restrictive, and
-    # prevents the user from gaining the benefit of dependency upgrades."
     install_requires=[
-        'requests==2.10.0',
-        'SSLyze==0.13.6',
-        'wget==3.2',
+        'requests>=2.10.0',
+        'SSLyze>=0.13.6',
+        'wget>=3.2',
         'docopt',
         'requests_cache',
     ],
