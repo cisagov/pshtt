@@ -23,7 +23,7 @@ setup(
     # Versions should comply with PEP440
     version='0.1.0',
 
-    description='Scan websites for HTTPS deployment best pratices',
+    description='Scan websites for HTTPS deployment best practices',
     long_description=long_description,
 
     # The project's main homepage
