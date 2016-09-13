@@ -5,21 +5,23 @@
 
 ## Getting Started
 
-Download the repository, then install all dependencies.
+Download the repository, then install in ["development mode"][development-mode].
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
+
+[development-mode]: https://packaging.python.org/distributing/#working-in-development-mode
 
 #### Usage and examples
 
 ```bash
-python -m pshtt.cli [options] DOMAIN...
-python -m pshtt.cli [options] INPUT
+pshtt [options] DOMAIN...
+pshtt [options] INPUT
 
-python -m pshtt.cli dhs.gov
-python -m pshtt.cli --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
-python -m pshtt.cli --sorted current-federal.csv
+pshtt dhs.gov
+pshtt --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
+pshtt --sorted current-federal.csv
 ```
 Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
 
