@@ -27,6 +27,7 @@ import pshtt
 import utils
 import logging
 
+
 def main():
     args = docopt.docopt(__doc__, version='v0.0.1')
     utils.configure_logging(args['--debug'])
@@ -36,38 +37,36 @@ def main():
     # Read from a .csv, or allow domains on the command line.
     domains = []
     if args['INPUT'][0].endswith(".csv"):
-      domains = utils.load_domains(args['INPUT'][0])
+        domains = utils.load_domains(args['INPUT'][0])
     else:
-      domains = args['INPUT']
+        domains = args['INPUT']
 
     # If the user wants to sort them, sort them in place.
     if args['--sorted']:
         domains.sort()
 
     options = {
-      'user_agent': args['--user-agent'],
-      'timeout': args['--timeout'],
-      'preload_cache': args['--preload-cache'],
-      'cache': args['--cache']
+        'user_agent': args['--user-agent'],
+        'timeout': args['--timeout'],
+        'preload_cache': args['--preload-cache'],
+        'cache': args['--cache']
     }
     results = pshtt.inspect_domains(domains, options)
 
     # JSON can go to STDOUT, or to a file.
     if args['--json']:
-      output = utils.json_for(results)
-      if out_file is None:
-        print(output)
-      else:
-        utils.write(output, out_file)
-        logging.warn("Wrote results to %s." % out_file)
-
+        output = utils.json_for(results)
+        if out_file is None:
+            print(output)
+        else:
+            utils.write(output, out_file)
+            logging.warn("Wrote results to %s." % out_file)
     # CSV always goes to a file.
     else:
-      if args['--output'] is None:
-        out_file = 'results.csv'
+        if args['--output'] is None:
+            out_file = 'results.csv'
+        pshtt.csv_for(results, out_file)
+        logging.warn("Wrote results to %s." % out_file)
 
-      pshtt.csv_for(results, out_file)
-      logging.warn("Wrote results to %s." % out_file)
-
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

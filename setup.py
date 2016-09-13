@@ -7,7 +7,7 @@ Based on:
 - https://github.com/pypa/sampleproject/blob/master/setup.py
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from codecs import open
 from os import path
 
@@ -69,7 +69,7 @@ setup(
     ],
 
     # Conveniently allows one to run the CLI tool as `pshtt`
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'pshtt = pshtt.cli:main',
         ]
