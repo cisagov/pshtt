@@ -164,12 +164,17 @@ def basic_check(endpoint):
         # Figure out the error(s).
         https_check(endpoint)
 
+    except requests.exceptions.ConnectionError:
+        endpoint.live = False
+        logging.warn("Failed to connect.")
+        return
+
     # And this is the parent of ConnectionError and other things.
     # For example, "too many redirects".
     # See https://github.com/kennethreitz/requests/blob/master/requests/exceptions.py
     except requests.exceptions.RequestException:
         endpoint.live = False
-        logging.warn("Unexpected requests exception.")
+        logging.warn("Unexpected other requests exception.")
         return
 
     # Endpoint is live, analyze the response.
