@@ -30,9 +30,9 @@ setup(
     url='https://github.com/dhs-ncats/pshtt',
 
     # Author details
-    author='18F',
+    author='DHS NCATS',
 
-    license='Public Domain',
+    license='License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
