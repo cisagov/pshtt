@@ -5,20 +5,23 @@
 
 ## Getting Started
 
-Download the repository, then install all dependencies.
+Download the repository, then install in ["development mode"][development-mode].
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
-#### Usage and examples
-```bash
-./pshtt_cli [options] DOMAIN...
-./pshtt_cli [options] INPUT
+[development-mode]: https://packaging.python.org/distributing/#working-in-development-mode
 
-./pshtt_cli dhs.gov
-./pshtt_cli --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
-./pshtt_cli --sorted current-federal.csv
+#### Usage and examples
+
+```bash
+pshtt [options] DOMAIN...
+pshtt [options] INPUT
+
+pshtt dhs.gov
+pshtt --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
+pshtt --sorted current-federal.csv
 ```
 Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
 
@@ -32,6 +35,17 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -u --user-agent=AGENT       Override user agent.
   -t --timeout=TIMEOUT        Override timeout (in seconds).
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
+```
+##### Using Docker (optional)
+```bash
+docker build -t pshtt/cli .
+
+docker run --rm -it \
+  --name pshtt \
+  -v $(pwd):/data \
+  -e UID=1042 \           /* Change the ownership of the files (**e.g** results)
+  -e GID=1042 \           to the user with id 1042 and to the group with id 1042. */
+  pshtt/cli
 ```
 
 ## What's Checked?
