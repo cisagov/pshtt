@@ -13,24 +13,21 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the README
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
-
 setup(
     name='pshtt',
 
     # Versions should comply with PEP440
     version='0.1.0',
-
     description='Scan websites for HTTPS deployment best practices',
-    long_description=long_description,
 
+    # NCATS "homepage"
+    url='https://www.dhs.gov/cyber-incident-response',
     # The project's main homepage
-    url='https://github.com/dhs-ncats/pshtt',
+    download_url='https://github.com/dhs-ncats/pshtt',
 
     # Author details
-    author='DHS NCATS',
+    author='Department of Homeland Security, National Cybersecurity Assessments and Technical Services team',
+    author_email='ncats@hq.dhs.gov',
 
     license='License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',
 
@@ -62,7 +59,7 @@ setup(
 
     install_requires=[
         'requests>=2.10.0',
-        'SSLyze>=0.13.6',
+        'sslyze>=0.13.6',
         'wget>=3.2',
         'docopt',
         'requests_cache',
