@@ -4,14 +4,10 @@
 `pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Hitting that target will be an astonishing achievement.
 
 ## Getting Started
-
-Download the repository, then install in ["development mode"][development-mode].
-
+`pshtt` can be installed directly via pip:
 ```bash
-pip install -e .
+pip install pshtt
 ```
-
-[development-mode]: https://packaging.python.org/distributing/#working-in-development-mode
 
 #### Usage and examples
 
