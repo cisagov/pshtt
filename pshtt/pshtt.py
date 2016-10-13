@@ -37,7 +37,7 @@ TIMEOUT = 1
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
 HEADERS = [
-    "Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
+    "Domain", "Canonical URL", "Base Domain", "Live", "Redirect", "Redirect To",
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
@@ -80,6 +80,7 @@ def result_for(domain):
     result = {
         'Domain': domain.domain,
         'Canonical URL': domain.canonical.url,
+        'Base Domain': base_domain_for(domain.domain),
         'Live': is_live(domain),
         'Redirect': is_redirect(domain),
         'Redirect To': redirects_to(domain),
@@ -744,11 +745,17 @@ def csv_for(results, out_filename):
     for result in results:
         row = []
         for header in HEADERS:
+            if (header != "HSTS Header") and (header != "HSTS Max Age") and (header != "Redirect To"):
+                if result[header] is None:
+                    result[header] = False
             row.append(result[header])
         writer.writerow(row)
 
     out_file.close()
 
+# return base domain for a subdomain
+def base_domain_for(subdomain):
+    return str.join(".", subdomain.split(".")[-2:])
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache.
