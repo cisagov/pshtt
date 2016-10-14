@@ -37,7 +37,7 @@ TIMEOUT = 1
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
 HEADERS = [
-    "Domain", "Parent Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
+    "Domain", "Base Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
@@ -79,7 +79,7 @@ def result_for(domain):
     # First, the basic fields the CSV will use.
     result = {
         'Domain': domain.domain,
-        'Parent Domain': parent_domain_for(domain.domain),
+        'Base Domain': parent_domain_for(domain.domain),
         'Canonical URL': domain.canonical.url,
         'Live': is_live(domain),
         'Redirect': is_redirect(domain),
