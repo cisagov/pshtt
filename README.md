@@ -54,6 +54,7 @@ A domain is checked on its four endpoints:
 The following values are returned in `results.csv`:
 
 * `Domain` - The domain you're scanning!
+* `Base Domain` - The second-level domain of `Domain`.
 * `Canonical URL` - A judgment call based on the observed redirect logic of the domain.
 * `Live` - The domain is "live" if any endpoint is live.
 * `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
