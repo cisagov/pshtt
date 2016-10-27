@@ -31,7 +31,7 @@ if [ -f /data/*.csv ]; then
   cp /data/*.csv /usr/src/app
 fi
 
-python -m pshtt.cli $@
+python -m pshtt.cli "$@"
 
 # Copy the results back to the mount point and change the ownership so the host
 # gets it and can read it
