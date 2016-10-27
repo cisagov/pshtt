@@ -35,5 +35,7 @@ python -m pshtt.cli $@
 
 # Copy the results back to the mount point and change the ownership so the host
 # gets it and can read it
-cp /usr/src/app/*.csv /data/
+if [ -f /usr/src/app/*.csv ]; then
+  cp /usr/src/app/*.scv /data/
+fi
 chown -R "${uid}:${gid}" /data/
