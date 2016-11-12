@@ -41,7 +41,8 @@ HEADERS = [
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
-    "HSTS Preload Ready", "HSTS Preloaded"
+    "HSTS Preload Ready", "HSTS Preloaded",
+    "Uses HTTPS (M-15-13)", "Enforces HTTPS (M-15-13)", "HSTS (M-15-13)"
 ]
 
 PRELOAD_CACHE = None
@@ -99,7 +100,28 @@ def result_for(domain):
         'HSTS Max Age': hsts_max_age(domain),
         'HSTS Entire Domain': is_hsts_entire_domain(domain),
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
-        'HSTS Preloaded': is_hsts_preloaded(domain)
+        'HSTS Preloaded': is_hsts_preloaded(domain),
+
+        'Uses HTTPS (M-15-13)': (
+            is_valid_https(domain) and
+            is_downgrades_https(domain) != False
+            ) or (
+                is_bad_chain(domain) == True and
+                is_bad_hostname(domain) == False
+            ),
+        'Enforces HTTPS (M-15-13)': (
+            is_valid_https(domain) and
+            is_downgrades_https(domain) != False
+            ) or (
+                is_bad_chain(domain) == True and
+                is_bad_hostname(domain) == False and (
+                    is_defaults_to_https(domain) or (
+                        is_redirect(domain) and
+                        is_strictly_forces_https(domain)
+                )
+            )
+        ),
+        'HSTS (M-15-13)': hsts_max_age(domain) >= 31536000
     }
 
     # But also capture the extended data for those who want it.
