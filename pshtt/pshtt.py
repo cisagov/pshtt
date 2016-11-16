@@ -112,27 +112,26 @@ def result_for(domain):
             is_downgrades_https(domain) != True and
             is_bad_chain(domain) and
             is_bad_hostname(domain) != True
-            ),
+        ),
 
         # A domain that 'Enforces HTTPS' must 'Use HTTPS' and default to HTTPS.
         # 'Redirect domains' must strictly enforce HTTPS.
         'Enforces HTTPS (M-15-13)': ((
             is_downgrades_https(domain) != True and
             is_valid_https(domain)
+        ) or (
+            is_downgrades_https(domain) != True and
+            is_bad_chain(domain) and
+            is_bad_hostname(domain) != True
+        )) and (
+            is_strictly_forces_https(domain) and (
+                is_defaults_to_https(domain) or
+                is_redirect(domain)
             ) or (
-                is_downgrades_https(domain) != True and
-                is_bad_chain(domain) and
-                is_bad_hostname(domain) != True
-                )
-            ) and (
-                is_strictly_forces_https(domain) and (
-                    is_defaults_to_https(domain) or
-                    is_redirect(domain)
-                    ) or (
-                        is_strictly_forces_https(domain) != True and
-                        is_defaults_to_https(domain)
-                        )
-                    ),
+                is_strictly_forces_https(domain) != True and
+                is_defaults_to_https(domain)
+            )
+        ),
         'HSTS (M-15-13)': hsts_max_age(domain) >= 31536000
     }
 
