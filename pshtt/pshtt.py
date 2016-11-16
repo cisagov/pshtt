@@ -113,7 +113,6 @@ def result_for(domain):
             is_bad_chain(domain) and
             is_bad_hostname(domain) != True
         ),
-
         # A domain that 'Enforces HTTPS' must 'Use HTTPS' and default to HTTPS.
         # 'Redirect domains' must strictly enforce HTTPS.
         'Enforces HTTPS (M-15-13)': ((
