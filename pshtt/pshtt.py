@@ -102,25 +102,37 @@ def result_for(domain):
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain),
 
+        # A domain 'Uses HTTPS' when it doesn't downgrade and has valid HTTPS,
+        # or when it doesn't downgrade and has a bad chain but not a bad hostname.
+        # Domains with a bad chain "use" HTTPS but user-side errors should be expected.
         'Uses HTTPS (M-15-13)': (
-            is_valid_https(domain) and
-            is_downgrades_https(domain) != False
-            ) or (
-                is_bad_chain(domain) == True and
-                is_bad_hostname(domain) == False
+            is_downgrades_https(domain) != True and
+            is_valid_https(domain)
+        ) or (
+            is_downgrades_https(domain) != True and
+            is_bad_chain(domain) and
+            is_bad_hostname(domain) != True
             ),
-        'Enforces HTTPS (M-15-13)': (
-            is_valid_https(domain) and
-            is_downgrades_https(domain) != False
+
+        # A domain that 'Enforces HTTPS' must 'Use HTTPS' and default to HTTPS.
+        # 'Redirect domains' must strictly enforce HTTPS.
+        'Enforces HTTPS (M-15-13)': ((
+            is_downgrades_https(domain) != True and
+            is_valid_https(domain)
             ) or (
-                is_bad_chain(domain) == True and
-                is_bad_hostname(domain) == False and (
-                    is_defaults_to_https(domain) or (
-                        is_redirect(domain) and
-                        is_strictly_forces_https(domain)
+                is_downgrades_https(domain) != True and
+                is_bad_chain(domain) and
+                is_bad_hostname(domain) != True
                 )
-            )
-        ),
+            ) and (
+                is_strictly_forces_https(domain) and (
+                    is_defaults_to_https(domain) or
+                    is_redirect(domain)
+                    ) or (
+                        is_strictly_forces_https(domain) != True and
+                        is_defaults_to_https(domain)
+                        )
+                    ),
         'HSTS (M-15-13)': hsts_max_age(domain) >= 31536000
     }
 
