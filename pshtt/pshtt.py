@@ -102,7 +102,7 @@ def result_for(domain):
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain),
 
-        # A domain 'Uses HTTPS' when it doesn't downgrade and has valid HTTPS,
+        # A domain 'Support HTTPS' when it doesn't downgrade and has valid HTTPS,
         # or when it doesn't downgrade and has a bad chain but not a bad hostname.
         # Domains with a bad chain "use" HTTPS but user-side errors should be expected.
         'Domain Supports HTTPS': (
@@ -113,7 +113,7 @@ def result_for(domain):
             is_bad_chain(domain) and
             (is_bad_hostname(domain) != True)
         ),
-        # A domain that 'Enforces HTTPS' must 'Use HTTPS' and default to HTTPS.
+        # A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS.
         # 'Redirect domains' must strictly enforce HTTPS.
         'Domain Enforces HTTPS': ((
             (is_downgrades_https(domain) != True) and
