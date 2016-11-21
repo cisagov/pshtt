@@ -249,6 +249,19 @@ def basic_check(endpoint):
                 (subdomain_original != subdomain_eventual)
             )
 
+        # If we were able to make the first redirect, but not the ultimate redirect,
+        # and if the immediate redirect is external, then it's accurate enough to
+        # say that the eventual redirect is the immediate redirect, since you're capturing
+        # the domain it's going to.
+        # This also avoids "punishing" the domain for configuration issues of the site
+        # it redirects to.
+        elif endpoint.redirect_immediately_to_external:
+            endpoint.redirect_eventually_to = endpoint.redirect_immediately_to
+            endpoint.redirect_eventually_to_https = endpoint.redirect_immediately_to_https
+            endpoint.redirect_eventually_to_http = endpoint.redirect_immediately_to_http
+            endpoint.redirect_eventually_to_external = endpoint.redirect_immediately_to_external
+            endpoint.redirect_eventually_to_subdomain = endpoint.redirect_immediately_to_subdomain
+
 
 # Given an endpoint and its detected headers, extract and parse
 # any present HSTS header, decide what HSTS properties are there.
