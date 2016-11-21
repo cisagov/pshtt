@@ -102,9 +102,9 @@ def result_for(domain):
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain),
 
-        # A domain 'Support HTTPS' when it doesn't downgrade and has valid HTTPS,
+        # A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
         # or when it doesn't downgrade and has a bad chain but not a bad hostname.
-        # Domains with a bad chain "use" HTTPS but user-side errors should be expected.
+        # Domains with a bad chain "support" HTTPS but user-side errors should be expected.
         'Domain Supports HTTPS': (
             (is_downgrades_https(domain) != True) and
             is_valid_https(domain)
