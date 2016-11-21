@@ -250,7 +250,7 @@ def basic_check(endpoint):
             )
 
         # If we were able to make the first redirect, but not the ultimate redirect,
-        # and if the immediate redirect is external, then it's accurate enough to say
+        # and if the immediate redirect is external, then it's accurate enough to
         # say that the eventual redirect is the immediate redirect, since you're capturing
         # the domain it's going to.
         # This also avoids "punishing" the domain for configuration issues of the site
