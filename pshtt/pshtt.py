@@ -41,12 +41,12 @@ HEADERS = [
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
-    "HSTS Preload Ready", "HSTS Preloaded"
+    "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded"
 ]
 
 PRELOAD_CACHE = None
 preload_list = None
-
+preload_pending = None
 
 def inspect(base_domain):
     domain = Domain(base_domain)
@@ -99,6 +99,7 @@ def result_for(domain):
         'HSTS Max Age': hsts_max_age(domain),
         'HSTS Entire Domain': is_hsts_entire_domain(domain),
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
+        'HSTS Preload Pending': is_hsts_preload_pending(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain)
     }
 
@@ -693,17 +694,36 @@ def is_hsts_preload_ready(domain):
 
     return preload_ready
 
+# Whether a domain is formally pending inclusion
+# in Chrome's HSTS preload list.
+def is_hsts_preload_pending(domain):
+    return domain.domain in preload_pending
 
 # Whether a domain is contained in Chrome's HSTS preload list.
 def is_hsts_preloaded(domain):
     return domain.domain in preload_list
-
 
 # For "x.y.domain.gov", return "domain.gov".
 # TODO: use Public Suffix list to do this properly.
 def parent_domain_for(hostname):
     return str.join(".", hostname.split(".")[-2:])
 
+# Fetch the Chrome preload pending list. Don't cache, it's quick/small.
+def fetch_preload_pending():
+    logging.debug("Fetching Chrome pending preload list...")
+
+    pending_url = "https://hstspreload.appspot.com/api/v2/pending"
+
+    request = requests.get(pending_url)
+    raw = request.content
+    pending_json = json.loads(raw)
+
+    pending = []
+    for entry in pending_json:
+        if entry.get('include_subdomains', False) is True:
+            pending.append(entry['name'])
+
+    return pending
 
 def create_preload_list():
     preload_json = None
@@ -791,6 +811,10 @@ def inspect_domains(domains, options):
     # Download HSTS preload list, caches locally.
     global preload_list
     preload_list = create_preload_list()
+
+    # Download HSTS pending preload list. Not cached.
+    global preload_pending
+    preload_pending = fetch_preload_pending()
 
     # For every given domain, get inspect data.
     results = []
