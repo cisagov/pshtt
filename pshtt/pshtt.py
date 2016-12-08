@@ -719,12 +719,13 @@ def is_domain_supports_https(domain):
 # enforce HTTPS.
 def is_domain_enforces_https(domain):
     return is_domain_supports_https(domain) and (
-        is_strictly_forces_https(domain) and (
+        is_strictly_forces_https(domain) and
+        (
             is_defaults_to_https(domain) or
             is_redirect(domain)
         ) or (
-            (is_strictly_forces_https(domain) != True) and
-            is_defaults_to_https(domain)
+        (is_strictly_forces_https(domain) != True) and
+        is_defaults_to_https(domain)
         )
     )
 
