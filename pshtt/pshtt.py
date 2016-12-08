@@ -102,39 +102,9 @@ def result_for(domain):
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain),
 
-        # A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
-        # or when it doesn't downgrade and has a bad chain but not a bad hostname.
-        # Domains with a bad chain "support" HTTPS but user-side errors should be expected.
-        'Domain Supports HTTPS': (
-            (is_downgrades_https(domain) != True) and
-            is_valid_https(domain)
-        ) or (
-            (is_downgrades_https(domain) != True) and
-            is_bad_chain(domain) and
-            (is_bad_hostname(domain) != True)
-        ),
-        # A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS.
-        # 'Redirect domains' must strictly enforce HTTPS.
-        'Domain Enforces HTTPS': ((
-            (is_downgrades_https(domain) != True) and
-            is_valid_https(domain)
-        ) or (
-            (is_downgrades_https(domain) != True) and
-            is_bad_chain(domain) and
-            (is_bad_hostname(domain) != True)
-        )) and (
-            is_strictly_forces_https(domain) and (
-                is_defaults_to_https(domain) or
-                is_redirect(domain)
-            ) or (
-                (is_strictly_forces_https(domain) != True) and
-                is_defaults_to_https(domain)
-            )
-        ),
-        'Domain Uses Strong HSTS': (
-            is_hsts(domain) and
-            hsts_max_age(domain) >= 31536000
-        )
+        'Domain Supports HTTPS': is_domain_supports_https(domain),
+        'Domain Enforces HTTPS': is_domain_enforces_https(domain),
+        'Domain Uses Strong HSTS': is_domain_strong_hsts(domain)
     }
 
     # But also capture the extended data for those who want it.
@@ -725,6 +695,45 @@ def is_hsts_preloaded(domain):
 # TODO: use Public Suffix list to do this properly.
 def parent_domain_for(hostname):
     return str.join(".", hostname.split(".")[-2:])
+
+
+# A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
+# or when it doesn't downgrade and has a bad chain but not a bad hostname.
+# Domains with a bad chain "support" HTTPS but user-side errors should be expected.
+def is_domain_supports_https(domain):
+    return (
+            (is_downgrades_https(domain) != True) and
+            is_valid_https(domain)
+        ) or (
+            (is_downgrades_https(domain) != True) and
+            is_bad_chain(domain) and
+            (is_bad_hostname(domain) != True)
+        )
+
+
+# A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS.
+# For websites (where Redirect is false) they are allowed to eventually
+# redirect to an https:// URI. For "redirect domains" (domains where the
+# Redirect value is true) they must immediately redirect clients to an
+# https:// URI (even if that URI is on another domain) in order to be said to
+# enforce HTTPS.
+def is_domain_enforces_https(domain):
+    return is_domain_supports_https(domain) and (
+        is_strictly_forces_https(domain) and (
+            is_defaults_to_https(domain) or
+            is_redirect(domain)
+        ) or (
+            (is_strictly_forces_https(domain) != True) and
+            is_defaults_to_https(domain)
+        )
+    )
+
+
+def is_domain_strong_hsts(domain):
+    return (
+        is_hsts(domain) and
+        hsts_max_age(domain) >= 31536000
+    )
 
 
 def create_preload_list():
