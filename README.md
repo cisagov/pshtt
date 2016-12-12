@@ -72,6 +72,9 @@ The following values are returned in `results.csv`:
 * `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its root HTTPS endpoint has HSTS enabled and uses the HSTS `includeSubDomains` flag.
 * `HSTS Preload Ready` - A domain is HSTS "preload ready" if its root HTTPS endpoint has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
 * `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json), regardless of what header is present on any endpoint.
+* `Domain Supports HTTPS` - A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS, or when it doesn't downgrade and has a bad chain but not a bad hostname (a bad hostname makes it clear the domain isn't actively attempting to support HTTPS, whereas an incomplete chain is just a mistake.). Domains with a bad chain "support" HTTPS but user-side errors can be expected.
+* `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
+* `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
 
 ## Acknowledgements
 This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
