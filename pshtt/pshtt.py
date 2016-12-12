@@ -102,8 +102,8 @@ def result_for(domain):
         'HSTS Entire Domain': is_hsts_entire_domain(domain),
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preload Pending': is_hsts_preload_pending(domain),
-        'HSTS Preloaded': is_hsts_preloaded(domain)
-      
+        'HSTS Preloaded': is_hsts_preloaded(domain),
+
         'Domain Supports HTTPS': is_domain_supports_https(domain),
         'Domain Enforces HTTPS': is_domain_enforces_https(domain),
         'Domain Uses Strong HSTS': is_domain_strong_hsts(domain)
@@ -718,7 +718,6 @@ def parent_domain_for(hostname):
     return str.join(".", hostname.split(".")[-2:])
 
 
-
 # A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
 # or when it doesn't downgrade and has a bad chain but not a bad hostname.
 # Domains with a bad chain "support" HTTPS but user-side errors should be expected.
@@ -757,9 +756,9 @@ def is_domain_strong_hsts(domain):
         is_hsts(domain) and
         hsts_max_age(domain) >= 31536000
     )
-  
-  
-  # Fetch the Chrome preload pending list. Don't cache, it's quick/small.
+
+
+# Fetch the Chrome preload pending list. Don't cache, it's quick/small.
 def fetch_preload_pending():
     logging.debug("Fetching Chrome pending preload list...")
 
