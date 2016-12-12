@@ -702,13 +702,13 @@ def parent_domain_for(hostname):
 # Domains with a bad chain "support" HTTPS but user-side errors should be expected.
 def is_domain_supports_https(domain):
     return (
-            (is_downgrades_https(domain) != True) and
-            is_valid_https(domain)
-        ) or (
-            (is_downgrades_https(domain) != True) and
-            is_bad_chain(domain) and
-            (is_bad_hostname(domain) != True)
-        )
+        (not is_downgrades_https(domain)) and
+        is_valid_https(domain)
+    ) or (
+        (not is_downgrades_https(domain)) and
+        is_bad_chain(domain) and
+        (not is_bad_hostname(domain))
+    )
 
 
 # A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS.
@@ -724,8 +724,8 @@ def is_domain_enforces_https(domain):
             is_defaults_to_https(domain) or
             is_redirect(domain)
         ) or (
-        (is_strictly_forces_https(domain) != True) and
-        is_defaults_to_https(domain)
+            (not is_strictly_forces_https(domain)) and
+            is_defaults_to_https(domain)
         )
     )
 
