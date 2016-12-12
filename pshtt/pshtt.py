@@ -42,6 +42,7 @@ HEADERS = [
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded"
+    "Domain Supports HTTPS", "Domain Enforces HTTPS", "Domain Uses Strong HSTS"
 ]
 
 PRELOAD_CACHE = None
@@ -102,6 +103,10 @@ def result_for(domain):
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preload Pending': is_hsts_preload_pending(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain)
+      
+        'Domain Supports HTTPS': is_domain_supports_https(domain),
+        'Domain Enforces HTTPS': is_domain_enforces_https(domain),
+        'Domain Uses Strong HSTS': is_domain_strong_hsts(domain)
     }
 
     # But also capture the extended data for those who want it.
@@ -713,7 +718,48 @@ def parent_domain_for(hostname):
     return str.join(".", hostname.split(".")[-2:])
 
 
-# Fetch the Chrome preload pending list. Don't cache, it's quick/small.
+
+# A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
+# or when it doesn't downgrade and has a bad chain but not a bad hostname.
+# Domains with a bad chain "support" HTTPS but user-side errors should be expected.
+def is_domain_supports_https(domain):
+    return (
+        (not is_downgrades_https(domain)) and
+        is_valid_https(domain)
+    ) or (
+        (not is_downgrades_https(domain)) and
+        is_bad_chain(domain) and
+        (not is_bad_hostname(domain))
+    )
+
+
+# A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS.
+# For websites (where Redirect is false) they are allowed to eventually
+# redirect to an https:// URI. For "redirect domains" (domains where the
+# Redirect value is true) they must immediately redirect clients to an
+# https:// URI (even if that URI is on another domain) in order to be said to
+# enforce HTTPS.
+def is_domain_enforces_https(domain):
+    return is_domain_supports_https(domain) and (
+        is_strictly_forces_https(domain) and
+        (
+            is_defaults_to_https(domain) or
+            is_redirect(domain)
+        ) or (
+            (not is_strictly_forces_https(domain)) and
+            is_defaults_to_https(domain)
+        )
+    )
+
+
+def is_domain_strong_hsts(domain):
+    return (
+        is_hsts(domain) and
+        hsts_max_age(domain) >= 31536000
+    )
+  
+  
+  # Fetch the Chrome preload pending list. Don't cache, it's quick/small.
 def fetch_preload_pending():
     logging.debug("Fetching Chrome pending preload list...")
 
