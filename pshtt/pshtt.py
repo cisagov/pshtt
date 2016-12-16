@@ -412,7 +412,10 @@ def canonical_endpoint(http, httpwww, https, httpswww):
         return (
             (not endpoint.live) or
             endpoint.https_bad_hostname or
-            (not str(endpoint.status).startswith("2"))
+            (
+                (not str(endpoint.status).startswith("2")) and
+                (not str(endpoint.status).startswith("3"))
+            )
         )
 
     def goes_to_www(endpoint):
