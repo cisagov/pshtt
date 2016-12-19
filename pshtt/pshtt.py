@@ -473,12 +473,15 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 
     at_least_one_https_endpoint = https_used(https) or https_used(httpswww)
     all_http_unused = http_unused(http) and http_unused(httpwww)
+    both_http_down = (not http.live) and (not httpwww.live)
     at_least_one_http_upgrades = http_upgrades(http) or http_upgrades(httpwww)
 
     is_https = (
         at_least_one_https_endpoint and
         all_http_unused and
-        at_least_one_http_upgrades
+        (
+            both_http_down or at_least_one_http_upgrades
+        )
     )
 
     if is_www and is_https:
@@ -765,7 +768,7 @@ def is_domain_strong_hsts(domain):
 def fetch_preload_pending():
     logging.debug("Fetching Chrome pending preload list...")
 
-    pending_url = "https://hstspreload.appspot.com/api/v2/pending"
+    pending_url = "https://hstspreload.org/api/v2/pending"
 
     request = requests.get(pending_url)
     raw = request.content
