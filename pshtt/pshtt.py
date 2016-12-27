@@ -834,6 +834,7 @@ def csv_for(results, out_filename):
 
     for result in results:
         row = []
+        # TODO: Fix this upstream
         for header in HEADERS:
             if (header != "HSTS Header") and (header != "HSTS Max Age") and (header != "Redirect To"):
                 if result[header] is None:
