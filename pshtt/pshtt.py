@@ -179,7 +179,6 @@ def basic_check(endpoint):
 
     except requests.exceptions.ConnectionError as err:
         endpoint.live = False
-        logging.warn("Failed to connect.")
         logging.debug("{0}".format(err))
         return
 
