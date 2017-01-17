@@ -9,6 +9,7 @@ import csv
 import os
 import utils
 import logging
+import pytablewriter
 
 try:
     from urllib import parse as urlparse  # Python 3
@@ -834,6 +835,26 @@ def create_preload_list():
             fully_preloaded.append(entry['name'])
 
     return fully_preloaded
+
+
+def md_for(results, out_fd):
+    value_matrix = []
+    for result in results:
+        row = []
+        # TODO: Fix this upstream
+        for header in HEADERS:
+            if (header != "HSTS Header") and (header != "HSTS Max Age") and (header != "Redirect To"):
+                if result[header] is None:
+                    result[header] = False
+            row.append(" %s" % result[header])
+        value_matrix.append(row)
+
+    writer = pytablewriter.MarkdownTableWriter()
+    writer.header_list = HEADERS
+    writer.value_matrix = value_matrix
+
+    writer.stream = out_fd
+    writer.write_table()
 
 
 # Output a CSV string for an array of results, with a

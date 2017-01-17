@@ -3,7 +3,7 @@
 """pshtt ("pushed") is a tool to test domains for HTTPS best practices.
 
 Usage:
-  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
+  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--markdown] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache]
   pshtt (-h | --help)
 
 Options:
@@ -11,6 +11,7 @@ Options:
   -s --sorted                 Sort output by domain, A-Z.
   -o --output=OUTFILE         Name output file. (Defaults to "results".)
   -j --json                   Get results in JSON. (Defaults to CSV.)
+  -m --markdown               Get results in Markdown. (Defaults to CSV.)
   -d --debug                  Print debug output.
   -u --user-agent=AGENT       Override user agent
   -t --timeout=TIMEOUT        Override timeout (in seconds)
@@ -26,6 +27,7 @@ import docopt
 import pshtt
 import utils
 import logging
+import sys
 
 
 def main():
@@ -61,6 +63,16 @@ def main():
         else:
             utils.write(output, out_file)
             logging.warn("Wrote results to %s." % out_file)
+    # Markdwon can go to STDOUT, or to a file
+    elif args['--markdown']:
+        output = sys.stdout
+        if out_file is not None:
+            output = open(out_file, 'w')
+
+        pshtt.md_for(results, output)
+
+        if out_file is not None:
+            output.close()
     # CSV always goes to a file.
     else:
         if args['--output'] is None:
