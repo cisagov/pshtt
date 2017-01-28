@@ -588,11 +588,19 @@ def is_downgrades_https(domain):
     else:
         canonical_https = https
 
-    return (
-        supports_https and
-        canonical_https.redirect_immediately_to_http and
-        (not canonical_https.redirect_immediately_to_external)
-    )
+    # If the site doesn't support HTTPS, it doesn't make sense to ask if it
+    # downgrades it or not, so return None instead of True or False.
+    downgrades_https = None
+    if supports_https:
+        # Explicitly convert to bool to avoid unintentionally returning None,
+        # which may happen if the site doesn't redirect.
+        downgrades_https = bool(
+            canonical_https.redirect_immediately_to_http and
+            (not canonical_https.redirect_immediately_to_external)
+        )
+
+    return downgrades_https
+
 
 
 # A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is
