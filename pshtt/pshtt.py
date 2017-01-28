@@ -597,7 +597,6 @@ def is_downgrades_https(domain):
     )
 
 
-
 # A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is
 # "live", and if both *HTTP* endpoints are either:
 #
