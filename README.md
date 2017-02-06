@@ -77,8 +77,8 @@ The following values are returned in `results.csv`:
 >* `HSTS` - A domain has HTTP Strict Transport Security enabled if its canonical HTTPS endpoint has HSTS enabled.
 * `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
-* `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its **root HTTPS endpoint** (not the canonical HTTPS endpoint) has HSTS enabled and uses the HSTS `includeSubDomains` flag.
-* `HSTS Preload Ready` - A domain is HSTS "preload ready" if its **root HTTPS endpoint** (not the canonical HTTPS endpoint) has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
+* `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled and uses the HSTS `includeSubDomains` flag.
+* `HSTS Preload Ready` - A domain is HSTS "preload ready" if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
 * `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.org/api/v2/pending).
 * `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json), regardless of what header is present on any endpoint.
 
@@ -88,13 +88,13 @@ These three fields use the previous results to come to high-level conclusions ab
 * `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
 
-## Acknowledgements
-This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
-
 ## Who uses pshtt?
 * GSA maintains [Pulse](https://pulse.cio.gov), a dashboard that tracks how federal government domains are meeting best practices on the web. [Pulse is open source](https://github.com/18F/pulse).
 * The Freedom of the Press Foundation runs [securethe.news](https://securethe.news), a site that aims to "track and promote the adoption of HTTPS encryption by major news organizations' websites". [Secure the News is open source](https://securethe.news/blog/secure-news-open-source/).
 * DHS issues [HTTPS Reports](https://18f.gsa.gov/2017/01/06/open-source-collaboration-across-agencies-to-improve-https-deployment/) to federal executive branch agencies.
+
+## Acknowledgements
+This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
 
 ## Public domain
 This project is in the worldwide [public domain](LICENSE.md).
