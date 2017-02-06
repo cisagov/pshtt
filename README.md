@@ -1,7 +1,9 @@
 ## Pushing HTTPS :lock:
-"pshtt" is the sound you make when you feel mildly astonished. `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
+`pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Hitting that target will be an astonishing achievement.
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
+
+`pshtt` is a collaboration between GSA's 18F and the DHS National Cybersecurity Assessments and Technical Services team.
 
 ## Getting Started
 `pshtt` can be installed directly via pip:
@@ -75,9 +77,9 @@ The following values are returned in `results.csv`:
 >* `HSTS` - A domain has HTTP Strict Transport Security enabled if its canonical HTTPS endpoint has HSTS enabled.
 * `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
-* `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its root HTTPS endpoint has HSTS enabled and uses the HSTS `includeSubDomains` flag.
-* `HSTS Preload Ready` - A domain is HSTS "preload ready" if its root HTTPS endpoint has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
-* `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.appspot.com/api/v2/pending).
+* `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its **root HTTPS endpoint** (not the canonical HTTPS endpoint) has HSTS enabled and uses the HSTS `includeSubDomains` flag.
+* `HSTS Preload Ready` - A domain is HSTS "preload ready" if its **root HTTPS endpoint** (not the canonical HTTPS endpoint) has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
+* `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.org/api/v2/pending).
 * `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json), regardless of what header is present on any endpoint.
 
 #### Scoring
@@ -88,6 +90,11 @@ These three fields use the previous results to come to high-level conclusions ab
 
 ## Acknowledgements
 This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
+
+## Who uses pshtt?
+* GSA maintains [Pulse](https://pulse.cio.gov), a dashboard that tracks how federal government domains are meeting best practices on the web. [Pulse is open source](https://github.com/18F/pulse).
+* The Freedom of the Press Foundation runs [securethe.news](https://securethe.news), a site that aims to "track and promote the adoption of HTTPS encryption by major news organizations' websites". [Secure the News is open source](https://securethe.news/blog/secure-news-open-source/).
+* DHS issues [HTTPS Reports](https://18f.gsa.gov/2017/01/06/open-source-collaboration-across-agencies-to-improve-https-deployment/) to federal executive branch agencies.
 
 ## Public domain
 This project is in the worldwide [public domain](LICENSE.md).
