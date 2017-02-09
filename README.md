@@ -46,6 +46,16 @@ docker run --rm -it \
   pshtt/cli
 ```
 
+##### Using your own CA Bundle
+
+The `pshtt` tool utilizes [`requests`](https://github.com/kennethreitz/requests) to perform HTTP requests.  If you work behind a corporate proxy or have your own certificates that aren't part of the bundled certificates from `requests`, you can point to your own using the  environment variable `REQUESTS_CA_BUNDLE`:
+
+```bash
+export REQUESTS_CA_BUNDLE=/etc/ssl/ca.pem
+pshtt server.internal-location.com  # will use your ca.pem instead to check trusts
+```
+
+
 ## What's Checked?
 A domain is checked on its four endpoints:
 * `http://`
