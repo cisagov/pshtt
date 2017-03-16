@@ -91,6 +91,7 @@ The following values are returned in `results.csv`:
 * `HSTS Preload Ready` - A domain is HSTS "preload ready" if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
 * `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.org/api/v2/pending).
 * `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json), regardless of what header is present on any endpoint.
+* `Base Domain HSTS Preloaded` - A domain's base domain is HSTS preloaded. This is subtly different from `HSTS Entire Domain`, which inpects headers on the base domain to see if HSTS is set correctly to encompass the entire zone. This checks the preload list directly.
 
 #### Scoring
 These three fields use the previous results to come to high-level conclusions about a domain's behavior.
