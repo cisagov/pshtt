@@ -155,15 +155,14 @@ def basic_check(endpoint):
         # Retry with certificate validation disabled.
         try:
             req = ping(endpoint.url, verify=False)
-        except requests.exceptions.SSLError:
+        except requests.exceptions.SSLError as err:
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
-            logging.warn("Unexpected SSL protocol (or other) error during retry.")
+            logging.warn("Unexpected SSL protocol (or other) error during retry. Printing error:\n{0}".format(err))
             return
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as err:
             endpoint.live = False
-            logging.warn("Unexpected requests exception during retry. Printing error:")
-            logging.warn(utils.format_last_exception())
+            logging.warn("Unexpected requests exception during retry. Printing error:\n{0}".format(err))
             return
 
         # If it was a certificate error of any kind, it's live.
@@ -172,17 +171,17 @@ def basic_check(endpoint):
         # Figure out the error(s).
         https_check(endpoint)
 
-    except requests.exceptions.ConnectionError:
+    except requests.exceptions.ConnectionError as err:
         endpoint.live = False
-        logging.warn("Failed to connect.")
+        logging.warn("Failed to connect. Printing error:\n{0}".format(err))
         return
 
     # And this is the parent of ConnectionError and other things.
     # For example, "too many redirects".
     # See https://github.com/kennethreitz/requests/blob/master/requests/exceptions.py
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as err:
         endpoint.live = False
-        logging.warn("Unexpected other requests exception.")
+        logging.warn("Unexpected other requests exception. Printing error:\n{0}".format(err))
         return
 
     # Endpoint is live, analyze the response.
@@ -322,24 +321,24 @@ def https_check(endpoint):
 
     try:
         server_info.test_connectivity_to_server()
-    except sslyze.server_connectivity.ServerConnectivityError:
-        logging.warn("Error in sslyze server connectivity check")
+    except sslyze.server_connectivity.ServerConnectivityError as err:
+        logging.warn("Error in sslyze server connectivity check. Printing error:\n{0}".format(err))
         return
 
     cert_plugin = CertificateInfoPlugin()
     try:
         cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
-    except nassl._nassl.OpenSSLError:
-        logging.warn("Error in sslyze cert info plugin")
+    except nassl._nassl.OpenSSLError as err:
+        logging.warn("Error in sslyze cert info plugin Printing error:\n{0}".format(err))
         return
-    except nassl.x509_certificate.X509HostnameValidationError:
-        logging.warn("Error parsing x.509 certificate.")
+    except nassl.x509_certificate.X509HostnameValidationError as err:
+        logging.warn("Error parsing x.509 certificate. Printing error:\n{0}".format(err))
         return
 
     try:
         cert_response = cert_plugin_result.as_text()
-    except TypeError:
-        logging.warn("sslyze exception parsing issuer, see https://github.com/nabla-c0d3/sslyze/issues/167")
+    except TypeError as err:
+        logging.warn("sslyze exception parsing issuer, see https://github.com/nabla-c0d3/sslyze/issues/167. Printing error:\n{0}".format(err))
         return
 
     # Debugging
