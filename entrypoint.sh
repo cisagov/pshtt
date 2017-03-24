@@ -26,16 +26,13 @@ else
 	gid=1000
 fi
 
-# Copy the input if there is one in the mount point
-if [ -f /data/*.csv ]; then
-  cp /data/*.csv /usr/src/app
-fi
+# Copy the inputs
+cp /data/*.csv /usr/src/app
 
 python -m pshtt.cli "$@"
 
 # Copy the results back to the mount point and change the ownership so the host
 # gets it and can read it
-if [ -f /usr/src/app/*.csv ]; then
-  cp /usr/src/app/*.csv /data/
-fi
+cp /usr/src/app/*.csv /data/
+
 chown -R "${uid}:${gid}" /data/
