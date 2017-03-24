@@ -70,8 +70,8 @@ def load_domains(domain_csv):
 # Configure logging level, so logging.debug can hinge on --debug.
 def configure_logging(debug=False):
     if debug:
-        log_level = "debug"
+        log_level = logging.DEBUG
     else:
-        log_level = "warn"
+        log_level = logging.WARNING
 
-    logging.basicConfig(format='%(message)s', level=log_level.upper())
+    logging.basicConfig(format='%(message)s', level=log_level)
