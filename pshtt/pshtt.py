@@ -533,12 +533,7 @@ def is_redirect(domain):
     # 308 Permanent Redirect (RFC 7538)
     redirect_codes = [300, 301, 302, 303, 304, 305, 306, 307, 308]
 
-    return (
-        (https.status in redirect_codes) or
-        (http.status in redirect_codes) or
-        (httpswww.status in redirect_codes) or
-        (httpwww.status in redirect_codes) or
-    )
+    return ((https.status in redirect_codes) or (http.status in redirect_codes) or (httpswww.status in redirect_codes) or (httpwww.status in redirect_codes))
 
 
 # If a domain is a "redirect domain", where does it redirect to?
