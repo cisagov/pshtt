@@ -59,6 +59,7 @@ setup(
         'wget>=3.2',
         'docopt',
         'requests_cache',
+        'pytablewriter',
     ],
 
     # Conveniently allows one to run the CLI tool as `pshtt`
