@@ -1,5 +1,5 @@
-requests==2.10.0
-SSLyze==0.13.6
+requests==2.13.0
+sslyze==1.1.0
 wget==3.2
 docopt
 requests_cache

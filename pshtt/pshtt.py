@@ -18,8 +18,7 @@ except ImportError:
 
 import nassl
 import sslyze
-from sslyze.server_connectivity import ServerConnectivityInfo
-from sslyze.plugins.certificate_info_plugin import CertificateInfoPlugin
+import sslyze.synchronous_scanner
 
 from models import Domain, Endpoint
 
@@ -324,7 +323,7 @@ def https_check(endpoint):
 
     # remove the https:// from prefix for sslyze
     hostname = endpoint.url[8:]
-    server_info = ServerConnectivityInfo(hostname=hostname, port=443)
+    server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
 
     try:
         server_info.test_connectivity_to_server()
@@ -333,17 +332,20 @@ def https_check(endpoint):
         logging.debug("{0}".format(err))
         return
 
-    cert_plugin = CertificateInfoPlugin()
-    try:
-        cert_plugin_result = cert_plugin.process_task(server_info, 'certinfo_basic')
-    except nassl._nassl.OpenSSLError as err:
-        logging.warn("Error in sslyze cert info plugin.")
-        logging.debug("{0}".format(err))
-        return
-    except nassl.x509_certificate.X509HostnameValidationError as err:
-        logging.warn("Error parsing x.509 certificate.")
-        logging.debug("{0}".format(err))
-        return
+
+    command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
+    scanner = sslyze.synchronous_scanner.SynchronousScanner()
+
+    # try:
+    cert_plugin_result = scanner.run_scan_command(server_info, command)
+    # except nassl._nassl.OpenSSLError as err:
+    #     logging.warn("Error in sslyze cert info plugin.")
+    #     logging.debug("{0}".format(err))
+    #     return
+    # except nassl.x509_certificate.X509HostnameValidationError as err:
+    #     logging.warn("Error parsing x.509 certificate.")
+    #     logging.debug("{0}".format(err))
+    #     return
 
     try:
         cert_response = cert_plugin_result.as_text()
