@@ -16,7 +16,6 @@ try:
 except ImportError:
     import urlparse  # Python 2
 
-import nassl
 import sslyze
 import sslyze.synchronous_scanner
 
@@ -336,23 +335,13 @@ def https_check(endpoint):
     command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
     scanner = sslyze.synchronous_scanner.SynchronousScanner()
 
-    # try:
     cert_plugin_result = scanner.run_scan_command(server_info, command)
-    # except nassl._nassl.OpenSSLError as err:
-    #     logging.warn("Error in sslyze cert info plugin.")
-    #     logging.debug("{0}".format(err))
-    #     return
-    # except nassl.x509_certificate.X509HostnameValidationError as err:
-    #     logging.warn("Error parsing x.509 certificate.")
-    #     logging.debug("{0}".format(err))
-    #     return
 
     try:
         cert_response = cert_plugin_result.as_text()
-    except TypeError as err:
-        logging.warn("Error parsing malformed issuer field (see https://github.com/nabla-c0d3/sslyze/issues/167)")
-        logging.debug("{0}".format(err))
-        return
+    except AttributeError as err:
+        logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
+        return None
 
     # Debugging
     # for msg in cert_response:
