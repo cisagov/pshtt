@@ -46,6 +46,10 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
 
     # What does your project relate to?
@@ -54,7 +58,7 @@ setup(
     packages=['pshtt'],
 
     install_requires=[
-        'requests>=2.10.0',
+        'requests>=2.14.2',
         'sslyze>=1.1.0',
         'wget>=3.2',
         'docopt',
