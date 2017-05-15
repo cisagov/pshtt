@@ -331,7 +331,6 @@ def https_check(endpoint):
         logging.debug("{0}".format(err))
         return
 
-
     command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
     scanner = sslyze.synchronous_scanner.SynchronousScanner()
 
