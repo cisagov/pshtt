@@ -13,7 +13,7 @@ setup(
     name='pshtt',
 
     # Versions should comply with PEP440
-    version='0.1.5',
+    version='0.1.6',
     description='Scan websites for HTTPS deployment best practices',
 
     # NCATS "homepage"
