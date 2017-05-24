@@ -511,32 +511,19 @@ def is_live(domain):
 def is_redirect(domain):
     http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
 
-    # TODO: make sub-function of the conditional below.
-    # def is_redirect_or_down(endpoint):
+    # Redirect codes from https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection
+    # 300 Multiple Choices
+    # 301 Moved Permanently
+    # 302 Found
+    # 303 See Other (since HTTP/1.1)
+    # 304 Not Modified (RFC 7232)
+    # 305 Use Proxy (since HTTP/1.1)
+    # 306 Switch Proxy
+    # 307 Temporary Redirect (since HTTP/1.1)
+    # 308 Permanent Redirect (RFC 7538)
+    redirect_codes = [300, 301, 302, 303, 304, 305, 306, 307, 308]
 
-    return is_live(domain) and (
-        (
-            https.redirect_eventually_to_external or
-            (not https.live) or
-            https.https_bad_hostname or
-            https.status >= 400
-        ) and
-        (
-            httpswww.redirect_eventually_to_external or
-            (not httpswww.live) or
-            httpswww.https_bad_hostname or
-            httpswww.status >= 400
-        ) and
-        (
-            httpwww.redirect_eventually_to_external or
-            (not httpwww.live) or
-            httpwww.status >= 400
-        ) and
-        (
-            http.redirect_eventually_to_external or
-            (not http.live) or
-            http.status >= 400
-        ))
+    return ((https.status in redirect_codes) or (http.status in redirect_codes) or (httpswww.status in redirect_codes) or (httpwww.status in redirect_codes))
 
 
 # If a domain is a "redirect domain", where does it redirect to?
