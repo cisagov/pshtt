@@ -12,6 +12,7 @@ import csv
 import os
 import logging
 import pytablewriter
+import sys
 
 try:
     from urllib import parse as urlparse  # Python 3
@@ -773,7 +774,12 @@ def fetch_preload_pending():
     pending_url = "https://hstspreload.org/api/v2/pending"
 
     request = requests.get(pending_url)
-    raw = str(request.content, 'utf-8')
+
+    # TODO: abstract Py 2/3 check out to utils
+    if sys.version_info[0] < 3:
+        raw = request.content
+    else:
+        raw = str(request.content, 'utf-8')
 
     pending_json = json.loads(raw)
 
