@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from . import utils
+from .models import Domain, Endpoint
+
 import requests
 # import requests_cache
 import re
@@ -7,7 +10,6 @@ import base64
 import json
 import csv
 import os
-import utils
 import logging
 import pytablewriter
 
@@ -18,8 +20,6 @@ except ImportError:
 
 import sslyze
 import sslyze.synchronous_scanner
-
-from models import Domain, Endpoint
 
 # We're going to be making requests with certificate validation disabled.
 requests.packages.urllib3.disable_warnings()
@@ -773,7 +773,8 @@ def fetch_preload_pending():
     pending_url = "https://hstspreload.org/api/v2/pending"
 
     request = requests.get(pending_url)
-    raw = request.content
+    raw = str(request.content, 'utf-8')
+
     pending_json = json.loads(raw)
 
     pending = []
