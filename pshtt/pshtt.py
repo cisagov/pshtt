@@ -724,7 +724,7 @@ def is_hsts_preloaded(domain):
 
 # Whether a domain's parent domain is in Chrome's HSTS preload list.
 def is_parent_hsts_preloaded(domain):
-    return parent_domain_for(domain.domain) in preload_list
+    return is_hsts_preloaded(Domain(parent_domain_for(domain.domain)))
 
 
 # For "x.y.domain.gov", return "domain.gov".
