@@ -41,7 +41,7 @@ def main():
     if args['INPUT'][0].endswith(".csv"):
         domains = utils.load_domains(args['INPUT'][0])
     else:
-        domains = args['INPUT']
+        domains = utils.format_domains(args['INPUT'])
 
     # If the user wants to sort them, sort them in place.
     if args['--sorted']:

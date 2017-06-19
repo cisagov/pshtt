@@ -63,7 +63,7 @@ def load_domains(domain_csv):
 
             row[0] = row[0].lower()
 
-            domains.append(row[0])
+            domains.append(format_domain(row[0]))
     return domains
 
 
@@ -75,3 +75,28 @@ def configure_logging(debug=False):
         log_level = logging.WARNING
 
     logging.basicConfig(format='%(message)s', level=log_level)
+
+
+# Ensure domains given are not prepended with www/https/http/combination of both.
+def format_domain(domain_name):
+    # Check for www. prepended
+    if domain_name.startswith("www."):
+        return domain_name[4:]
+    # Check for https prepended, account for www. as well
+    if domain_name.startswith("https://"):
+        return format_domain(domain_name[8:])
+
+    # Check for http:// prepended, account for www. as well
+    if domain_name.startswith("http://"):
+        return format_domain(domain_name[7:])
+
+    return domain_name
+
+
+def format_domains(domains):
+    formatted_domains = []
+
+    for domain in domains:
+        formatted_domains.append(format_domain(domain))
+
+    return formatted_domains
