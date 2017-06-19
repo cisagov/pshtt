@@ -48,7 +48,7 @@ docker run --rm -it \
 
 ##### Using your own CA Bundle
 
-The `pshtt` tool utilizes [`requests`](https://github.com/kennethreitz/requests) to perform HTTP requests.  If you work behind a corporate proxy or have your own certificates that aren't part of the bundled certificates from `requests`, you can point to your own using the  environment variable `REQUESTS_CA_BUNDLE`:
+`pshtt` utilizes [`requests`](https://github.com/kennethreitz/requests) to perform HTTP requests.  If you work behind a corporate proxy or have your own certificates that aren't part of the bundled certificates from `requests`, you can point to your own using the environment variable `REQUESTS_CA_BUNDLE`:
 
 ```bash
 export REQUESTS_CA_BUNDLE=/etc/ssl/ca.pem
@@ -65,7 +65,7 @@ A domain is checked on its four endpoints:
 
 The following values are returned in `results.csv`:
 #### Domain and redirect info
->* `Domain` - The domain you're scanning!
+* `Domain` - The domain you're scanning!
 * `Base Domain` - The second-level domain of `Domain`.
 * `Canonical URL` -  One of the four endpoints described above; a judgment call based on the observed redirect logic of the domain.
 * `Live` - The domain is "live" if any endpoint is live.
@@ -73,28 +73,29 @@ The following values are returned in `results.csv`:
 * `Redirect to` - If a domain is a "redirect domain", where does it redirect to?
 
 #### Landing on HTTPS
->* `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at the hostname in its Canonical URL with an unexpired valid certificate for the hostname. This can be true even if the Canonical URL uses HTTP.
+* `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at the hostname in its Canonical URL with an unexpired valid certificate for the hostname. This can be true even if the Canonical URL uses HTTP.
 * `Defaults to HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
 * `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects internally to HTTP.
 * `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both HTTP endpoints are either down or redirect immediately to any HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long as it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
 
 #### Common errors
->* `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
+* `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
 * `HTTPS Expired Cert` - A domain has an expired certificate if the either HTTPS endpoint has an expired certificate.
 
 #### HSTS
->* `HSTS` - A domain has HTTP Strict Transport Security enabled if its canonical HTTPS endpoint has HSTS enabled.
+* `HSTS` - A domain has HTTP Strict Transport Security enabled if its canonical HTTPS endpoint has HSTS enabled.
 * `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
 * `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled and uses the HSTS `includeSubDomains` flag.
 * `HSTS Preload Ready` - A domain is HSTS "preload ready" if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
 * `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.org/api/v2/pending).
 * `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json), regardless of what header is present on any endpoint.
+* `Base Domain HSTS Preloaded` - A domain's base domain is HSTS preloaded. This is subtly different from `HSTS Entire Domain`, which inpects headers on the base domain to see if HSTS is set correctly to encompass the entire zone. This checks the preload list directly.
 
 #### Scoring
 These three fields use the previous results to come to high-level conclusions about a domain's behavior.
->* `Domain Supports HTTPS` - A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS, or when it doesn't downgrade and has a bad chain but not a bad hostname (a bad hostname makes it clear the domain isn't actively attempting to support HTTPS, whereas an incomplete chain is just a mistake.). Domains with a bad chain "support" HTTPS but user-side errors can be expected.
+* `Domain Supports HTTPS` - A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS, or when it doesn't downgrade and has a bad chain but not a bad hostname (a bad hostname makes it clear the domain isn't actively attempting to support HTTPS, whereas an incomplete chain is just a mistake.). Domains with a bad chain "support" HTTPS but user-side errors can be expected.
 * `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
 

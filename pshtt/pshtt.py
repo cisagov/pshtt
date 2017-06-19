@@ -41,7 +41,8 @@ HEADERS = [
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
-    "Domain Supports HTTPS", "Domain Enforces HTTPS", "Domain Uses Strong HSTS"
+    "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
+    "Domain Enforces HTTPS", "Domain Uses Strong HSTS"
 ]
 
 PRELOAD_CACHE = None
@@ -102,6 +103,7 @@ def result_for(domain):
         'HSTS Preload Ready': is_hsts_preload_ready(domain),
         'HSTS Preload Pending': is_hsts_preload_pending(domain),
         'HSTS Preloaded': is_hsts_preloaded(domain),
+        'Base Domain HSTS Preloaded': is_parent_hsts_preloaded(domain),
 
         'Domain Supports HTTPS': is_domain_supports_https(domain),
         'Domain Enforces HTTPS': is_domain_enforces_https(domain),
@@ -718,6 +720,11 @@ def is_hsts_preload_pending(domain):
 # Whether a domain is contained in Chrome's HSTS preload list.
 def is_hsts_preloaded(domain):
     return domain.domain in preload_list
+
+
+# Whether a domain's parent domain is in Chrome's HSTS preload list.
+def is_parent_hsts_preloaded(domain):
+    return is_hsts_preloaded(Domain(parent_domain_for(domain.domain)))
 
 
 # For "x.y.domain.gov", return "domain.gov".
