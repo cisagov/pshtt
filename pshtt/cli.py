@@ -23,9 +23,10 @@ Notes:
   CSV output will always be written to disk, defaulting to results.csv.
 """
 
+from . import pshtt
+from . import utils
+
 import docopt
-import pshtt
-import utils
 import logging
 import sys
 

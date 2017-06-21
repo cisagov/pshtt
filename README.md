@@ -3,12 +3,38 @@
 
 `pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
-`pshtt` is a collaboration between GSA's 18F and the DHS National Cybersecurity Assessments and Technical Services team.
+`pshtt` is a collaboration between the [Department of Homeland Security's National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
 ## Getting Started
+
+`pshtt` can be installed as a module, or run directly from the repository.
+
+#### Installed as a module
+
 `pshtt` can be installed directly via pip:
+
 ```bash
 pip install pshtt
+```
+
+It can then be run directly:
+
+```bash
+pshtt example.com [options]
+```
+
+#### Running directly
+
+To run the tool locally from the repository, without installing , first install the requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+Then run it as a module via `python -m`:
+
+```bash
+python -m pshtt.cli example.com [options]
 ```
 
 #### Usage and examples
