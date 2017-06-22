@@ -13,7 +13,7 @@ setup(
     name='pshtt',
 
     # Versions should comply with PEP440
-    version='0.2',
+    version='0.2.1',
     description='Scan websites for HTTPS deployment best practices',
 
     # NCATS "homepage"
@@ -45,13 +45,9 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
-<<<<<<< Updated upstream
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
-=======
-        'Programming Language :: Python :: 3'
->>>>>>> Stashed changes
     ],
 
     # What does your project relate to?
