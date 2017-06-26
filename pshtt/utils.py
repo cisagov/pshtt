@@ -6,6 +6,7 @@ import logging
 import datetime
 import sys
 import traceback
+import re
 
 
 # Display exception without re-throwing it.
@@ -82,6 +83,6 @@ def format_domains(domains):
 
     for domain in domains:
         # Replace a single instance of http://, https://, and www. if present.
-        formatted_domains.append(domain.replace("https://", "").replace("http://", "", 1).replace("www.", "", 1))
+        formatted_domains.append(re.sub("^(https?://)?(www\.)?", "", domain))
 
     return formatted_domains
