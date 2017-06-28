@@ -6,6 +6,7 @@ import logging
 import datetime
 import sys
 import traceback
+import re
 
 
 # Display exception without re-throwing it.
@@ -75,3 +76,13 @@ def configure_logging(debug=False):
         log_level = logging.WARNING
 
     logging.basicConfig(format='%(message)s', level=log_level)
+
+
+def format_domains(domains):
+    formatted_domains = []
+
+    for domain in domains:
+        # Replace a single instance of http://, https://, and www. if present.
+        formatted_domains.append(re.sub("^(https?://)?(www\.)?", "", domain))
+
+    return formatted_domains
