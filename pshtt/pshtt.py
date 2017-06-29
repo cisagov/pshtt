@@ -2,6 +2,7 @@
 
 from . import utils
 from .models import Domain, Endpoint
+from publicsuffix import PublicSuffixList
 
 import requests
 # import requests_cache
@@ -49,6 +50,7 @@ HEADERS = [
 PRELOAD_CACHE = None
 preload_list = None
 preload_pending = None
+suffix_list = PublicSuffixList()
 
 
 def inspect(base_domain):
@@ -729,9 +731,8 @@ def is_parent_hsts_preloaded(domain):
 
 
 # For "x.y.domain.gov", return "domain.gov".
-# TODO: use Public Suffix list to do this properly.
 def parent_domain_for(hostname):
-    return str.join(".", hostname.split(".")[-2:])
+    return suffix_list.get_public_suffix(hostname)
 
 
 # A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
