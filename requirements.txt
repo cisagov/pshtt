@@ -4,3 +4,4 @@ wget==3.2
 docopt
 requests_cache
 pytablewriter
+publicsuffix

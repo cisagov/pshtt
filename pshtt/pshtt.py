@@ -2,6 +2,8 @@
 
 from . import utils
 from .models import Domain, Endpoint
+from publicsuffix import PublicSuffixList
+from publicsuffix import fetch
 
 import requests
 # import requests_cache
@@ -13,6 +15,7 @@ import os
 import logging
 import pytablewriter
 import sys
+import codecs
 
 try:
     from urllib import parse as urlparse  # Python 3
@@ -49,6 +52,10 @@ HEADERS = [
 PRELOAD_CACHE = None
 preload_list = None
 preload_pending = None
+
+# Used for determining base domain via Mozilla's public suffix list.
+SUFFIX_CACHE = None
+suffix_list = None
 
 
 def inspect(base_domain):
@@ -729,9 +736,8 @@ def is_parent_hsts_preloaded(domain):
 
 
 # For "x.y.domain.gov", return "domain.gov".
-# TODO: use Public Suffix list to do this properly.
 def parent_domain_for(hostname):
-    return str.join(".", hostname.split(".")[-2:])
+    return suffix_list.get_public_suffix(hostname)
 
 
 # A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
@@ -840,6 +846,24 @@ def create_preload_list():
     return fully_preloaded
 
 
+def load_suffix_list():
+    if SUFFIX_CACHE and os.path.exists(SUFFIX_CACHE):
+        logging.debug("Using cached suffix list.")
+        cache_file = codecs.open(SUFFIX_CACHE, encoding='utf-8')
+        suffixes = PublicSuffixList(cache_file)
+    else:
+        # File does not exist, download current list and cache it at given location.
+        cache_file = fetch()
+        content = cache_file.readlines()
+        suffixes = PublicSuffixList(content)
+
+        if SUFFIX_CACHE:
+            logging.debug("Caching suffix list at %s" % SUFFIX_CACHE)
+            utils.write(''.join(content), SUFFIX_CACHE)
+
+    return suffixes
+
+
 def md_for(results, out_fd):
     value_matrix = []
     for result in results:
@@ -883,7 +907,7 @@ def csv_for(results, out_filename):
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache.
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
@@ -901,6 +925,8 @@ def inspect_domains(domains, options):
         # utils.mkdir_p(cache_dir)
         # requests_cache.install_cache("%s/cache" % cache_dir)
         logging.warn("WARNING: Caching disabled.")
+    if options.get('suffix_cache'):
+        SUFFIX_CACHE = options['suffix_cache']
 
     # Download HSTS preload list, caches locally.
     global preload_list
@@ -909,6 +935,9 @@ def inspect_domains(domains, options):
     # Download HSTS pending preload list. Not cached.
     global preload_pending
     preload_pending = fetch_preload_pending()
+
+    global suffix_list
+    suffix_list = load_suffix_list()
 
     # For every given domain, get inspect data.
     results = []
