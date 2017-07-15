@@ -854,6 +854,7 @@ def load_suffix_list():
         suffixes = PublicSuffixList(cache_file)
     else:
         # File does not exist, download current list and cache it at given location.
+        logging.debug("Downloading the Public Suffix List...")
         cache_file = fetch()
         content = cache_file.readlines()
         suffixes = PublicSuffixList(content)

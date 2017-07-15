@@ -1,7 +1,8 @@
 ## Pushing HTTPS :lock:
+
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their web sites and services by the end of 2016. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their public web sites and services by the end of 2016. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
 `pshtt` is a collaboration between the [Department of Homeland Security's National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
@@ -50,6 +51,7 @@ pshtt --sorted current-federal.csv
 Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
 
 #### Options
+
 ```bash
   -h --help                   Show this message.
   -s --sorted                 Sort output by domain, A-Z.
@@ -59,8 +61,11 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -u --user-agent=AGENT       Override user agent.
   -t --timeout=TIMEOUT        Override timeout (in seconds).
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
+  -l --suffix-cache=SUFFIX    Cache suffix list, and where to cache it.
 ```
+
 ##### Using Docker (optional)
+
 ```bash
 docker build -t pshtt/cli .
 
@@ -83,6 +88,7 @@ pshtt server.internal-location.com  # will use your ca.pem instead to check trus
 
 
 ## What's Checked?
+
 A domain is checked on its four endpoints:
 * `http://`
 * `http://www`
@@ -90,26 +96,31 @@ A domain is checked on its four endpoints:
 * `https://www`
 
 The following values are returned in `results.csv`:
+
 #### Domain and redirect info
+
 * `Domain` - The domain you're scanning!
-* `Base Domain` - The second-level domain of `Domain`.
+* `Base Domain` - The base domain of `Domain`. For example, for a Domain of `sub.example.com`, the Base Domain will be `example.com`. Usually this is the second-level domain, but `pshtt` will download and factor in the [Public Suffix List](https://publicsuffix.org) when calculating the base domain. (To cache the Public Suffix List, use `--suffix-cache` as documented above.)
 * `Canonical URL` -  One of the four endpoints described above; a judgment call based on the observed redirect logic of the domain.
 * `Live` - The domain is "live" if any endpoint is live.
 * `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
 * `Redirect to` - If a domain is a "redirect domain", where does it redirect to?
 
 #### Landing on HTTPS
+
 * `Valid HTTPS` - A domain has "valid HTTPS" if it responds on port 443 at the hostname in its Canonical URL with an unexpired valid certificate for the hostname. This can be true even if the Canonical URL uses HTTP.
 * `Defaults to HTTPS` - A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
 * `Downgrades HTTPS` -  A domain "downgrades HTTPS" if HTTPS is supported in some way, but its canonical HTTPS endpoint immediately redirects internally to HTTP.
 * `Strictly Forces HTTPS` - This is different than whether a domain "defaults" to HTTPS. A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is "live", and if both HTTP endpoints are either down or redirect immediately to any HTTPS URI. An HTTP redirect can go to HTTPS on another domain, as long as it's immediate. (A domain with an invalid cert can still be enforcing HTTPS.)
 
 #### Common errors
+
 * `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
 * `HTTPS Expired Cert` - A domain has an expired certificate if the either HTTPS endpoint has an expired certificate.
 
 #### HSTS
+
 * `HSTS` - A domain has HTTP Strict Transport Security enabled if its canonical HTTPS endpoint has HSTS enabled.
 * `HSTS Header` - This field provides a domain's HSTS header at its canonical endpoint.
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
@@ -120,20 +131,25 @@ The following values are returned in `results.csv`:
 * `Base Domain HSTS Preloaded` - A domain's base domain is HSTS preloaded. This is subtly different from `HSTS Entire Domain`, which inpects headers on the base domain to see if HSTS is set correctly to encompass the entire zone. This checks the preload list directly.
 
 #### Scoring
+
 These three fields use the previous results to come to high-level conclusions about a domain's behavior.
+
 * `Domain Supports HTTPS` - A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS, or when it doesn't downgrade and has a bad chain but not a bad hostname (a bad hostname makes it clear the domain isn't actively attempting to support HTTPS, whereas an incomplete chain is just a mistake.). Domains with a bad chain "support" HTTPS but user-side errors can be expected.
 * `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
 
 ## Who uses pshtt?
+
 * GSA maintains [Pulse](https://pulse.cio.gov), a dashboard that tracks how federal government domains are meeting best practices on the web. [Pulse is open source](https://github.com/18F/pulse).
 * The Freedom of the Press Foundation runs [securethe.news](https://securethe.news), a site that aims to "track and promote the adoption of HTTPS encryption by major news organizations' websites". [Secure the News is open source](https://securethe.news/blog/secure-news-open-source/).
 * DHS issues [HTTPS Reports](https://18f.gsa.gov/2017/01/06/open-source-collaboration-across-agencies-to-improve-https-deployment/) to federal executive branch agencies.
 
 ## Acknowledgements
-This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [konklone](https://github.com/konklone).
+
+This code was modeled after [Ben Balter](https://github.com/benbalter)'s [site-inspector](https://github.com/benbalter/site-inspector), with significant guidance from [Eric Mill](https://github.com/konklone).
 
 ## Public domain
+
 This project is in the worldwide [public domain](LICENSE.md).
 
 This project is in the public domain within the United States, and copyright and related rights in the work worldwide are waived through the [CC0 1.0 Universal public domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
