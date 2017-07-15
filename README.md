@@ -61,6 +61,7 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -u --user-agent=AGENT       Override user agent.
   -t --timeout=TIMEOUT        Override timeout (in seconds).
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
+  -l --suffix-cache=SUFFIX    Cache suffix list, and where to cache it.
 ```
 
 ##### Using Docker (optional)
@@ -99,7 +100,7 @@ The following values are returned in `results.csv`:
 #### Domain and redirect info
 
 * `Domain` - The domain you're scanning!
-* `Base Domain` - The second-level domain of `Domain`.
+* `Base Domain` - The base domain of `Domain`. For example, for a Domain of `sub.example.com`, the Base Domain will be `example.com`. Usually this is the second-level domain, but `pshtt` will download and factor in the [Public Suffix List](https://publicsuffix.org) when calculating the base domain. (To cache the Public Suffix List, use `--suffix-cache` as documented above.)
 * `Canonical URL` -  One of the four endpoints described above; a judgment call based on the observed redirect logic of the domain.
 * `Live` - The domain is "live" if any endpoint is live.
 * `Redirect` - The domain is a "redirect domain" if at least one endpoint is a redirect, and all endpoints are either redirects or down.
