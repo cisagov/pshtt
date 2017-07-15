@@ -204,7 +204,7 @@ def basic_check(endpoint):
 
     endpoint.status = req.status_code
 
-    if (req.headers.get('Location') != None) and str(endpoint.status).startswith('3'):
+    if (req.headers.get('Location') is not None) and str(endpoint.status).startswith('3'):
         endpoint.redirect = True
 
     if endpoint.redirect:
