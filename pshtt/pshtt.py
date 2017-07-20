@@ -14,7 +14,7 @@ import csv
 import os
 import logging
 import pytablewriter
-import sys 
+import sys
 import codecs
 
 try:
@@ -356,8 +356,8 @@ def https_check(endpoint):
         return None
 
     #Debugging
-    for msg in cert_response:
-        print(msg)
+    #for msg in cert_response:
+    #    print(msg)
 
     # A certificate can have multiple issues.
     for msg in cert_response:
