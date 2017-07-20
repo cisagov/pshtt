@@ -57,6 +57,7 @@ class Endpoint:
         self.https_bad_chain = None
         self.https_bad_hostname = None
         self.https_expired_cert = None
+        self.https_self_signed_cert = None
         self.hsts = None
         self.hsts_header = None
         self.hsts_max_age = None
@@ -98,6 +99,7 @@ class Endpoint:
             obj['https_bad_chain'] = self.https_bad_chain
             obj['https_bad_hostname'] = self.https_bad_hostname
             obj['https_expired_cert'] = self.https_expired_cert
+            obj['https_self_signed_cert'] = self.https_self_signed_cert
             obj['hsts'] = self.hsts
             obj['hsts_header'] = self.hsts_header
             obj['hsts_max_age'] = self.hsts_max_age

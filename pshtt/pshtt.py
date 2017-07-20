@@ -14,7 +14,7 @@ import csv
 import os
 import logging
 import pytablewriter
-import sys
+import sys 
 import codecs
 
 try:
@@ -43,6 +43,7 @@ HEADERS = [
     "Domain", "Base Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
+    "HTTPS Self Signed Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
@@ -103,6 +104,7 @@ def result_for(domain):
         'HTTPS Bad Chain': is_bad_chain(domain),
         'HTTPS Bad Hostname': is_bad_hostname(domain),
         'HTTPS Expired Cert': is_expired_cert(domain),
+        'HTTPS Self Signed Cert': is_self_signed_cert(domain),
 
         'HSTS': is_hsts(domain),
         'HSTS Header': hsts_header(domain),
@@ -353,29 +355,44 @@ def https_check(endpoint):
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
 
-    # Debugging
-    # for msg in cert_response:
-    #     print(msg)
+    #Debugging
+    for msg in cert_response:
+        print(msg)
 
     # A certificate can have multiple issues.
     for msg in cert_response:
 
         # Check for certificate expiration.
         if (
-            (("Mozilla NSS CA Store") in msg) and
+            (("Mozilla") in msg) and
             (("FAILED") in msg) and
             (("certificate has expired") in msg)
         ):
             endpoint.https_expired_cert = True
-
-        # Check for whether there's a valid chain to Mozilla.
-        # Note: this will also catch expired certs, but this is okay.
+        #Check to see if the cert is self-signed
         if (
-            (("Mozilla NSS CA Store") in msg) and
+            (("Mozilla") in msg) and
             (("FAILED") in msg) and
-            (("Certificate is NOT Trusted") in msg)
+            (("self signed certificate") in msg)
+        ):
+            endpoint.https_self_signed_cert = True
+        # Check to see if there is a bad chain
+
+        # NOTE: If this is the only flag that's set, it's probably
+        # an incomplete chain
+
+        # If this isnt the only flag that is set, it's might be 
+        # because there is another error. More debugging would 
+        # need to be done at this point, but not through sslyze
+        # because sslyze doesn't have enough granularity
+
+        if (
+            (("Mozilla") in msg) and
+            (("FAILED") in msg) and
+            (("unable to get local issuer certificate") in msg)
         ):
             endpoint.https_bad_chain = True
+
 
         # Check for whether the hostname validates.
         if (
@@ -666,6 +683,16 @@ def is_expired_cert(domain):
 
     return canonical_https.https_expired_cert
 
+# Returns if the either https endpoint has a self-signed cert cert
+def is_self_signed_cert(domain):
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_self_signed_cert
 
 # Domain has HSTS if its canonical HTTPS endpoint has HSTS.
 def is_hsts(domain):
