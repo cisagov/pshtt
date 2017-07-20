@@ -355,9 +355,9 @@ def https_check(endpoint):
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
 
-    #Debugging
-    #for msg in cert_response:
-    #    print(msg)
+    # Debugging
+    # for msg in cert_response:
+    #     print(msg)
 
     # A certificate can have multiple issues.
     for msg in cert_response:
@@ -369,7 +369,8 @@ def https_check(endpoint):
             (("certificate has expired") in msg)
         ):
             endpoint.https_expired_cert = True
-        #Check to see if the cert is self-signed
+
+        # Check to see if the cert is self-signed
         if (
             (("Mozilla") in msg) and
             (("FAILED") in msg) and
@@ -380,8 +381,7 @@ def https_check(endpoint):
 
         # NOTE: If this is the only flag that's set, it's probably
         # an incomplete chain
-
-        # If this isnt the only flag that is set, it's might be 
+        # If this isnt the only flag that is set, it's might be
         # because there is another error. More debugging would 
         # need to be done at this point, but not through sslyze
         # because sslyze doesn't have enough granularity
@@ -392,7 +392,6 @@ def https_check(endpoint):
             (("unable to get local issuer certificate") in msg)
         ):
             endpoint.https_bad_chain = True
-
 
         # Check for whether the hostname validates.
         if (
@@ -683,6 +682,7 @@ def is_expired_cert(domain):
 
     return canonical_https.https_expired_cert
 
+
 # Returns if the either https endpoint has a self-signed cert cert
 def is_self_signed_cert(domain):
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
@@ -693,6 +693,7 @@ def is_self_signed_cert(domain):
         canonical_https = https
 
     return canonical_https.https_self_signed_cert
+
 
 # Domain has HSTS if its canonical HTTPS endpoint has HSTS.
 def is_hsts(domain):
