@@ -382,7 +382,7 @@ def https_check(endpoint):
         # NOTE: If this is the only flag that's set, it's probably
         # an incomplete chain
         # If this isnt the only flag that is set, it's might be
-        # because there is another error. More debugging would 
+        # because there is another error. More debugging would
         # need to be done at this point, but not through sslyze
         # because sslyze doesn't have enough granularity
 
