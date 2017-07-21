@@ -9,6 +9,7 @@ class Domain:
         self.httpwww = None
         self.https = None
         self.httpswww = None
+        self.unknownerror = None
 
         # Filled in after analyzing each endpoint.
         self.canonical = None
@@ -36,6 +37,7 @@ class Endpoint:
         self.status = None
         self.live = None
         self.redirect = None
+        self.unknownerror = None
 
         # If an endpoint redirects, characterize the redirect behavior
         self.redirect_immediately_to = None
@@ -90,7 +92,8 @@ class Endpoint:
             'redirect_eventually_to_https': self.redirect_eventually_to_https,
             'redirect_eventually_to_http': self.redirect_eventually_to_http,
             'redirect_eventually_to_external': self.redirect_eventually_to_external,
-            'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain
+            'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain,
+            'unknown_error': self.unknownerror,
         }
 
         if self.protocol == "https":
