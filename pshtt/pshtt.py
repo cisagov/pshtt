@@ -922,8 +922,7 @@ def csv_for(results, out_filename):
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE,\
-            CA_FILE, STORE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE, CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
