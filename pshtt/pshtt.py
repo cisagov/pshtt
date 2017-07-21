@@ -16,6 +16,7 @@ import logging
 import pytablewriter
 import sys
 import codecs
+import OpenSSL
 
 try:
     from urllib import parse as urlparse  # Python 3
@@ -178,6 +179,11 @@ def basic_check(endpoint):
             logging.warn("Unexpected requests exception during retry.")
             logging.debug("{0}".format(err))
             return
+        except OpenSSL.SSL.Error as err:
+            endpoint.live = False
+            logging.warn("Unexpected OpenSSL exception during retry.")
+            logging.debug("{0}".format(err))
+            return 
 
         # If it was a certificate error of any kind, it's live.
         endpoint.live = True
