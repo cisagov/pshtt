@@ -185,7 +185,7 @@ def basic_check(endpoint):
             endpoint.live = False
             logging.warn("Unexpected OpenSSL exception during retry.")
             logging.debug("{0}".format(err))
-            return 
+            return
         except Exception as err:
             endpoint.unknownerror = True
             logging.warn("Unexpected other unknown exception during requests retry.")
@@ -211,7 +211,7 @@ def basic_check(endpoint):
         logging.warn("Unexpected other requests exception.")
         logging.debug("{0}".format(err))
         return
-    
+
     except Exception as err:
         endpoint.unknownerror = True
         logging.warn("Unexpected other unknown exception during initial\
@@ -358,6 +358,7 @@ def hsts_check(endpoint):
         logging.debug("{0}".format(err))
         return
 
+
 # Uses sslyze to figure out the reason the endpoint wouldn't verify.
 def https_check(endpoint):
     logging.debug("sslyzing %s..." % endpoint.url)
@@ -371,7 +372,7 @@ def https_check(endpoint):
         logging.warn("Unknown exception when checking server connectivity info\
             with sslyze.")
         logging.debug("{0}".format(err))
-        return 
+        return
 
     try:
         server_info.test_connectivity_to_server()
@@ -383,7 +384,7 @@ def https_check(endpoint):
         endpoint.unknownerror = True
         logging.warn("Unknown exception in sslyze server connectivity check.")
         logging.debug("{0}".format(err))
-        return 
+        return
 
     try:
         command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
@@ -393,7 +394,7 @@ def https_check(endpoint):
         endpoint.unknownerror = True
         logging.warn("Unknown exception in sslyze scanner.")
         logging.debug("{0}".format(err))
-        return 
+        return
 
     try:
         cert_response = cert_plugin_result.as_text()
@@ -404,14 +405,14 @@ def https_check(endpoint):
         endpoint.unknownerror = True
         logging.warn("Unknown exception in cert plugin.")
         logging.debug("{0}".format(err))
-        return 
+        return
 
     # Debugging
     # for msg in cert_response:
     #     print(msg)
 
     # A certificate can have multiple issues.
-    #TODO remove this before submitting PR 
+    #TODO remove this before submitting PR
     for msg in cert_response:
 
         # Check for certificate expiration.
@@ -834,7 +835,8 @@ def is_domain_strong_hsts(domain):
             is_hsts(domain) and
             hsts_max_age(domain) >= 31536000
         )
-    return None 
+    return None
+
 
 # Checks if the domain had an Unknown error somewhere
 # The main purpos of this is to flag any odd websites for
@@ -846,6 +848,7 @@ def did_domain_error(domain):
         if list_of_endpoints[endpoint]['unknown_error']:
             return True
     return False
+
 
 # Fetch the Chrome preload pending list. Don't cache, it's quick/small.
 def fetch_preload_pending():
