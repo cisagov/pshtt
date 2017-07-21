@@ -411,7 +411,6 @@ def https_check(endpoint):
     #     print(msg)
 
     # A certificate can have multiple issues.
-    #TODO remove this before submitting PR
     for msg in cert_response:
 
         # Check for certificate expiration.
