@@ -59,6 +59,8 @@ suffix_list = None
 
 # Set is user wants to use a custom CA bundle
 CA_FILE = None
+STORE = "Mozilla"
+
 
 def inspect(base_domain):
     domain = Domain(base_domain)
@@ -361,24 +363,19 @@ def https_check(endpoint):
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
 
-    # Debugging   
-    for msg in cert_response:
-        print(msg)
-  
-    # By default, the store that we want to check is the Mozilla store
-    # However, if a user wants to use their own CA bundle, check the
-    # "Custom" Option from the sslyze output.
-    store = "Mozilla"
-    if CA_FILE:
-        store = "Custom"
+    # Debugging
+    # for msg in cert_response:
+    #     print(msg)
+
+    # STORE will be either "Mozilla" or "Custom"
+    # depending on what the user chose.
 
     # A certificate can have multiple issues.
     for msg in cert_response:
 
         # Check for certificate expiration.
         if (
-            #(("Mozilla NSS CA Store") in msg) and   
-            (store in msg) and
+            (STORE in msg) and
             (("FAILED") in msg) and
             (("certificate has expired") in msg)
         ):
@@ -387,8 +384,7 @@ def https_check(endpoint):
         # Check for whether there's a valid chain to Mozilla.
         # Note: this will also catch expired certs, but this is okay.
         if (
-            #(("Mozilla NSS CA Store") in msg) and
-            (store in msg) and
+            (STORE in msg) and
             (("FAILED") in msg) and
             (("Certificate is NOT Trusted") in msg)
         ):
@@ -927,7 +923,7 @@ def csv_for(results, out_filename):
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
     global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE,\
-            CA_FILE
+            CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
@@ -950,6 +946,10 @@ def inspect_domains(domains, options):
         SUFFIX_CACHE = options['suffix_cache']
     if options.get('ca_file'):
         CA_FILE = options['ca_file']
+        # By default, the store that we want to check is the Mozilla store
+        # However, if a user wants to use their own CA bundle, check the
+        # "Custom" Option from the sslyze output.
+        STORE = "Custom"
 
     # Download HSTS preload list, caches locally.
     global preload_list
