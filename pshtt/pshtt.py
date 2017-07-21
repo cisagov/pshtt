@@ -156,7 +156,6 @@ def basic_check(endpoint):
     #
     # * Validate certificates. (Will figure out error if necessary.)
     try:
-
         req = ping(endpoint.url)
 
         endpoint.live = True
@@ -368,7 +367,7 @@ def https_check(endpoint):
         hostname = endpoint.url[8:]
         server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
     except Exception as err:
-        endpoint.unknownerro = True
+        endpoint.unknownerror = True
         logging.warn("Unknown exception when checking server connectivity info\
             with sslyze.")
         logging.debug("{0}".format(err))
@@ -417,7 +416,7 @@ def https_check(endpoint):
 
         # Check for certificate expiration.
         if (
-            #(("Mozilla NSS CA Store") in msg) and
+            (("Mozilla NSS CA Store") in msg) and
             (("FAILED") in msg) and
             (("certificate has expired") in msg)
         ):
@@ -426,7 +425,7 @@ def https_check(endpoint):
         # Check for whether there's a valid chain to Mozilla.
         # Note: this will also catch expired certs, but this is okay.
         if (
-            #(("Mozilla NSS CA Store") in msg) and
+            (("Mozilla NSS CA Store") in msg) and
             (("FAILED") in msg) and
             (("Certificate is NOT Trusted") in msg)
         ):
@@ -434,7 +433,7 @@ def https_check(endpoint):
 
         # Check for whether the hostname validates.
         if (
-            #(("Hostname Validation") in msg) and
+            (("Hostname Validation") in msg) and
             (("FAILED") in msg) and
             (("Certificate does NOT match") in msg)
         ):
@@ -855,7 +854,6 @@ def fetch_preload_pending():
     logging.debug("Fetching Chrome pending preload list...")
 
     pending_url = "https://hstspreload.org/api/v2/pending"
-    #TODO What the fuck is happening here
     request = requests.get(pending_url)
 
     # TODO: abstract Py 2/3 check out to utils
