@@ -57,6 +57,8 @@ preload_pending = None
 SUFFIX_CACHE = None
 suffix_list = None
 
+# Set is user wants to use a custom CA bundle
+CA_FILE = None
 
 def inspect(base_domain):
     domain = Domain(base_domain)
@@ -125,6 +127,12 @@ def result_for(domain):
 
 
 def ping(url, allow_redirects=False, verify=True):
+    # If there is a custom CA file and we want to verify
+    # use that instead when pinging with requests
+
+    if CA_FILE and verify:
+        verify = CA_FILE
+
     return requests.get(
         url,
 
@@ -342,7 +350,7 @@ def https_check(endpoint):
         logging.debug("{0}".format(err))
         return
 
-    command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
+    command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=CA_FILE)
     scanner = sslyze.synchronous_scanner.SynchronousScanner()
 
     cert_plugin_result = scanner.run_scan_command(server_info, command)
@@ -353,16 +361,24 @@ def https_check(endpoint):
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
 
-    # Debugging
-    # for msg in cert_response:
-    #     print(msg)
+    # Debugging   
+    for msg in cert_response:
+        print(msg)
+  
+    # By default, the store that we want to check is the Mozilla store
+    # However, if a user wants to use their own CA bundle, check the
+    # "Custom" Option from the sslyze output.
+    store = "Mozilla"
+    if CA_FILE:
+        store = "Custom"
 
     # A certificate can have multiple issues.
     for msg in cert_response:
 
         # Check for certificate expiration.
         if (
-            (("Mozilla NSS CA Store") in msg) and
+            #(("Mozilla NSS CA Store") in msg) and   
+            (store in msg) and
             (("FAILED") in msg) and
             (("certificate has expired") in msg)
         ):
@@ -371,7 +387,8 @@ def https_check(endpoint):
         # Check for whether there's a valid chain to Mozilla.
         # Note: this will also catch expired certs, but this is okay.
         if (
-            (("Mozilla NSS CA Store") in msg) and
+            #(("Mozilla NSS CA Store") in msg) and
+            (store in msg) and
             (("FAILED") in msg) and
             (("Certificate is NOT Trusted") in msg)
         ):
@@ -908,8 +925,10 @@ def csv_for(results, out_filename):
 
 
 def inspect_domains(domains, options):
-    # Override timeout, user agent, preload cache.
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE
+    # Override timeout, user agent, preload cache, default CA bundle
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE,\
+            CA_FILE
+
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
@@ -929,6 +948,8 @@ def inspect_domains(domains, options):
         logging.warn("WARNING: Caching disabled.")
     if options.get('suffix_cache'):
         SUFFIX_CACHE = options['suffix_cache']
+    if options.get('ca_file'):
+        CA_FILE = options['ca_file']
 
     # Download HSTS preload list, caches locally.
     global preload_list
