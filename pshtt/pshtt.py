@@ -57,7 +57,7 @@ preload_pending = None
 SUFFIX_CACHE = None
 suffix_list = None
 
-# Set is user wants to use a custom CA bundle
+# Set if user wants to use a custom CA bundle
 CA_FILE = None
 STORE = "Mozilla"
 
