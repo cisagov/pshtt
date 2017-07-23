@@ -187,7 +187,7 @@ def basic_check(endpoint):
             logging.debug("{0}".format(err))
             return
         except Exception as err:
-            endpoint.unknownerror = True
+            endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception during requests retry.")
             logging.debug("{0}".format(err))
             return
@@ -213,7 +213,7 @@ def basic_check(endpoint):
         return
 
     except Exception as err:
-        endpoint.unknownerror = True
+        endpoint.unknown_error = True
         logging.warn("Unexpected other unknown exception during initial request.")
         logging.debug("{0}".format(err))
         return
@@ -246,7 +246,7 @@ def basic_check(endpoint):
             # Swallow connection errors, but we won't be saving redirect info.
             pass
         except Exception as err:
-            endpoint.unknownerror = True
+            endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception when handling redirect.")
             logging.debug("{0}".format(err))
             pass
@@ -351,7 +351,7 @@ def hsts_check(endpoint):
         if 'preload' in header.lower():
             endpoint.hsts_preload = True
     except Exception as err:
-        endpoint.unknownerror = True
+        endpoint.unknown_error = True
         logging.warn("Unknown exception when handling HSTS check.")
         logging.debug("{0}".format(err))
         return
@@ -366,7 +366,7 @@ def https_check(endpoint):
         hostname = endpoint.url[8:]
         server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
     except Exception as err:
-        endpoint.unknownerror = True
+        endpoint.unknown_error = True
         logging.warn("Unknown exception when checking server connectivity info with sslyze.")
         logging.debug("{0}".format(err))
         return
@@ -378,7 +378,7 @@ def https_check(endpoint):
         logging.debug("{0}".format(err))
         return
     except Exception as err:
-        endpoint.unknownerror = True
+        endpoint.unknown_error = True
         logging.warn("Unknown exception in sslyze server connectivity check.")
         logging.debug("{0}".format(err))
         return
@@ -388,7 +388,7 @@ def https_check(endpoint):
         scanner = sslyze.synchronous_scanner.SynchronousScanner()
         cert_plugin_result = scanner.run_scan_command(server_info, command)
     except Exception as err:
-        endpoint.unknownerror = True
+        endpoint.unknown_error = True
         logging.warn("Unknown exception in sslyze scanner.")
         logging.debug("{0}".format(err))
         return
@@ -399,7 +399,7 @@ def https_check(endpoint):
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
     except Exception as err:
-        endpoint.unknownerror = True
+        endpoint.unknown_error = True
         logging.warn("Unknown exception in cert plugin.")
         logging.debug("{0}".format(err))
         return
@@ -857,19 +857,20 @@ def is_domain_strong_hsts(domain):
             is_hsts(domain) and
             hsts_max_age(domain) >= 31536000
         )
-    return None
+    else:
+        return None
 
 
 # Checks if the domain had an Unknown error somewhere
 # The main purpos of this is to flag any odd websites for
 # further debugging with other tools.
 def did_domain_error(domain):
-    list_of_endpoints = domain.to_object()
-    endpoints = ['http', 'https', 'httpwww', 'httpswww']
-    for endpoint in endpoints:
-        if list_of_endpoints[endpoint]['unknown_error']:
-            return True
-    return False
+    http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
+
+    return (
+        http.unknown_error or httpwww.unknown_error or
+        https.unknown_error or httpswww.unknown_error
+    )
 
 
 # Fetch the Chrome preload pending list. Don't cache, it's quick/small.
