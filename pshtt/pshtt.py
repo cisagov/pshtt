@@ -6,7 +6,6 @@ from publicsuffix import PublicSuffixList
 from publicsuffix import fetch
 
 import requests
-# import requests_cache
 import re
 import base64
 import json
@@ -215,8 +214,7 @@ def basic_check(endpoint):
 
     except Exception as err:
         endpoint.unknownerror = True
-        logging.warn("Unexpected other unknown exception during initial\
-                request.")
+        logging.warn("Unexpected other unknown exception during initial request.")
         logging.debug("{0}".format(err))
         return
 
@@ -248,9 +246,8 @@ def basic_check(endpoint):
             # Swallow connection errors, but we won't be saving redirect info.
             pass
         except Exception as err:
-            endpoint.unknonwnerror = True
-            logging.warn("Unexpected other unknown exception when handling\
-                    redirect.")
+            endpoint.unknownerror = True
+            logging.warn("Unexpected other unknown exception when handling redirect.")
             logging.debug("{0}".format(err))
             pass
 
@@ -355,7 +352,7 @@ def hsts_check(endpoint):
             endpoint.hsts_preload = True
     except Exception as err:
         endpoint.unknownerror = True
-        logging.warn("Unknown exception when handling hsts check.")
+        logging.warn("Unknown exception when handling HSTS check.")
         logging.debug("{0}".format(err))
         return
 
@@ -370,8 +367,7 @@ def https_check(endpoint):
         server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
     except Exception as err:
         endpoint.unknownerror = True
-        logging.warn("Unknown exception when checking server connectivity info\
-            with sslyze.")
+        logging.warn("Unknown exception when checking server connectivity info with sslyze.")
         logging.debug("{0}".format(err))
         return
 
