@@ -359,6 +359,12 @@ def https_check(endpoint):
     # for msg in cert_response:
     #     print(msg)
 
+    # Default endpoint assessments to False until proven True.
+    endpoint.https_expired_cert = False
+    endpoint.https_self_signed_cert = False
+    endpoint.https_bad_chain = False
+    endpoint.https_bad_hostname = False
+
     # A certificate can have multiple issues.
     for msg in cert_response:
 
@@ -377,6 +383,7 @@ def https_check(endpoint):
             (("self signed certificate") in msg)
         ):
             endpoint.https_self_signed_cert = True
+
         # Check to see if there is a bad chain
 
         # NOTE: If this is the only flag that's set, it's probably
