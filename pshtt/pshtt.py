@@ -6,7 +6,6 @@ from publicsuffix import PublicSuffixList
 from publicsuffix import fetch
 
 import requests
-# import requests_cache
 import re
 import base64
 import json
@@ -16,6 +15,7 @@ import logging
 import pytablewriter
 import sys
 import codecs
+import OpenSSL
 
 try:
     from urllib import parse as urlparse  # Python 3
@@ -47,7 +47,7 @@ HEADERS = [
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
-    "Domain Enforces HTTPS", "Domain Uses Strong HSTS"
+    "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "Unknown Error",
 ]
 
 PRELOAD_CACHE = None
@@ -117,7 +117,9 @@ def result_for(domain):
 
         'Domain Supports HTTPS': is_domain_supports_https(domain),
         'Domain Enforces HTTPS': is_domain_enforces_https(domain),
-        'Domain Uses Strong HSTS': is_domain_strong_hsts(domain)
+        'Domain Uses Strong HSTS': is_domain_strong_hsts(domain),
+
+        'Unknown Error': did_domain_error(domain),
     }
 
     # But also capture the extended data for those who want it.
@@ -155,7 +157,6 @@ def basic_check(endpoint):
     #
     # * Validate certificates. (Will figure out error if necessary.)
     try:
-
         req = ping(endpoint.url)
 
         endpoint.live = True
@@ -180,6 +181,16 @@ def basic_check(endpoint):
             logging.warn("Unexpected requests exception during retry.")
             logging.debug("{0}".format(err))
             return
+        except OpenSSL.SSL.Error as err:
+            endpoint.live = False
+            logging.warn("Unexpected OpenSSL exception during retry.")
+            logging.debug("{0}".format(err))
+            return
+        except Exception as err:
+            endpoint.unknown_error = True
+            logging.warn("Unexpected other unknown exception during requests retry.")
+            logging.debug("{0}".format(err))
+            return
 
         # If it was a certificate error of any kind, it's live.
         endpoint.live = True
@@ -198,6 +209,12 @@ def basic_check(endpoint):
     except requests.exceptions.RequestException as err:
         endpoint.live = False
         logging.warn("Unexpected other requests exception.")
+        logging.debug("{0}".format(err))
+        return
+
+    except Exception as err:
+        endpoint.unknown_error = True
+        logging.warn("Unexpected other unknown exception during initial request.")
         logging.debug("{0}".format(err))
         return
 
@@ -227,6 +244,11 @@ def basic_check(endpoint):
             ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
         except requests.exceptions.RequestException:
             # Swallow connection errors, but we won't be saving redirect info.
+            pass
+        except Exception as err:
+            endpoint.unknown_error = True
+            logging.warn("Unexpected other unknown exception when handling redirect.")
+            logging.debug("{0}".format(err))
             pass
 
         # Now establish whether the redirects were:
@@ -291,42 +313,48 @@ def basic_check(endpoint):
 # any present HSTS header, decide what HSTS properties are there.
 def hsts_check(endpoint):
     # Disqualify domains with a bad host, they won't work as valid HSTS.
-    if endpoint.https_bad_hostname:
-        endpoint.hsts = False
+    try:
+        if endpoint.https_bad_hostname:
+            endpoint.hsts = False
+            return
+
+        header = endpoint.headers.get("Strict-Transport-Security")
+
+        if header is None:
+            endpoint.hsts = False
+            return
+
+        endpoint.hsts = True
+        endpoint.hsts_header = header
+
+        # Set max age to the string after max-age
+        # TODO: make this more resilient to pathological HSTS headers.
+
+        # handle multiple HSTS headers, requests comma-separates them
+        first_pass = re.split(',\s?', header)[0]
+        second_pass = re.sub('\'', '', first_pass)
+
+        temp = re.split(';\s?', second_pass)
+
+        if "max-age" in header.lower():
+            endpoint.hsts_max_age = int(temp[0][len("max-age="):])
+
+        if endpoint.hsts_max_age <= 0:
+            endpoint.hsts = False
+            return
+
+        # check if hsts includes sub domains
+        if 'includesubdomains' in header.lower():
+            endpoint.hsts_all_subdomains = True
+
+        # Check is hsts has the preload flag
+        if 'preload' in header.lower():
+            endpoint.hsts_preload = True
+    except Exception as err:
+        endpoint.unknown_error = True
+        logging.warn("Unknown exception when handling HSTS check.")
+        logging.debug("{0}".format(err))
         return
-
-    header = endpoint.headers.get("Strict-Transport-Security")
-
-    if header is None:
-        endpoint.hsts = False
-        return
-
-    endpoint.hsts = True
-    endpoint.hsts_header = header
-
-    # Set max age to the string after max-age
-    # TODO: make this more resilient to pathological HSTS headers.
-
-    # handle multiple HSTS headers, requests comma-separates them
-    first_pass = re.split(',\s?', header)[0]
-    second_pass = re.sub('\'', '', first_pass)
-
-    temp = re.split(';\s?', second_pass)
-
-    if "max-age" in header.lower():
-        endpoint.hsts_max_age = int(temp[0][len("max-age="):])
-
-    if endpoint.hsts_max_age <= 0:
-        endpoint.hsts = False
-        return
-
-    # check if hsts includes sub domains
-    if 'includesubdomains' in header.lower():
-        endpoint.hsts_all_subdomains = True
-
-    # Check is hsts has the preload flag
-    if 'preload' in header.lower():
-        endpoint.hsts_preload = True
 
 
 # Uses sslyze to figure out the reason the endpoint wouldn't verify.
@@ -334,8 +362,14 @@ def https_check(endpoint):
     logging.debug("sslyzing %s..." % endpoint.url)
 
     # remove the https:// from prefix for sslyze
-    hostname = endpoint.url[8:]
-    server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
+    try:
+        hostname = endpoint.url[8:]
+        server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
+    except Exception as err:
+        endpoint.unknown_error = True
+        logging.warn("Unknown exception when checking server connectivity info with sslyze.")
+        logging.debug("{0}".format(err))
+        return
 
     try:
         server_info.test_connectivity_to_server()
@@ -343,17 +377,32 @@ def https_check(endpoint):
         logging.warn("Error in sslyze server connectivity check")
         logging.debug("{0}".format(err))
         return
+    except Exception as err:
+        endpoint.unknown_error = True
+        logging.warn("Unknown exception in sslyze server connectivity check.")
+        logging.debug("{0}".format(err))
+        return
 
-    command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
-    scanner = sslyze.synchronous_scanner.SynchronousScanner()
-
-    cert_plugin_result = scanner.run_scan_command(server_info, command)
+    try:
+        command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand()
+        scanner = sslyze.synchronous_scanner.SynchronousScanner()
+        cert_plugin_result = scanner.run_scan_command(server_info, command)
+    except Exception as err:
+        endpoint.unknown_error = True
+        logging.warn("Unknown exception in sslyze scanner.")
+        logging.debug("{0}".format(err))
+        return
 
     try:
         cert_response = cert_plugin_result.as_text()
     except AttributeError as err:
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
+    except Exception as err:
+        endpoint.unknown_error = True
+        logging.warn("Unknown exception in cert plugin.")
+        logging.debug("{0}".format(err))
+        return
 
     # Debugging
     # for msg in cert_response:
@@ -803,9 +852,24 @@ def is_domain_enforces_https(domain):
 
 
 def is_domain_strong_hsts(domain):
+    if is_hsts(domain) and hsts_max_age(domain):
+        return (
+            is_hsts(domain) and
+            hsts_max_age(domain) >= 31536000
+        )
+    else:
+        return None
+
+
+# Checks if the domain had an Unknown error somewhere
+# The main purpos of this is to flag any odd websites for
+# further debugging with other tools.
+def did_domain_error(domain):
+    http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
+
     return (
-        is_hsts(domain) and
-        hsts_max_age(domain) >= 31536000
+        http.unknown_error or httpwww.unknown_error or
+        https.unknown_error or httpswww.unknown_error
     )
 
 
@@ -814,7 +878,6 @@ def fetch_preload_pending():
     logging.debug("Fetching Chrome pending preload list...")
 
     pending_url = "https://hstspreload.org/api/v2/pending"
-
     request = requests.get(pending_url)
 
     # TODO: abstract Py 2/3 check out to utils
