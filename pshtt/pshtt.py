@@ -134,6 +134,8 @@ def ping(url, allow_redirects=False, verify=True):
     # If there is a custom CA file and we want to verify
     # use that instead when pinging with requests
 
+    # By changing the verify param from a boolean to a .pem file, the
+    # requests module will use the .pem to validate HTTPS connections.
     if CA_FILE and verify:
         verify = CA_FILE
 
