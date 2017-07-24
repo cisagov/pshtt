@@ -402,7 +402,7 @@ def https_check(endpoint):
         # because sslyze doesn't have enough granularity
 
         if (
-            (("Mozilla") in msg) and
+            (STORE in msg) and
             (("FAILED") in msg) and
             (("unable to get local issuer certificate") in msg)
         ):
