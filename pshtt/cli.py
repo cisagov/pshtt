@@ -3,7 +3,7 @@
 """pshtt ("pushed") is a tool to test domains for HTTPS best practices.
 
 Usage:
-  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--markdown] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache] [--suffix-cache SUFFIX]
+  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--markdown] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache] [--suffix-cache SUFFIX] [--ca-file PATH]
   pshtt (-h | --help)
 
 Options:
@@ -18,6 +18,7 @@ Options:
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
   -c --cache                  Cache network requests to a directory.
   -l --suffix-cache=SUFFIX    Cache suffix list, and where to cache it.
+  -f --ca-file=PATH           Specify custom CA bundle (PEM format)
 
 Notes:
   If the first INPUT ends with .csv, domains will be read from CSV.
@@ -56,7 +57,8 @@ def main():
         'timeout': args['--timeout'],
         'preload_cache': args['--preload-cache'],
         'suffix_cache': args['--suffix-cache'],
-        'cache': args['--cache']
+        'cache': args['--cache'],
+        'ca_file': args['--ca-file']
     }
     results = pshtt.inspect_domains(domains, options)
 
