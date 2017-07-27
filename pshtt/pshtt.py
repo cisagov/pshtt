@@ -261,7 +261,6 @@ def basic_check(endpoint):
             pass
 
         try:
-            print('endpoint url ',endpoint.url)
             ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
         except requests.exceptions.RequestException:
             # Swallow connection errors, but we won't be saving redirect info.
@@ -286,10 +285,7 @@ def basic_check(endpoint):
             # The hostname of the immediate redirect.
             # The parent domain of the immediate redirect.
             subdomain_immediate = urlparse.urlparse(immediate).hostname
-            #if subdomain_immediate is not None:
-            #    base_immediate = parent_domain_for(subdomain_immediate)
-            #else:
-            #    base_immediate = None
+            base_immediate = parent_domain_for(subdomain_immediate)
 
             endpoint.redirect_immediately_to = immediate
             endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
