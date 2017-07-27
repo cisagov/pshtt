@@ -241,8 +241,6 @@ def basic_check(endpoint):
     if endpoint.redirect:
         try:
             location_header = req.headers.get('Location')
-            print(req.headers)
-            print(location_header)
             # Absolute redirects (e.g. "https://example.com/Index.aspx")
             if location_header.startswith("http:") or location_header.startswith("https:"):
                 immediate = location_header
@@ -269,7 +267,7 @@ def basic_check(endpoint):
             endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception when handling redirect.")
             logging.debug("{0}".format(err))
-            pass
+            return
 
         try:
             # Now establish whether the redirects were:
