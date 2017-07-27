@@ -5,4 +5,4 @@ docopt
 requests_cache
 pytablewriter
 publicsuffix
-pyopenssl=17.2.0
+pyopenssl==17.2.0
