@@ -239,19 +239,25 @@ def basic_check(endpoint):
         endpoint.redirect = True
 
     if endpoint.redirect:
+        try:
+            location_header = req.headers.get('Location')
+            # Absolute redirects (e.g. "https://example.com/Index.aspx")
+            if location_header.startswith("http:") or location_header.startswith("https:"):
+                immediate = location_header
 
-        location_header = req.headers.get('Location')
-        # Absolute redirects (e.g. "https://example.com/Index.aspx")
-        if location_header.startswith("http:") or location_header.startswith("https:"):
-            immediate = location_header
+            # Relative redirects (e.g. "Location: /Index.aspx").
+            # Construct absolute URI, relative to original request.
+            else:
+                immediate = urlparse.urljoin(endpoint.url, location_header)
 
-        # Relative redirects (e.g. "Location: /Index.aspx").
-        # Construct absolute URI, relative to original request.
-        else:
-            immediate = urlparse.urljoin(endpoint.url, location_header)
+            # Chase down the ultimate destination, ignoring any certificate warnings.
+            ultimate_req = None
+        except Exception as err:
+            endpoint.unknown_error = True
+            logging.warn("Unexpected other unknown exception when handling Requests Header.")
+            logging.debug("{0}".format(err))
+            pass
 
-        # Chase down the ultimate destination, ignoring any certificate warnings.
-        ultimate_req = None
         try:
             ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
         except requests.exceptions.RequestException:
@@ -261,64 +267,70 @@ def basic_check(endpoint):
             endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception when handling redirect.")
             logging.debug("{0}".format(err))
-            pass
+            return
 
-        # Now establish whether the redirects were:
-        # * internal (same exact hostname),
-        # * within the zone (any subdomain within the parent domain)
-        # * external (on some other parent domain)
+        try:
+            # Now establish whether the redirects were:
+            # * internal (same exact hostname),
+            # * within the zone (any subdomain within the parent domain)
+            # * external (on some other parent domain)
 
-        # The hostname of the endpoint (e.g. "www.agency.gov")
-        subdomain_original = urlparse.urlparse(endpoint.url).hostname
-        # The parent domain of the endpoint (e.g. "agency.gov")
-        base_original = parent_domain_for(subdomain_original)
+            # The hostname of the endpoint (e.g. "www.agency.gov")
+            subdomain_original = urlparse.urlparse(endpoint.url).hostname
+            # The parent domain of the endpoint (e.g. "agency.gov")
+            base_original = parent_domain_for(subdomain_original)
 
-        # The hostname of the immediate redirect.
-        # The parent domain of the immediate redirect.
-        subdomain_immediate = urlparse.urlparse(immediate).hostname
-        base_immediate = parent_domain_for(subdomain_immediate)
+            # The hostname of the immediate redirect.
+            # The parent domain of the immediate redirect.
+            subdomain_immediate = urlparse.urlparse(immediate).hostname
+            base_immediate = parent_domain_for(subdomain_immediate)
 
-        endpoint.redirect_immediately_to = immediate
-        endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
-        endpoint.redirect_immediately_to_https = immediate.startswith("https://")
-        endpoint.redirect_immediately_to_http = immediate.startswith("http://")
-        endpoint.redirect_immediately_to_external = (base_original != base_immediate)
-        endpoint.redirect_immediately_to_subdomain = (
-            (base_original == base_immediate) and
-            (subdomain_original != subdomain_immediate)
-        )
-
-        if ultimate_req is not None:
-            # For ultimate destination, use the URL we arrived at,
-            # not Location header. Auto-resolves relative redirects.
-            eventual = ultimate_req.url
-
-            # The hostname of the eventual destination.
-            # The parent domain of the eventual destination.
-            subdomain_eventual = urlparse.urlparse(eventual).hostname
-            base_eventual = parent_domain_for(subdomain_eventual)
-
-            endpoint.redirect_eventually_to = eventual
-            endpoint.redirect_eventually_to_https = eventual.startswith("https://")
-            endpoint.redirect_eventually_to_http = eventual.startswith("http://")
-            endpoint.redirect_eventually_to_external = (base_original != base_eventual)
-            endpoint.redirect_eventually_to_subdomain = (
-                (base_original == base_eventual) and
-                (subdomain_original != subdomain_eventual)
+            endpoint.redirect_immediately_to = immediate
+            endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
+            endpoint.redirect_immediately_to_https = immediate.startswith("https://")
+            endpoint.redirect_immediately_to_http = immediate.startswith("http://")
+            endpoint.redirect_immediately_to_external = (base_original != base_immediate)
+            endpoint.redirect_immediately_to_subdomain = (
+                (base_original == base_immediate) and
+                (subdomain_original != subdomain_immediate)
             )
 
-        # If we were able to make the first redirect, but not the ultimate redirect,
-        # and if the immediate redirect is external, then it's accurate enough to
-        # say that the eventual redirect is the immediate redirect, since you're capturing
-        # the domain it's going to.
-        # This also avoids "punishing" the domain for configuration issues of the site
-        # it redirects to.
-        elif endpoint.redirect_immediately_to_external:
-            endpoint.redirect_eventually_to = endpoint.redirect_immediately_to
-            endpoint.redirect_eventually_to_https = endpoint.redirect_immediately_to_https
-            endpoint.redirect_eventually_to_http = endpoint.redirect_immediately_to_http
-            endpoint.redirect_eventually_to_external = endpoint.redirect_immediately_to_external
-            endpoint.redirect_eventually_to_subdomain = endpoint.redirect_immediately_to_subdomain
+            if ultimate_req is not None:
+                # For ultimate destination, use the URL we arrived at,
+                # not Location header. Auto-resolves relative redirects.
+                eventual = ultimate_req.url
+
+                # The hostname of the eventual destination.
+                # The parent domain of the eventual destination.
+                subdomain_eventual = urlparse.urlparse(eventual).hostname
+                base_eventual = parent_domain_for(subdomain_eventual)
+
+                endpoint.redirect_eventually_to = eventual
+                endpoint.redirect_eventually_to_https = eventual.startswith("https://")
+                endpoint.redirect_eventually_to_http = eventual.startswith("http://")
+                endpoint.redirect_eventually_to_external = (base_original != base_eventual)
+                endpoint.redirect_eventually_to_subdomain = (
+                    (base_original == base_eventual) and
+                    (subdomain_original != subdomain_eventual)
+                )
+
+            # If we were able to make the first redirect, but not the ultimate redirect,
+            # and if the immediate redirect is external, then it's accurate enough to
+            # say that the eventual redirect is the immediate redirect, since you're capturing
+            # the domain it's going to.
+            # This also avoids "punishing" the domain for configuration issues of the site
+            # it redirects to.
+            elif endpoint.redirect_immediately_to_external:
+                endpoint.redirect_eventually_to = endpoint.redirect_immediately_to
+                endpoint.redirect_eventually_to_https = endpoint.redirect_immediately_to_https
+                endpoint.redirect_eventually_to_http = endpoint.redirect_immediately_to_http
+                endpoint.redirect_eventually_to_external = endpoint.redirect_immediately_to_external
+                endpoint.redirect_eventually_to_subdomain = endpoint.redirect_immediately_to_subdomain
+        except Exception as err:
+            endpoint.unknown_error = True
+            logging.warn("Unexpected other unknown exception when establishing redirects.")
+            logging.debug("{0}".format(err))
+            pass
 
 
 # Given an endpoint and its detected headers, extract and parse
