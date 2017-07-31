@@ -43,7 +43,7 @@ HEADERS = [
     "Domain", "Base Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
     "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
-    "HTTPS Self Signed Cert", "HTTPS Missing SAN",
+    "HTTPS Self Signed Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
@@ -109,7 +109,6 @@ def result_for(domain):
         'HTTPS Bad Hostname': is_bad_hostname(domain),
         'HTTPS Expired Cert': is_expired_cert(domain),
         'HTTPS Self Signed Cert': is_self_signed_cert(domain),
-        'HTTPS Missing SAN': is_missing_san(domain),
 
         'HSTS': is_hsts(domain),
         'HSTS Header': hsts_header(domain),
@@ -436,7 +435,6 @@ def https_check(endpoint):
     # Default endpoint assessments to False until proven True.
     endpoint.https_expired_cert = False
     endpoint.https_self_signed_cert = False
-    endpoint.https_missing_san = False
     endpoint.https_bad_chain = False
     endpoint.https_bad_hostname = False
 
@@ -451,7 +449,7 @@ def https_check(endpoint):
             (("DNS Subject Alternative Names") in msg) and
             (("[]") in msg)
         ):
-            endpoint.https_missing_san = True
+            endpoint.https_bad_hostname = True
 
         # Check for certificate expiration.
         if (
@@ -785,18 +783,6 @@ def is_self_signed_cert(domain):
         canonical_https = https
 
     return canonical_https.https_self_signed_cert
-
-
-# Returns if the either https endpoint has a missing san
-def is_missing_san(domain):
-    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
-
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
-
-    return canonical_https.https_missing_san
 
 
 # Domain has HSTS if its canonical HTTPS endpoint has HSTS.
