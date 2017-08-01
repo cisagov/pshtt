@@ -62,6 +62,7 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -t --timeout=TIMEOUT        Override timeout (in seconds).
   -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
   -l --suffix-cache=SUFFIX    Cache suffix list, and where to cache it.
+  -f --ca-file=PATH           Specify custom CA bundle (PEM format)
 ```
 
 ##### Using Docker (optional)
@@ -79,11 +80,10 @@ docker run --rm -it \
 
 ##### Using your own CA Bundle
 
-`pshtt` utilizes [`requests`](https://github.com/kennethreitz/requests) to perform HTTP requests.  If you work behind a corporate proxy or have your own certificates that aren't part of the bundled certificates from `requests`, you can point to your own using the environment variable `REQUESTS_CA_BUNDLE`:
+By default, `pshtt` relies on the root CAs that are trusted in the [Mozilla root store](https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt) If you work behind a corporate proxy or have your own certificates that aren't publicly trusted, you can specify your own CA bundle:
 
 ```bash
-export REQUESTS_CA_BUNDLE=/etc/ssl/ca.pem
-pshtt server.internal-location.com  # will use your ca.pem instead to check trusts
+pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
 ```
 
 
