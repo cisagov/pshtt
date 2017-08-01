@@ -65,6 +65,14 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -f --ca-file=PATH           Specify custom CA bundle (PEM format)
 ```
 
+##### Using your own CA Bundle
+
+By default, `pshtt` relies on the root CAs that are trusted in the [Mozilla root store](https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt) If you work behind a corporate proxy or have your own certificates that aren't publicly trusted, you can specify your own CA bundle:
+
+```bash
+pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
+```
+
 ##### Using Docker (optional)
 
 ```bash
@@ -76,14 +84,6 @@ docker run --rm -it \
   -e USER_ID=1042 \           /* Change the ownership of the files (**e.g** results)
   -e GROUP_ID=1042 \         to the user with id 1042 and to the group with id 1042. */
   pshtt/cli
-```
-
-##### Using your own CA Bundle
-
-By default, `pshtt` relies on the root CAs that are trusted in the [Mozilla root store](https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt) If you work behind a corporate proxy or have your own certificates that aren't publicly trusted, you can specify your own CA bundle:
-
-```bash
-pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
 ```
 
 
