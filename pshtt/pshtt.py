@@ -444,6 +444,13 @@ def https_check(endpoint):
     # A certificate can have multiple issues.
     for msg in cert_response:
 
+        # Check for missing SAN.
+        if (
+            (("DNS Subject Alternative Names") in msg) and
+            (("[]") in msg)
+        ):
+            endpoint.https_bad_hostname = True
+
         # Check for certificate expiration.
         if (
             (STORE in msg) and
