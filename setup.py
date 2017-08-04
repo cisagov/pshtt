@@ -62,7 +62,8 @@ setup(
         'docopt',
         'requests_cache',
         'pytablewriter',
-        'publicsuffix'
+        'publicsuffix',
+        'pyopenssl>=17.2.0'
     ],
 
     # Conveniently allows one to run the CLI tool as `pshtt`
