@@ -170,10 +170,7 @@ def basic_check(endpoint):
     # * Validate certificates. (Will figure out error if necessary.)
     try:
         req = ping(endpoint.url)
-
         endpoint.live = True
-        if endpoint.protocol == "https":
-            endpoint.https_valid = True
 
     except requests.exceptions.SSLError as err:
         logging.warn("Error validating certificate.")
@@ -331,6 +328,14 @@ def basic_check(endpoint):
             logging.warn("Unexpected other unknown exception when establishing redirects.")
             logging.debug("{0}".format(err))
             pass
+
+    # Here we check if the site had valid https
+    # We check after the redirect logic because it is possible that
+    # a site would redirect immediately or evetually to a non https site
+    # We need to be able to catch this
+    if endpoint.protocol == 'https' and endpoint.live:
+        if not endpoint.redirect_immediately_to_http:
+            endpoint.https_valid = True
 
 
 # Given an endpoint and its detected headers, extract and parse
