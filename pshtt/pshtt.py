@@ -286,7 +286,7 @@ def basic_check(endpoint):
             base_immediate = parent_domain_for(subdomain_immediate)
 
             endpoint.redirect_immediately_to = immediate
-            endpoint.redirect_immediately_to_www = re.match(r'^https?://www\.', immediate)
+            endpoint.redirect_immediately_to_www = (re.match(r'^https?://www\.', immediate) is not None)
             endpoint.redirect_immediately_to_https = immediate.startswith("https://")
             endpoint.redirect_immediately_to_http = immediate.startswith("http://")
             endpoint.redirect_immediately_to_external = (base_original != base_immediate)
