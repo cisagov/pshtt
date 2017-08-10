@@ -334,7 +334,7 @@ def basic_check(endpoint):
     # a site would redirect immediately or evetually to a non https site
     # We need to be able to catch this
     if endpoint.protocol == 'https' and endpoint.live == True: 
-        if not endpoint.redirect_immediately_to_http and not endpoint.redirect_eventually_to_http:
+        if not endpoint.redirect_immediately_to_http:
             endpoint.https_valid = True
 
 # Given an endpoint and its detected headers, extract and parse
