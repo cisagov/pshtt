@@ -35,7 +35,7 @@ WEB_CACHE = None
 USER_AGENT = "pshtt, https scanning"
 
 # Defaults to 1 second, overrideable via --timeout
-TIMEOUT = 1
+TIMEOUT = 10
 
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
