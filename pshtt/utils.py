@@ -89,6 +89,7 @@ def format_domains(domains):
 
     return formatted_domains
 
+
 def debug(message, divider=True):
     if divider:
         logging.debug("\n-------------------------\n")
