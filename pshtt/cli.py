@@ -66,6 +66,8 @@ def main():
     if args['--json']:
         output = utils.json_for(results)
         if out_file is None:
+            logging.debug("\n-------------------------\n")
+            logging.debug("Printing JSON...\n")
             print(output)
         else:
             utils.write(output, out_file)
