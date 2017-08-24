@@ -69,6 +69,7 @@ def main():
             print(output)
         else:
             utils.write(output, out_file)
+            logging.debug("\n-------------------------\n")
             logging.warn("Wrote results to %s." % out_file)
     # Markdwon can go to STDOUT, or to a file
     elif args['--markdown']:
@@ -85,6 +86,7 @@ def main():
         if args['--output'] is None:
             out_file = 'results.csv'
         pshtt.csv_for(results, out_file)
+        logging.debug("\n-------------------------\n")
         logging.warn("Wrote results to %s." % out_file)
 
 
