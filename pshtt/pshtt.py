@@ -181,7 +181,7 @@ def basic_check(endpoint):
 
         # Retry with certificate validation disabled.
         try:
-            req = ping(endpoint.url)
+            req = ping(endpoint.url, verify=False)
         except requests.exceptions.SSLError as err:
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
