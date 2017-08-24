@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import json
 import errno
@@ -86,3 +88,11 @@ def format_domains(domains):
         formatted_domains.append(re.sub("^(https?://)?(www\.)?", "", domain))
 
     return formatted_domains
+
+
+def debug(message, divider=False):
+    if divider:
+        logging.debug("\n-------------------------\n")
+
+    if message:
+        logging.debug("%s\n" % message)
