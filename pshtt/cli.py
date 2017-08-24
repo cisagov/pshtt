@@ -66,12 +66,11 @@ def main():
     if args['--json']:
         output = utils.json_for(results)
         if out_file is None:
-            logging.debug("\n-------------------------\n")
-            logging.debug("Printing JSON...\n")
+
+            utils.debug("Printing JSON...")
             print(output)
         else:
             utils.write(output, out_file)
-            logging.debug("\n-------------------------\n")
             logging.warn("Wrote results to %s." % out_file)
     # Markdwon can go to STDOUT, or to a file
     elif args['--markdown']:
@@ -79,8 +78,7 @@ def main():
         if out_file is not None:
             output = open(out_file, 'w')
 
-        logging.debug("\n-------------------------\n")
-        logging.debug("Printing Markdown...\n")
+        utils.debug("Printing Markdown...")
         pshtt.md_for(results, output)
 
         if out_file is not None:
@@ -90,7 +88,7 @@ def main():
         if args['--output'] is None:
             out_file = 'results.csv'
         pshtt.csv_for(results, out_file)
-        logging.debug("\n-------------------------\n")
+        utils.debug("Writing results...")
         logging.warn("Wrote results to %s." % out_file)
 
 

@@ -86,3 +86,10 @@ def format_domains(domains):
         formatted_domains.append(re.sub("^(https?://)?(www\.)?", "", domain))
 
     return formatted_domains
+
+def debug(message, divider=True):
+    if divider:
+        logging.debug("\n-------------------------\n")
+
+    if message:
+        logging.debug("%s\n" % message)
