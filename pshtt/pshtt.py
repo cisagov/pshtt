@@ -158,7 +158,7 @@ def ping(url, allow_redirects=False, verify=True):
 
 
 def basic_check(endpoint):
-    utils.debug("Pinging %s..." % endpoint.url)
+    utils.debug("Pinging %s..." % endpoint.url, divider=True)
 
     # Test the endpoint. At first:
     #
@@ -177,31 +177,31 @@ def basic_check(endpoint):
 
     except requests.exceptions.SSLError as err:
         logging.warn("Error validating certificate.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
 
         # Retry with certificate validation disabled.
         try:
-            req = ping(endpoint.url, verify=False)
+            req = ping(endpoint.url)
         except requests.exceptions.SSLError as err:
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
             logging.warn("Unexpected SSL protocol (or other) error during retry.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             return
         except requests.exceptions.RequestException as err:
             endpoint.live = False
             logging.warn("Unexpected requests exception during retry.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             return
         except OpenSSL.SSL.Error as err:
             endpoint.live = False
             logging.warn("Unexpected OpenSSL exception during retry.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             return
         except Exception as err:
             endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception during requests retry.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             return
 
         # If it was a certificate error of any kind, it's live.
@@ -212,7 +212,7 @@ def basic_check(endpoint):
 
     except requests.exceptions.ConnectionError as err:
         endpoint.live = False
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     # And this is the parent of ConnectionError and other things.
@@ -221,13 +221,13 @@ def basic_check(endpoint):
     except requests.exceptions.RequestException as err:
         endpoint.live = False
         logging.warn("Unexpected other requests exception.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     except Exception as err:
         endpoint.unknown_error = True
         logging.warn("Unexpected other unknown exception during initial request.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     # Endpoint is live, analyze the response.
@@ -255,7 +255,7 @@ def basic_check(endpoint):
         except Exception as err:
             endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception when handling Requests Header.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             pass
 
         try:
@@ -266,7 +266,7 @@ def basic_check(endpoint):
         except Exception as err:
             endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception when handling redirect.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             return
 
         try:
@@ -329,7 +329,7 @@ def basic_check(endpoint):
         except Exception as err:
             endpoint.unknown_error = True
             logging.warn("Unexpected other unknown exception when establishing redirects.")
-            utils.debug("{0}".format(err), False)
+            utils.debug("{0}".format(err))
             pass
 
 
@@ -377,13 +377,13 @@ def hsts_check(endpoint):
     except Exception as err:
         endpoint.unknown_error = True
         logging.warn("Unknown exception when handling HSTS check.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
 
 # Uses sslyze to figure out the reason the endpoint wouldn't verify.
 def https_check(endpoint):
-    utils.debug("sslyzing %s..." % endpoint.url, False)
+    utils.debug("sslyzing %s..." % endpoint.url)
 
     # remove the https:// from prefix for sslyze
     try:
@@ -392,19 +392,19 @@ def https_check(endpoint):
     except Exception as err:
         endpoint.unknown_error = True
         logging.warn("Unknown exception when checking server connectivity info with sslyze.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     try:
         server_info.test_connectivity_to_server()
     except sslyze.server_connectivity.ServerConnectivityError as err:
         logging.warn("Error in sslyze server connectivity check")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
     except Exception as err:
         endpoint.unknown_error = True
         logging.warn("Unknown exception in sslyze server connectivity check.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     try:
@@ -414,7 +414,7 @@ def https_check(endpoint):
     except Exception as err:
         endpoint.unknown_error = True
         logging.warn("Unknown exception in sslyze scanner.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     try:
@@ -425,7 +425,7 @@ def https_check(endpoint):
     except Exception as err:
         endpoint.unknown_error = True
         logging.warn("Unknown exception in cert plugin.")
-        utils.debug("{0}".format(err), False)
+        utils.debug("{0}".format(err))
         return
 
     # Debugging
@@ -916,7 +916,7 @@ def did_domain_error(domain):
 
 # Fetch the Chrome preload pending list. Don't cache, it's quick/small.
 def fetch_preload_pending():
-    utils.debug("Fetching Chrome pending preload list...")
+    utils.debug("Fetching Chrome pending preload list...", divider=True)
 
     pending_url = "https://hstspreload.org/api/v2/pending"
     request = requests.get(pending_url)
@@ -941,10 +941,10 @@ def create_preload_list():
     preload_json = None
 
     if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
-        utils.debug("Using cached Chrome preload list.")
+        utils.debug("Using cached Chrome preload list.", divider=True)
         preload_json = json.loads(open(PRELOAD_CACHE).read())
     else:
-        utils.debug("Fetching Chrome preload list from source...")
+        utils.debug("Fetching Chrome preload list from source...", divider=True)
 
         # Downloads the chromium preloaded domain list and sets it to a global set
         file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
@@ -967,7 +967,7 @@ def create_preload_list():
         preload_json = json.loads(raw)
 
         if PRELOAD_CACHE:
-            utils.debug("Caching preload list at %s" % PRELOAD_CACHE, False)
+            utils.debug("Caching preload list at %s" % PRELOAD_CACHE, divider=True)
             utils.write(utils.json_for(preload_json), PRELOAD_CACHE)
 
     # For our purposes, we only care about entries that includeSubDomains
@@ -981,18 +981,18 @@ def create_preload_list():
 
 def load_suffix_list():
     if SUFFIX_CACHE and os.path.exists(SUFFIX_CACHE):
-        utils.debug("Using cached suffix list.", False)
+        utils.debug("Using cached suffix list.", divider=True)
         cache_file = codecs.open(SUFFIX_CACHE, encoding='utf-8')
         suffixes = PublicSuffixList(cache_file)
     else:
         # File does not exist, download current list and cache it at given location.
-        utils.debug("Downloading the Public Suffix List...")
+        utils.debug("Downloading the Public Suffix List...", divider=True)
         cache_file = fetch()
         content = cache_file.readlines()
         suffixes = PublicSuffixList(content)
 
         if SUFFIX_CACHE:
-            utils.debug("Caching suffix list at %s" % SUFFIX_CACHE)
+            utils.debug("Caching suffix list at %s" % SUFFIX_CACHE, divider=True)
             utils.write(''.join(content), SUFFIX_CACHE)
 
     return suffixes

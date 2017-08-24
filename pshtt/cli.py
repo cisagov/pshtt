@@ -67,7 +67,7 @@ def main():
         output = utils.json_for(results)
         if out_file is None:
 
-            utils.debug("Printing JSON...")
+            utils.debug("Printing JSON...", divider=True)
             print(output)
         else:
             utils.write(output, out_file)
@@ -78,7 +78,7 @@ def main():
         if out_file is not None:
             output = open(out_file, 'w')
 
-        utils.debug("Printing Markdown...")
+        utils.debug("Printing Markdown...", divider=True)
         pshtt.md_for(results, output)
 
         if out_file is not None:
@@ -88,7 +88,7 @@ def main():
         if args['--output'] is None:
             out_file = 'results.csv'
         pshtt.csv_for(results, out_file)
-        utils.debug("Writing results...")
+        utils.debug("Writing results...", divider=True)
         logging.warn("Wrote results to %s." % out_file)
 
 
