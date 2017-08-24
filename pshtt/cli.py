@@ -79,6 +79,8 @@ def main():
         if out_file is not None:
             output = open(out_file, 'w')
 
+        logging.debug("\n-------------------------\n")
+        logging.debug("Printing Markdown...\n")
         pshtt.md_for(results, output)
 
         if out_file is not None:
