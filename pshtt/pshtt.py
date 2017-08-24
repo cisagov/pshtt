@@ -916,7 +916,7 @@ def did_domain_error(domain):
 
 # Fetch the Chrome preload pending list. Don't cache, it's quick/small.
 def fetch_preload_pending():
-    utils.debug("Fetching Chrome pending preload list...", False)
+    utils.debug("Fetching Chrome pending preload list...")
 
     pending_url = "https://hstspreload.org/api/v2/pending"
     request = requests.get(pending_url)
@@ -941,10 +941,10 @@ def create_preload_list():
     preload_json = None
 
     if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
-        utils.debug("Using cached Chrome preload list.", False)
+        utils.debug("Using cached Chrome preload list.")
         preload_json = json.loads(open(PRELOAD_CACHE).read())
     else:
-        utils.debug("Fetching Chrome preload list from source...", False)
+        utils.debug("Fetching Chrome preload list from source...")
 
         # Downloads the chromium preloaded domain list and sets it to a global set
         file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
@@ -986,13 +986,13 @@ def load_suffix_list():
         suffixes = PublicSuffixList(cache_file)
     else:
         # File does not exist, download current list and cache it at given location.
-        utils.debug("Downloading the Public Suffix List...", False)
+        utils.debug("Downloading the Public Suffix List...")
         cache_file = fetch()
         content = cache_file.readlines()
         suffixes = PublicSuffixList(content)
 
         if SUFFIX_CACHE:
-            utils.debug("Caching suffix list at %s\n" % SUFFIX_CACHE)
+            utils.debug("Caching suffix list at %s" % SUFFIX_CACHE)
             utils.write(''.join(content), SUFFIX_CACHE)
 
     return suffixes
