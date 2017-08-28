@@ -2,6 +2,7 @@
 todo.txt
 *.json
 *.sqlite
+*.pem
 
 .cache/
 cache/
