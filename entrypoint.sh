@@ -28,6 +28,7 @@ fi
 
 # Copy the inputs
 cp /data/*.csv /usr/src/app
+cp /data/*.pem /usr/src/app
 
 python -m pshtt.cli "$@"
 
