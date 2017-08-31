@@ -76,16 +76,10 @@ pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
 ##### Using Docker (optional)
 
 ```bash
-docker build -t pshtt/cli .
-
-docker run --rm -it \
-  --name pshtt \
-  -v $(pwd):/data \
-  -e USER_ID=1042 \           /* Change the ownership of the files (**e.g** results)
-  -e GROUP_ID=1042 \         to the user with id 1042 and to the group with id 1042. */
-  pshtt/cli
+./run [opts]
 ```
 
+`opts` are the same arguments that would get passed to `pshtt`.
 
 ## What's Checked?
 
