@@ -22,6 +22,11 @@ try:
 except ImportError:
     import urlparse  # Python 2
 
+try:
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import URLError
+
 import sslyze
 import sslyze.synchronous_scanner
 
@@ -1000,7 +1005,7 @@ def load_suffix_list():
         utils.debug("Downloading the Public Suffix List...", divider=True)
         try:
             cache_file = fetch()
-        except urllib.error.URLError as err:
+        except URLError as err:
             logging.warn("Unable to download the Public Suffix List...")
             utils.debug("{}".format(err))
             return []
