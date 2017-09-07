@@ -34,7 +34,7 @@ import sys
 
 
 def main():
-    args = docopt.docopt(__doc__, version='v0.0.1')
+    args = docopt.docopt(__doc__, version='v0.2.3')
     utils.configure_logging(args['--debug'])
 
     out_file = args['--output']
