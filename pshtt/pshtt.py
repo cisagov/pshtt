@@ -22,6 +22,11 @@ try:
 except ImportError:
     import urlparse  # Python 2
 
+try:
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import URLError
+
 import sslyze
 import sslyze.synchronous_scanner
 
@@ -919,7 +924,13 @@ def fetch_preload_pending():
     utils.debug("Fetching Chrome pending preload list...", divider=True)
 
     pending_url = "https://hstspreload.org/api/v2/pending"
-    request = requests.get(pending_url)
+
+    try:
+        request = requests.get(pending_url)
+    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+        logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
+        logging.debug('{}'.format(err))
+        return []
 
     # TODO: abstract Py 2/3 check out to utils
     if sys.version_info[0] < 3:
@@ -949,8 +960,13 @@ def create_preload_list():
         # Downloads the chromium preloaded domain list and sets it to a global set
         file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
 
-        # TODO: proper try/except around this network request
-        request = requests.get(file_url)
+        try:
+            request = requests.get(file_url)
+        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+            logging.warn('Failed to fetch preload list: {}'.format(file_url))
+            logging.debug('{}'.format(err))
+            return []
+
         raw = request.content
 
         # To avoid parsing the contents of the file out of the source tree viewer's
@@ -987,7 +1003,12 @@ def load_suffix_list():
     else:
         # File does not exist, download current list and cache it at given location.
         utils.debug("Downloading the Public Suffix List...", divider=True)
-        cache_file = fetch()
+        try:
+            cache_file = fetch()
+        except URLError as err:
+            logging.warn("Unable to download the Public Suffix List...")
+            utils.debug("{}".format(err))
+            return []
         content = cache_file.readlines()
         suffixes = PublicSuffixList(content)
 
