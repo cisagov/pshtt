@@ -8,12 +8,13 @@ Based on:
 """
 
 from setuptools import setup
+from pshtt import __version__
 
 setup(
     name='pshtt',
 
     # Versions should comply with PEP440
-    version='0.2.2',
+    version=__version__,
     description='Scan websites for HTTPS deployment best practices',
 
     # NCATS "homepage"

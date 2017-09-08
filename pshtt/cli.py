@@ -27,6 +27,7 @@ Notes:
 
 from . import pshtt
 from . import utils
+from . import __version__
 
 import docopt
 import logging
@@ -34,7 +35,7 @@ import sys
 
 
 def main():
-    args = docopt.docopt(__doc__, version='v0.0.1')
+    args = docopt.docopt(__doc__, version=__version__)
     utils.configure_logging(args['--debug'])
 
     out_file = args['--output']
