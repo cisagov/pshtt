@@ -1,4 +1,6 @@
 *.csv
+*.xls
+*.xlsx
 todo.txt
 *.json
 *.sqlite
