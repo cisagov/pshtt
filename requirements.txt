@@ -7,3 +7,4 @@ pytablewriter
 publicsuffix
 pyopenssl==17.2.0
 tox
+pytest
