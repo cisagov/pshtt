@@ -34,25 +34,25 @@ class TestCertificate(unittest.TestCase):
         domain = inspect('expired.badssl.com')
         basic_check(domain.https)
 
-        unittest.assertTrue(domain.https.https_expired_cert)
+        self.assertTrue(domain.https.https_expired_cert)
 
     def test_https_bad_hostname(self):
         domain = inspect('wrong.host.badssl.com')
         basic_check(domain.https)
 
-        unittest.assertTrue(domain.https.https_bad_hostname)
+        self.assertTrue(domain.https.https_bad_hostname)
 
     def test_https_bad_chain(self):
         domain = inspect('untrusted-root.badssl.com')
         basic_check(domain.https)
 
-        unittest.assertTrue(domain.https.https_bad_chain)
+        self.assertTrue(domain.https.https_bad_chain)
 
     def test_https_self_signed_cert(self):
         domain = inspect('self-signed.badssl.com')
         basic_check(domain.https)
 
-        unittest.assertTrue(domain.https.https_self_signed_cert)
+        self.assertTrue(domain.https.https_self_signed_cert)
 
 
 if __name__ == '__main__':
