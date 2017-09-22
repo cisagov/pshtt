@@ -24,7 +24,7 @@ Example: 1000 sites in 2 hours would take 2 instances.
 
 2.  Make sure you have the correct quota allowances.
 
-    *   Go to the [quotas page](https://console.cloud.google.com/iam-admin/quotas?_ga=2.32845757.-2082203426.1506093243)
+    *   Go to the [quotas page](https://cloud.google.com/compute/quotas)
 		and select the project that you want to run this under.
     *   Request quotas --- click on the following items in the list and click
         "edit qutoas" at the top of the page:
@@ -57,7 +57,7 @@ Example: 1000 sites in 2 hours would take 2 instances.
 
     *   `cd ~/.ssh && ssh-keygen -t rsa -f gce_pshtt_key`
     *   Go to the [metadata
-        tab](https://console.cloud.google.com/compute/metadata/sshKeys?_ga=2.222782360.-2082203426.1506093243) and hit edit.
+        tab](https://cloud.google.com/compute/docs/instances/adding-removing-ssh-keys) and hit edit.
     *   `cd ~/.ssh && cat gce_pshtt_key.pub`
     *   Copy the output of the above command and paste it into the console.
 
