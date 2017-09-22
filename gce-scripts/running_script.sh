@@ -8,4 +8,4 @@
 # output files: test_file.csv.json, time_test_file.csv.txt
 
 input_file=$1
-(time python3 -m pshtt.cli "${input_file}" -t 10 -u "Google-Transparency-Report" -j -o "${input_file}".json -f "roots.pem" --debug) 2> time_"${input_file}".txt
+(time python3 -m pshtt.cli "${input_file}" -t 10 -u -j -o "${input_file}".json -f "roots.pem" --debug) 2> time_"${input_file}".txt

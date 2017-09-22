@@ -24,8 +24,8 @@ Example: 1000 sites in 2 hours would take 2 instances.
 
 2.  Make sure you have the correct quota allowances.
 
-    *   Go to the [quotas page](https://cloud.google.com/compute/quotas) and select the project that
-		you want to run this under.
+    *   Go to the [quotas page](https://console.cloud.google.com/iam-admin/quotas?_ga=2.32845757.-2082203426.1506093243)
+		and select the project that you want to run this under.
     *   Request quotas --- click on the following items in the list and click
         "edit qutoas" at the top of the page:
         *   CPUS (all regions) --> 150
@@ -39,7 +39,7 @@ Example: 1000 sites in 2 hours would take 2 instances.
     Instance Group template allows you to make up to 150 machines under the same
     template.
 
-    *   Go to the template
+    *   Go to Compute Engine, then click on the Instance templates
         tab and click "Create Instance Template".
     *   Name --> "pshtt-template"
     *   Machine type -- 1 CPU (n1-standard-1 (1 vCPU, 3.75 GB memory)).
@@ -56,8 +56,8 @@ Example: 1000 sites in 2 hours would take 2 instances.
     This is a security measure. ***DO NOT USE YOUR REGULAR SSH KEY.***
 
     *   `cd ~/.ssh && ssh-keygen -t rsa -f gce_pshtt_key`
-    *   Go to the metadata
-        tab and hit edit.
+    *   Go to the [metadata
+        tab](https://console.cloud.google.com/compute/metadata/sshKeys?_ga=2.222782360.-2082203426.1506093243) and hit edit.
     *   `cd ~/.ssh && cat gce_pshtt_key.pub`
     *   Copy the output of the above command and paste it into the console.
 
@@ -110,7 +110,7 @@ The following is a set of commands to run to make your running directory.
     *   `<instance-group-name>` is what you named the instance group you created
         above.
 
-3.  Copy all .sh scripts from this [PR]():
+3.  Copy all .sh scripts from this directory:
 
     *   Keep the name of the scripts the same.
     *   `chmod +x ~/pshtt_run/*.sh`
