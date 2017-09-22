@@ -5,7 +5,7 @@ import sys
 
 def main():
     if (len(sys.argv)) < 2:
-        print 'you need a filename!'
+        print('you need a filename!')
         exit(1)
     # Master file is the file with the list of filenames to intake.
     # Fileception.
@@ -22,7 +22,8 @@ def main():
         with open(item, 'r') as input_file:
             json_data = json.load(input_file)
             for item in json_data:
-                print json.dumps(item)
+                print(json.dumps(item))
+
 
 if __name__ == '__main__':
     main()
