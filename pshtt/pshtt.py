@@ -494,8 +494,10 @@ def https_check(endpoint):
         if (
             (STORE in msg) and
             (("FAILED") in msg) and
-            ((("unable to get local issuer certificate") in msg) or
-            (("self signed certificate") in msg))
+            (
+                (("unable to get local issuer certificate") in msg) or
+                (("self signed certificate") in msg)
+            )
         ):
             endpoint.https_bad_chain = True
 
