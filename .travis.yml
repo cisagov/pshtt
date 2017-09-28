@@ -10,9 +10,8 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install flake8
-  - pip install coveralls
-  - pip install pytest
+  - pip install pytest-cov pytest coveralls
 
 script:
-  - coverage run --source=pshtt pytest
+  - pytest --cov=pshtt
   - flake8 .
