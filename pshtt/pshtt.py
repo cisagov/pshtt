@@ -33,9 +33,6 @@ import sslyze.synchronous_scanner
 # We're going to be making requests with certificate validation disabled.
 requests.packages.urllib3.disable_warnings()
 
-# whether/where to cache, set via --cache
-WEB_CACHE = None
-
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
 
@@ -1125,7 +1122,7 @@ def csv_for(results, out_filename):
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE, CA_FILE, STORE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, SUFFIX_CACHE, CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
