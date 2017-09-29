@@ -1130,17 +1130,6 @@ def inspect_domains(domains, options):
         USER_AGENT = options['user_agent']
     if options.get('preload_cache'):
         PRELOAD_CACHE = options['preload_cache']
-    if options.get('cache'):
-        # TODO: requests-cache has a blocking bug for us, now
-        # that we're tweaking allow_redirects and verify parameters.
-        # Caching disabled until bug is fixed, or routed around.
-        #
-        # https://github.com/reclosedev/requests-cache/issues/70
-        #
-        # cache_dir = ".cache"
-        # utils.mkdir_p(cache_dir)
-        # requests_cache.install_cache("%s/cache" % cache_dir)
-        logging.warn("WARNING: Caching disabled.")
     if options.get('suffix_cache'):
         SUFFIX_CACHE = options['suffix_cache']
     if options.get('ca_file'):
