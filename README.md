@@ -132,6 +132,19 @@ These three fields use the previous results to come to high-level conclusions ab
 * `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
 
+## Troubleshooting
+
+#### DNS Blackhole / DNS Assist
+
+One issue which can occur when running `pshtt`, particularly for home / residential networks, with standard ISPs is the use of "DNS Assist" features, a.k.a. "DNS Blackholes".
+
+In these environments, you may see inconsistent results from `pshtt` owing to the fact that your ISP is attempting to detect a request for an unknown site without a DNS record and redirect you to a search page, looking for that page. This means that an endpoint which *should* resolve as "not-alive", will instead resolve as "live", owing to the detection of the live search result page.
+
+If you would like to disable this "feature", several ISPs offer the ability to opt out of this service, and maintain their own instructions for doing so:
+
+* [AT&T](http://www.att.net/dnserrorassist/about/srchTrm=Redirect%20Bin)
+* [FIOS](https://www.verizon.com/support/residential/internet/fiosinternet/troubleshooting/network/questionsone/99147.htm)
+
 ## Who uses pshtt?
 
 * GSA maintains [Pulse](https://pulse.cio.gov), a dashboard that tracks how federal government domains are meeting best practices on the web. [Pulse is open source](https://github.com/18F/pulse).
