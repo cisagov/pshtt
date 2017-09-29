@@ -132,6 +132,8 @@ These three fields use the previous results to come to high-level conclusions ab
 * `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
 
+## Troubleshooting
+
 #### DNS Blackhole / DNS Assist
 
 One issue which can occur when running `pshtt`, particularly for home / residential networks, with standard ISPs is the use of "DNS Assist" features, a.k.a. "DNS Blackholes".
