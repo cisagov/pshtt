@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Runs pshtt with a 10 second time, "Google-Transparency-Report" as the user
-# agent, with roots.pem as the CA file, and debug on. Logging goes to
-# time_<input_file_name>.txt
+# Runs pshtt with a 10 second timeout, with roots.pem as the CA file,
+# and debug on. Logging goes to time_<input_file_name>.txt
 
 # ./running_script.sh test_file.csv
 # output files: test_file.csv.json, time_test_file.csv.txt

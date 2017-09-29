@@ -120,7 +120,6 @@ The following is a set of commands to run to make your running directory.
             `.csv`.
         *   domains must have the schema stripped of them and no trailing '/',
             such as:
-            *   domain.tld/path/to/page
             *   domain.tld
             *   subdomain.domain.tld
             *   www.subdomain.domain.tld

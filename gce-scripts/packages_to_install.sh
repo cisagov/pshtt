@@ -6,9 +6,6 @@
 echo 'UPDATE'
 apt-get -y update -qq
 echo $? ' ERROR CODE'
-echo 'PYTHON PIP'
-apt-get -y install python-pip -qq
-echo $? ' ERROR CODE'
 echo 'GIT'
 apt-get -y install git -qq
 echo $? ' ERROR CODE'
@@ -19,7 +16,7 @@ echo 'LIBFFI6'
 apt-get -y install libffi6 libffi-dev -qq
 echo $? ' ERROR CODE'
 echo 'LIBSSL'
-apt-get -y install build-essential libssl-dev libffi-dev python-dev python3-dev -qq
+apt-get -y install build-essential libssl-dev libffi-dev python3-dev -qq
 echo $? ' ERROR CODE'
 echo 'SETUPTOOLS'
 pip3 install --upgrade setuptools -qq
