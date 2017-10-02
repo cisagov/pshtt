@@ -29,6 +29,7 @@ def inspect(base_domain):
     return domain
 
 
+@unittest.skip('Disable live tests against badssl for now')
 class TestCertificate(unittest.TestCase):
     def test_https_expired(self):
         domain = inspect('expired.badssl.com')
