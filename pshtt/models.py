@@ -1,5 +1,5 @@
 
-class Domain:
+class Domain(object):
 
     def __init__(self, domain):
         self.domain = domain
@@ -23,7 +23,7 @@ class Domain:
         }
 
 
-class Endpoint:
+class Endpoint(object):
 
     def __init__(self, protocol, host, base_domain):
         # Basic endpoint description

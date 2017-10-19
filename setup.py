@@ -49,6 +49,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -57,7 +58,7 @@ setup(
     packages=['pshtt'],
 
     install_requires=[
-        'requests>=2.14.2',
+        'requests>=2.18.4',
         'sslyze>=1.1.0',
         'wget>=3.2',
         'docopt',
