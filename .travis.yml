@@ -9,8 +9,14 @@ python:
   - '3.6'
 
 install:
-  - pip install flake8
   - pip install -r requirements.txt
+  - pip install flake8
+  - pip install pytest-cov pytest coveralls
+  - pip install -e .
 
 script:
+  - pytest --cov=pshtt
   - flake8 .
+
+after_success:
+  - coveralls
