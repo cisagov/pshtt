@@ -58,7 +58,7 @@ setup(
     packages=['pshtt'],
 
     install_requires=[
-        'requests>=2.14.2',
+        'requests>=2.18.4',
         'sslyze>=1.1.0',
         'wget>=3.2',
         'docopt',
