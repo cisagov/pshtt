@@ -80,20 +80,22 @@ def main():
         'cache': args['--cache'],
         'ca_file': args['--ca-file']
     }
+
+    # Do the domain inspections
     results = pshtt.inspect_domains(domains, options)
 
     # JSON can go to STDOUT, or to a file.
     if args['--json']:
-        # Generate all the results before exporting to JSON
+        # Generate (yield) all the results before exporting to JSON
         results = list(results)
 
-        output = utils.json_for(results)
-        if out_filename is None:
-            utils.debug("Printing JSON...", divider=True)
-            print(output)
-        else:
-            utils.write(output, out_filename)
-            logging.warn("Wrote results to %s." % out_filename)
+        with smart_open(out_filename) as out_file:
+            json_content = utils.json_for(results)
+
+            out_file.write(json_content)
+
+            if out_file is not sys.stdout:
+                logging.warn("Wrote results to %s.", out_filename)
 
     # Markdwon can go to STDOUT, or to a file
     elif args['--markdown']:
