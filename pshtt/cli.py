@@ -35,6 +35,8 @@ import docopt
 import logging
 import sys
 
+import pytablewriter
+
 
 @contextlib.contextmanager
 def smart_open(filename=None):
@@ -95,18 +97,21 @@ def main():
 
     # Markdwon can go to STDOUT, or to a file
     elif args['--markdown']:
-        # Generate all the results before exporting to JSON
-        results = list(results)
-
-        output = sys.stdout
-        if out_filename is not None:
-            output = open(out_filename, 'w')
+        # Generate all the results before exporting to Markdown
+        table = [
+            [" %s" % result[header] for header in pshtt.HEADERS]
+            for result in results
+        ]
 
         utils.debug("Printing Markdown...", divider=True)
-        pshtt.md_for(results, output)
+        with smart_open(out_filename) as out_file:
+            writer = pytablewriter.MarkdownTableWriter()
 
-        if out_filename is not None:
-            output.close()
+            writer.header_list = pshtt.HEADERS
+            writer.value_matrix = table
+            writer.stream = out_file
+
+            writer.write_table()
 
     # CSV always goes to a file.
     else:

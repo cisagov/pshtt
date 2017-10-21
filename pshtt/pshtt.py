@@ -11,7 +11,6 @@ import base64
 import json
 import os
 import logging
-import pytablewriter
 import sys
 import codecs
 import OpenSSL
@@ -1088,26 +1087,6 @@ def load_suffix_list():
             utils.write(''.join(content), SUFFIX_CACHE)
 
     return suffixes
-
-
-def md_for(results, out_fd):
-    value_matrix = []
-    for result in results:
-        row = []
-        # TODO: Fix this upstream
-        for header in HEADERS:
-            if (header != "HSTS Header") and (header != "HSTS Max Age") and (header != "Redirect To"):
-                if result[header] is None:
-                    result[header] = False
-            row.append(" %s" % result[header])
-        value_matrix.append(row)
-
-    writer = pytablewriter.MarkdownTableWriter()
-    writer.header_list = HEADERS
-    writer.value_matrix = value_matrix
-
-    writer.stream = out_fd
-    writer.write_table()
 
 
 def inspect_domains(domains, options):
