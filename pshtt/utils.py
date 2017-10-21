@@ -82,6 +82,14 @@ def configure_logging(debug=False):
 
 
 def format_domains(domains):
+    """
+    Convert web server URLs and into domain only format
+
+    Can accept a string for a single URL or a list of strings for multiple URLs
+    """
+    if isinstance(domains, str):
+        domains = [domains]
+
     formatted_domains = []
 
     for domain in domains:

@@ -3,7 +3,7 @@ import sys
 import tempfile
 import unittest
 
-from pshtt.utils import smart_open
+from pshtt.utils import smart_open, format_domains
 
 
 class TestSmartOpen(unittest.TestCase):
@@ -37,3 +37,22 @@ class TestSmartOpen(unittest.TestCase):
                 fh.write(test_data)
 
             self.assertEqual(test_data, open(filename).read())
+
+
+class TestFormatDomains(unittest.TestCase):
+    def test_single_domain_string(self):
+        result = format_domains('https://example.com')
+        self.assertEqual(result, ['example.com'])
+
+    def test_results(self):
+        domains = [
+            'example.com',
+            'www.example.com',
+            'http://example.com',
+            'https://example.com',
+            'http://www.example.com',
+            'https://www.example.com',
+        ]
+
+        results = format_domains(domains)
+        self.assertEqual(results, ['example.com'] * len(domains))
