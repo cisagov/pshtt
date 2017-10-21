@@ -38,6 +38,53 @@ import sys
 import pytablewriter
 
 
+def to_csv(results, out_filename):
+    utils.debug("Opening CSV file: {}".format(out_filename))
+    with smart_open(out_filename) as out_file:
+        writer = csv.writer(out_file)
+
+        # Write out header
+        writer.writerow(pshtt.HEADERS)
+
+        # Write out the row data as it completes
+        for result in results:
+            row = [result[header] for header in pshtt.HEADERS]
+            writer.writerow(row)
+
+    logging.warn("Wrote results to %s.", out_filename)
+
+
+def to_json(results, out_filename):
+    # Generate (yield) all the results before exporting to JSON
+    results = list(results)
+
+    with smart_open(out_filename) as out_file:
+        json_content = utils.json_for(results)
+
+        out_file.write(json_content + '\n')
+
+        if out_file is not sys.stdout:
+            logging.warn("Wrote results to %s.", out_filename)
+
+
+def to_markdown(results, out_filename):
+    # Generate (yield) all the results before exporting to Markdown
+    table = [
+        [" %s" % result[header] for header in pshtt.HEADERS]
+        for result in results
+    ]
+
+    utils.debug("Printing Markdown...", divider=True)
+    with smart_open(out_filename) as out_file:
+        writer = pytablewriter.MarkdownTableWriter()
+
+        writer.header_list = pshtt.HEADERS
+        writer.value_matrix = table
+        writer.stream = out_file
+
+        writer.write_table()
+
+
 def main():
     args = docopt.docopt(__doc__, version=__version__)
     utils.configure_logging(args['--debug'])
@@ -71,53 +118,18 @@ def main():
 
     # JSON can go to STDOUT, or to a file.
     if args['--json']:
-        # Generate (yield) all the results before exporting to JSON
-        results = list(results)
+        to_json(results, out_filename)
 
-        with smart_open(out_filename) as out_file:
-            json_content = utils.json_for(results)
-
-            out_file.write(json_content + '\n')
-
-            if out_file is not sys.stdout:
-                logging.warn("Wrote results to %s.", out_filename)
-
-    # Markdwon can go to STDOUT, or to a file
+    # Markdown can go to STDOUT, or to a file
     elif args['--markdown']:
-        # Generate all the results before exporting to Markdown
-        table = [
-            [" %s" % result[header] for header in pshtt.HEADERS]
-            for result in results
-        ]
-
-        utils.debug("Printing Markdown...", divider=True)
-        with smart_open(out_filename) as out_file:
-            writer = pytablewriter.MarkdownTableWriter()
-
-            writer.header_list = pshtt.HEADERS
-            writer.value_matrix = table
-            writer.stream = out_file
-
-            writer.write_table()
+        to_markdown(results, out_filename)
 
     # CSV always goes to a file.
     else:
         if out_filename is None:
             out_filename = 'results.csv'
 
-        utils.debug("Opening CSV file: {}".format(out_filename))
-        with smart_open(out_filename) as out_file:
-            writer = csv.writer(out_file)
-
-            # Write out header
-            writer.writerow(pshtt.HEADERS)
-
-            # Write out the row data as it completes
-            for result in results:
-                row = [result[header] for header in pshtt.HEADERS]
-                writer.writerow(row)
-
-        logging.warn("Wrote results to %s.", out_filename)
+        to_csv(results, out_filename)
 
 
 if __name__ == '__main__':
