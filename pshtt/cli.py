@@ -92,7 +92,7 @@ def main():
         with smart_open(out_filename) as out_file:
             json_content = utils.json_for(results)
 
-            out_file.write(json_content)
+            out_file.write(json_content + '\n')
 
             if out_file is not sys.stdout:
                 logging.warn("Wrote results to %s.", out_filename)
