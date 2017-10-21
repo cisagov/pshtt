@@ -14,7 +14,7 @@ class TestSmartOpen(unittest.TestCase):
     def test_with_empty_filename(self):
         """Should raise a `FileNotFoundError`"""
         with self.assertRaises(FileNotFoundError):
-            with smart_open('') as fh:
+            with smart_open(''):
                 pass
 
     def test_with_real_filename(self):
