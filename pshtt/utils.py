@@ -12,15 +12,17 @@ import traceback
 import re
 
 
-# Display exception without re-throwing it.
 def format_last_exception():
+    """Display exception without re-throwing it."""
     exc_type, exc_value, exc_traceback = sys.exc_info()
     return "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
 
 
-# mkdir -p in python, from:
-# http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
 def mkdir_p(path):
+    """
+    mkdir -p in python, from:
+    http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
+    """
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
@@ -57,8 +59,8 @@ def format_datetime(obj):
         return None
 
 
-# Load domains from a CSV, skip a header row
 def load_domains(domain_csv):
+    """Load domains from a CSV, skip a header row"""
     domains = []
     with open(domain_csv) as csvfile:
         for row in csv.reader(csvfile):
@@ -71,8 +73,8 @@ def load_domains(domain_csv):
     return domains
 
 
-# Configure logging level, so logging.debug can hinge on --debug.
 def configure_logging(debug=False):
+    """Configure logging level, so logging.debug can hinge on --debug"""
     if debug:
         log_level = logging.DEBUG
     else:
