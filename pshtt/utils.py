@@ -101,7 +101,11 @@ def debug(message, divider=False):
 
 @contextlib.contextmanager
 def smart_open(filename=None):
-    """Context manager that can handle writing to a file or stdout"""
+    """
+    Context manager that can handle writing to a file or stdout
+
+    Adapted from: https://stackoverflow.com/a/17603000
+    """
     if filename is None:
         fh = sys.stdout
     else:
