@@ -11,12 +11,21 @@ class TestSmartOpen(unittest.TestCase):
         with smart_open() as fh:
             self.assertIs(fh, sys.stdout)
 
+    @unittest.skipIf(sys.version_info[0] < 3, 'Python 3 version of test')
     def test_with_empty_filename(self):
         """Should raise a `FileNotFoundError`"""
         with self.assertRaises(FileNotFoundError):
             with smart_open(''):
                 pass
 
+    @unittest.skipIf(sys.version_info[0] >= 3, 'Python 2 version of test')
+    def test_with_empty_filename_python2(self):
+        """Should raise a `FileNotFoundError`"""
+        with self.assertRaises(IOError):
+            with smart_open(''):
+                pass
+
+    @unittest.skipIf(sys.version_info[0] < 3, 'Python 3 version of test')
     def test_with_real_filename(self):
         test_data = 'This is the test data'
 
