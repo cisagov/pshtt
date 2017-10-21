@@ -29,10 +29,26 @@ from . import pshtt
 from . import utils
 from . import __version__
 
+import contextlib
 import csv
 import docopt
 import logging
 import sys
+
+
+@contextlib.contextmanager
+def smart_open(filename=None):
+    """Context manager that can handle writing to a file or stdout"""
+    if filename is None:
+        fh = sys.stdout
+    else:
+        fh = open(filename, 'w')
+
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdout:
+            fh.close()
 
 
 def main():
@@ -97,7 +113,7 @@ def main():
         if out_filename is None:
             out_filename = 'results.csv'
 
-        with open(out_filename, 'w') as out_file:
+        with smart_open(out_filename) as out_file:
             utils.debug("Opening CSV file: {}".format(out_filename))
             writer = csv.writer(out_file)
 
