@@ -113,8 +113,8 @@ def main():
         if out_filename is None:
             out_filename = 'results.csv'
 
+        utils.debug("Opening CSV file: {}".format(out_filename))
         with smart_open(out_filename) as out_file:
-            utils.debug("Opening CSV file: {}".format(out_filename))
             writer = csv.writer(out_file)
 
             # Write out header
