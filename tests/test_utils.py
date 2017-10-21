@@ -14,7 +14,7 @@ class TestSmartOpen(unittest.TestCase):
     @unittest.skipIf(sys.version_info[0] < 3, 'Python 3 version of test')
     def test_with_empty_filename(self):
         """Should raise a `FileNotFoundError`"""
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(FileNotFoundError):  # noqa
             with smart_open(''):
                 pass
 
