@@ -28,29 +28,14 @@ Notes:
 from . import pshtt
 from . import utils
 from . import __version__
+from .utils import smart_open
 
-import contextlib
 import csv
 import docopt
 import logging
 import sys
 
 import pytablewriter
-
-
-@contextlib.contextmanager
-def smart_open(filename=None):
-    """Context manager that can handle writing to a file or stdout"""
-    if filename is None:
-        fh = sys.stdout
-    else:
-        fh = open(filename, 'w')
-
-    try:
-        yield fh
-    finally:
-        if fh is not sys.stdout:
-            fh.close()
 
 
 def main():
