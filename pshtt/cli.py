@@ -29,6 +29,7 @@ from . import pshtt
 from . import utils
 from . import __version__
 
+import csv
 import docopt
 import logging
 import sys
@@ -38,7 +39,7 @@ def main():
     args = docopt.docopt(__doc__, version=__version__)
     utils.configure_logging(args['--debug'])
 
-    out_file = args['--output']
+    out_filename = args['--output']
 
     # Read from a .csv, or allow domains on the command line.
     domains = []
@@ -65,32 +66,50 @@ def main():
 
     # JSON can go to STDOUT, or to a file.
     if args['--json']:
-        output = utils.json_for(results)
-        if out_file is None:
+        # Generate all the results before exporting to JSON
+        results = list(results)
 
+        output = utils.json_for(results)
+        if out_filename is None:
             utils.debug("Printing JSON...", divider=True)
             print(output)
         else:
-            utils.write(output, out_file)
-            logging.warn("Wrote results to %s." % out_file)
+            utils.write(output, out_filename)
+            logging.warn("Wrote results to %s." % out_filename)
+
     # Markdwon can go to STDOUT, or to a file
     elif args['--markdown']:
+        # Generate all the results before exporting to JSON
+        results = list(results)
+
         output = sys.stdout
-        if out_file is not None:
-            output = open(out_file, 'w')
+        if out_filename is not None:
+            output = open(out_filename, 'w')
 
         utils.debug("Printing Markdown...", divider=True)
         pshtt.md_for(results, output)
 
-        if out_file is not None:
+        if out_filename is not None:
             output.close()
+
     # CSV always goes to a file.
     else:
-        if args['--output'] is None:
-            out_file = 'results.csv'
-        pshtt.csv_for(results, out_file)
-        utils.debug("Writing results...", divider=True)
-        logging.warn("Wrote results to %s." % out_file)
+        if out_filename is None:
+            out_filename = 'results.csv'
+
+        with open(out_filename, 'w') as out_file:
+            utils.debug("Opening CSV file: {}".format(out_filename))
+            writer = csv.writer(out_file)
+
+            # Write out header
+            writer.writerow(pshtt.HEADERS)
+
+            # Write out the row data as it completes
+            for result in results:
+                row = [result[header] for header in pshtt.HEADERS]
+                writer.writerow(row)
+
+        logging.warn("Wrote results to %s.", out_filename)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,6 @@ import requests
 import re
 import base64
 import json
-import csv
 import os
 import logging
 import pytablewriter
@@ -133,6 +132,17 @@ def result_for(domain):
 
     # But also capture the extended data for those who want it.
     result['endpoints'] = domain.to_object()
+
+    # Convert Header fields from None to False, except for:
+    # - "HSTS Header"
+    # - "HSTS Max Age"
+    # - "Redirect To"
+    for header in HEADERS:
+        if header in ("HSTS Header", "HSTS Max Age", "Redirect To"):
+            continue
+
+        if result[header] is None:
+            result[header] = False
 
     return result
 
@@ -1100,29 +1110,6 @@ def md_for(results, out_fd):
     writer.write_table()
 
 
-def csv_for(results, out_filename):
-    """
-    Output a CSV string for an array of results, with a
-    header row, and with header fields in the desired order.
-    """
-    out_file = open(out_filename, 'w')
-    writer = csv.writer(out_file)
-
-    writer.writerow(HEADERS)
-
-    for result in results:
-        row = []
-        # TODO: Fix this upstream
-        for header in HEADERS:
-            if (header != "HSTS Header") and (header != "HSTS Max Age") and (header != "Redirect To"):
-                if result[header] is None:
-                    result[header] = False
-            row.append(result[header])
-        writer.writerow(row)
-
-    out_file.close()
-
-
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
     global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE, CA_FILE, STORE
@@ -1165,8 +1152,5 @@ def inspect_domains(domains, options):
     suffix_list = load_suffix_list()
 
     # For every given domain, get inspect data.
-    results = []
     for domain in domains:
-        results.append(inspect(domain))
-
-    return results
+        yield inspect(domain)
