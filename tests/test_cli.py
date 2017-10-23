@@ -41,9 +41,9 @@ class TestToCSV(unittest.TestCase):
         with open(self.temp_filename) as fh:
             content = fh.read()
 
-            expected = 'Domain,Base Domain,Canonical URL,Live,Redirect,Redirect To,Valid HTTPS,Defaults to HTTPS,Downgrades HTTPS,Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Hostname,HTTPS Expired Cert,HTTPS Self Signed Cert,HSTS,HSTS Header,HSTS Max Age,HSTS Entire Domain,HSTS Preload Ready,HSTS Preload Pending,HSTS Preloaded,Base Domain HSTS Preloaded,Domain Supports HTTPS,Domain Enforces HTTPS,Domain Uses Strong HSTS,Unknown Error\n'
+        expected = ','.join(_pshtt.HEADERS) + '\n'
 
-            self.assertEqual(content, expected)
+        self.assertEqual(content, expected)
 
     @unittest.skipIf(sys.version_info[0] < 3, 'Python 3 test only')
     def test_single_result(self):
@@ -52,8 +52,41 @@ class TestToCSV(unittest.TestCase):
         with open(self.temp_filename) as fh:
             content = fh.read()
 
-            expected = ''
-            expected += 'Domain,Base Domain,Canonical URL,Live,Redirect,Redirect To,Valid HTTPS,Defaults to HTTPS,Downgrades HTTPS,Strictly Forces HTTPS,HTTPS Bad Chain,HTTPS Bad Hostname,HTTPS Expired Cert,HTTPS Self Signed Cert,HSTS,HSTS Header,HSTS Max Age,HSTS Entire Domain,HSTS Preload Ready,HSTS Preload Pending,HSTS Preloaded,Base Domain HSTS Preloaded,Domain Supports HTTPS,Domain Enforces HTTPS,Domain Uses Strong HSTS,Unknown Error\n'
-            expected += 'example.com,example.com,http://example.com,False,False,,False,False,False,False,False,False,False,False,False,,,False,False,False,False,False,False,False,False,False\n'
+        domain_data = [
+            ('Domain', 'example.com'),
+            ('Base Domain', 'example.com'),
+            ('Canonical URL', 'http://example.com'),
+            ('Live', 'False'),
+            ('Redirect', 'False'),
+            ('Redirect To', ''),
+            ('Valid HTTPS', 'False'),
+            ('Defaults to HTTPS', 'False'),
+            ('Downgrades HTTPS', 'False'),
+            ('Strictly Forces HTTPS', 'False'),
+            ('HTTPS Bad Chain', 'False'),
+            ('HTTPS Bad Hostname', 'False'),
+            ('HTTPS Expired Cert', 'False'),
+            ('HTTPS Self Signed Cert', 'False'),
+            ('HSTS', 'False'),
+            ('HSTS Header', ''),
+            ('HSTS Max Age', ''),
+            ('HSTS Entire Domain', 'False'),
+            ('HSTS Preload Ready', 'False'),
+            ('HSTS Preload Pending', 'False'),
+            ('HSTS Preloaded', 'False'),
+            ('Base Domain HSTS Preloaded', 'False'),
+            ('Domain Supports HTTPS', 'False'),
+            ('Domain Enforces HTTPS', 'False'),
+            ('Domain Uses Strong HSTS', 'False'),
+            ('Unknown Error', 'False'),
+        ]
 
-            self.assertEqual(content, expected)
+        header = ','.join(t[0] for t in domain_data)
+        values = ','.join(t[1] for t in domain_data)
+        expected = header + '\n' + values + '\n'
+        self.assertEqual(content, expected)
+
+        # Sanity check that this hard coded data has the same headers as defined
+        # in the package. This should never fail, as the above assert should
+        # catch any changes in the header columns.
+        self.assertEqual(header, ','.join(_pshtt.HEADERS))
