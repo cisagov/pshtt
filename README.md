@@ -1,5 +1,9 @@
 ## Pushing HTTPS :lock:
 
+[![Coverage Status](https://coveralls.io/repos/github/dhs-ncats/pshtt/badge.svg)](https://coveralls.io/github/dhs-ncats/pshtt)
+
+[![Build Status](https://travis-ci.org/dhs-ncats/pshtt.svg?branch=master)](https://travis-ci.org/dhs-ncats/pshtt)
+
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
 `pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their public web sites and services by the end of 2016. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
@@ -130,6 +134,19 @@ These three fields use the previous results to come to high-level conclusions ab
 * `Domain Supports HTTPS` - A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS, or when it doesn't downgrade and has a bad chain but not a bad hostname (a bad hostname makes it clear the domain isn't actively attempting to support HTTPS, whereas an incomplete chain is just a mistake.). Domains with a bad chain "support" HTTPS but user-side errors can be expected.
 * `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS. For websites (where `Redirect` is `false`) they are allowed to _eventually_ redirect to an `https://` URI. For "redirect domains" (domains where the `Redirect` value is `true`) they must _immediately_ redirect clients to an `https://` URI (even if that URI is on another domain) in order to be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the max-age ≥ 31536000.
+
+## Troubleshooting
+
+#### DNS Blackhole / DNS Assist
+
+One issue which can occur when running `pshtt`, particularly for home / residential networks, with standard ISPs is the use of "DNS Assist" features, a.k.a. "DNS Blackholes".
+
+In these environments, you may see inconsistent results from `pshtt` owing to the fact that your ISP is attempting to detect a request for an unknown site without a DNS record and redirect you to a search page, looking for that page. This means that an endpoint which *should* resolve as "not-alive", will instead resolve as "live", owing to the detection of the live search result page.
+
+If you would like to disable this "feature", several ISPs offer the ability to opt out of this service, and maintain their own instructions for doing so:
+
+* [AT&T](http://www.att.net/dnserrorassist/about/srchTrm=Redirect%20Bin)
+* [FIOS](https://www.verizon.com/support/residential/internet/fiosinternet/troubleshooting/network/questionsone/99147.htm)
 
 ## Who uses pshtt?
 
