@@ -28,17 +28,68 @@ Notes:
 from . import pshtt
 from . import utils
 from . import __version__
+from .utils import smart_open
 
+import csv
 import docopt
 import logging
 import sys
+
+import pytablewriter
+
+
+def to_csv(results, out_filename):
+    utils.debug("Opening CSV file: {}".format(out_filename))
+    with smart_open(out_filename) as out_file:
+        writer = csv.writer(out_file)
+
+        # Write out header
+        writer.writerow(pshtt.HEADERS)
+
+        # Write out the row data as it completes
+        for result in results:
+            row = [result[header] for header in pshtt.HEADERS]
+            writer.writerow(row)
+
+    logging.warn("Wrote results to %s.", out_filename)
+
+
+def to_json(results, out_filename):
+    # Generate (yield) all the results before exporting to JSON
+    results = list(results)
+
+    with smart_open(out_filename) as out_file:
+        json_content = utils.json_for(results)
+
+        out_file.write(json_content + '\n')
+
+        if out_file is not sys.stdout:
+            logging.warn("Wrote results to %s.", out_filename)
+
+
+def to_markdown(results, out_filename):
+    # Generate (yield) all the results before exporting to Markdown
+    table = [
+        [" %s" % result[header] for header in pshtt.HEADERS]
+        for result in results
+    ]
+
+    utils.debug("Printing Markdown...", divider=True)
+    with smart_open(out_filename) as out_file:
+        writer = pytablewriter.MarkdownTableWriter()
+
+        writer.header_list = pshtt.HEADERS
+        writer.value_matrix = table
+        writer.stream = out_file
+
+        writer.write_table()
 
 
 def main():
     args = docopt.docopt(__doc__, version=__version__)
     utils.configure_logging(args['--debug'])
 
-    out_file = args['--output']
+    out_filename = args['--output']
 
     # Read from a .csv, or allow domains on the command line.
     domains = []
@@ -61,36 +112,24 @@ def main():
         'cache': args['--cache'],
         'ca_file': args['--ca-file']
     }
+
+    # Do the domain inspections
     results = pshtt.inspect_domains(domains, options)
 
     # JSON can go to STDOUT, or to a file.
     if args['--json']:
-        output = utils.json_for(results)
-        if out_file is None:
+        to_json(results, out_filename)
 
-            utils.debug("Printing JSON...", divider=True)
-            print(output)
-        else:
-            utils.write(output, out_file)
-            logging.warn("Wrote results to %s." % out_file)
-    # Markdwon can go to STDOUT, or to a file
+    # Markdown can go to STDOUT, or to a file
     elif args['--markdown']:
-        output = sys.stdout
-        if out_file is not None:
-            output = open(out_file, 'w')
+        to_markdown(results, out_filename)
 
-        utils.debug("Printing Markdown...", divider=True)
-        pshtt.md_for(results, output)
-
-        if out_file is not None:
-            output.close()
     # CSV always goes to a file.
     else:
-        if args['--output'] is None:
-            out_file = 'results.csv'
-        pshtt.csv_for(results, out_file)
-        utils.debug("Writing results...", divider=True)
-        logging.warn("Wrote results to %s." % out_file)
+        if out_filename is None:
+            out_filename = 'results.csv'
+
+        to_csv(results, out_filename)
 
 
 if __name__ == '__main__':

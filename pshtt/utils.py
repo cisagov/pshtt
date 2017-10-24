@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import contextlib
 import os
 import json
 import errno
@@ -96,3 +97,22 @@ def debug(message, divider=False):
 
     if message:
         logging.debug("%s\n" % message)
+
+
+@contextlib.contextmanager
+def smart_open(filename=None):
+    """
+    Context manager that can handle writing to a file or stdout
+
+    Adapted from: https://stackoverflow.com/a/17603000
+    """
+    if filename is None:
+        fh = sys.stdout
+    else:
+        fh = open(filename, 'w')
+
+    try:
+        yield fh
+    finally:
+        if fh is not sys.stdout:
+            fh.close()
