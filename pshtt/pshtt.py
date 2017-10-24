@@ -52,13 +52,23 @@ HEADERS = [
     "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "Unknown Error",
 ]
 
+# Used for caching the HSTS preload list from Chromium's source.
 PRELOAD_CACHE = None
+PRELOAD_CACHE_DEFAULT = "preloaded.json"
 preload_list = None
+
+# Used for caching the HSTS pending preload list from hstspreload.org.
+PRELOAD_PENDING_CACHE = None
+PRELOAD_PENDING_CACHE_DEFAULT = "preload-pending.json"
 preload_pending = None
 
 # Used for determining base domain via Mozilla's public suffix list.
-SUFFIX_CACHE = None
+PUBLIC_SUFFIX_CACHE = None
+PUBLIC_SUFFIX_CACHE_DEFAULT = "public-suffix-list.txt"
 suffix_list = None
+
+# Directory to cache all third party responses, if set by user.
+THIRD_PARTIES_CACHE = None
 
 # Set if user wants to use a custom CA bundle
 CA_FILE = None
@@ -1054,9 +1064,9 @@ def create_preload_list():
 
 
 def load_suffix_list():
-    if SUFFIX_CACHE and os.path.exists(SUFFIX_CACHE):
+    if PUBLIC_SUFFIX_CACHE and os.path.exists(PUBLIC_SUFFIX_CACHE):
         utils.debug("Using cached suffix list.", divider=True)
-        cache_file = codecs.open(SUFFIX_CACHE, encoding='utf-8')
+        cache_file = codecs.open(PUBLIC_SUFFIX_CACHE, encoding='utf-8')
         suffixes = PublicSuffixList(cache_file)
     else:
         # File does not exist, download current list and cache it at given location.
@@ -1070,9 +1080,9 @@ def load_suffix_list():
         content = cache_file.readlines()
         suffixes = PublicSuffixList(content)
 
-        if SUFFIX_CACHE:
-            utils.debug("Caching suffix list at %s" % SUFFIX_CACHE, divider=True)
-            utils.write(''.join(content), SUFFIX_CACHE)
+        if PUBLIC_SUFFIX_CACHE:
+            utils.debug("Caching suffix list at %s" % PUBLIC_SUFFIX_CACHE, divider=True)
+            utils.write(''.join(content), PUBLIC_SUFFIX_CACHE)
 
     return suffixes
 
@@ -1122,16 +1132,29 @@ def csv_for(results, out_filename):
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, SUFFIX_CACHE, CA_FILE, STORE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, PUBLIC_SUFFIX_CACHE, PRELOAD_PENDING_CACHE, THIRD_PARTIES_CACHE, CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
         USER_AGENT = options['user_agent']
+
+    # Supported cache flag, a directory to store all third party requests.
+    if options.get('cache_third_parties'):
+        THIRD_PARTIES_CACHE = options['cache_third_parties']
+        PRELOAD_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_CACHE_DEFAULT)
+        PRELOAD_PENDING_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_PENDING_CACHE_DEFAULT)
+        PUBLIC_SUFFIX_CACHE = os.path.join(THIRD_PARTIES_CACHE, PUBLIC_SUFFIX_CACHE_DEFAULT)
+
+    # Legacy cache flags, undocumented but supported for backwards compatibility.
+    # These will also override the generic third parties dir.
     if options.get('preload_cache'):
         PRELOAD_CACHE = options['preload_cache']
+    if options.get('preload_pending_cache'):
+        PRELOAD_PENDING_CACHE = options['preload_pending_cache']
     if options.get('suffix_cache'):
-        SUFFIX_CACHE = options['suffix_cache']
+        PUBLIC_SUFFIX_CACHE = options['suffix_cache']
+
     if options.get('ca_file'):
         CA_FILE = options['ca_file']
         # By default, the store that we want to check is the Mozilla store

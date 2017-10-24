@@ -53,16 +53,15 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
 #### Options
 
 ```bash
-  -h --help                   Show this message.
-  -s --sorted                 Sort output by domain, A-Z.
-  -o --output=OUTFILE         Name output file. (Defaults to "results".)
-  -j --json                   Get results in JSON. (Defaults to CSV.)
-  -d --debug                  Print debug output.
-  -u --user-agent=AGENT       Override user agent.
-  -t --timeout=TIMEOUT        Override timeout (in seconds).
-  -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
-  -l --suffix-cache=SUFFIX    Cache suffix list, and where to cache it.
-  -f --ca-file=PATH           Specify custom CA bundle (PEM format)
+  -h --help                     Show this message.
+  -s --sorted                   Sort output by domain, A-Z.
+  -o --output=OUTFILE           Name output file. (Defaults to "results".)
+  -j --json                     Get results in JSON. (Defaults to CSV.)
+  -d --debug                    Print debug output.
+  -u --user-agent=AGENT         Override user agent.
+  -t --timeout=TIMEOUT          Override timeout (in seconds).
+  -p --cache-third-parties=DIR  Cache third party data, and what directory to cache it in.
+  -f --ca-file=PATH             Specify custom CA bundle (PEM format)
 ```
 
 ##### Using your own CA Bundle
