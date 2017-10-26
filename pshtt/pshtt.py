@@ -899,16 +899,35 @@ def is_hsts_preload_ready(domain):
 
 def is_hsts_preload_pending(domain):
     """
-    Whether a domain is formally pending inclusion
-    in Chrome's HSTS preload list.
+    Whether a domain is formally pending inclusion in Chrome's HSTS preload
+    list.
+
+    If preload_pending is None, the caches have not been initialized, so do
+    that.
     """
+    if preload_pending is None:
+        logging.error('`preload_pending` has not yet been initialized!')
+        raise RuntimeError(
+            '`initialize_external_data()` must be called explicitly before '
+            'using this function'
+        )
+
     return domain.domain in preload_pending
 
 
 def is_hsts_preloaded(domain):
     """
     Whether a domain is contained in Chrome's HSTS preload list.
+
+    If preload_list is None, the caches have not been initialized, so do that.
     """
+    if preload_list is None:
+        logging.error('`preload_list` has not yet been initialized!')
+        raise RuntimeError(
+            '`initialize_external_data()` must be called explicitly before '
+            'using this function'
+        )
+
     return domain.domain in preload_list
 
 
@@ -922,7 +941,16 @@ def is_parent_hsts_preloaded(domain):
 def parent_domain_for(hostname):
     """
     For "x.y.domain.gov", return "domain.gov".
+
+    If suffix_list is None, the caches have not been initialized, so do that.
     """
+    if suffix_list is None:
+        logging.error('`suffix_list` has not yet been initialized!')
+        raise RuntimeError(
+            '`initialize_external_data()` must be called explicitly before '
+            'using this function'
+        )
+
     return suffix_list.get_public_suffix(hostname)
 
 
@@ -1089,6 +1117,26 @@ def load_suffix_list():
     return suffixes
 
 
+def initialize_external_data():
+    """
+    This function serves to load all of the third party external data used
+
+    This is meant to be called explicitly by a user. Either the `pshtt` tool
+    itself as part of `inspect_domains()` function, or if in a library, as part
+    of the setup needed before using certain library functions.
+    """
+    # Download HSTS preload list, caches locally.
+    global preload_list
+    preload_list = create_preload_list()
+
+    # Download HSTS pending preload list. Not cached.
+    global preload_pending
+    preload_pending = fetch_preload_pending()
+
+    global suffix_list
+    suffix_list = load_suffix_list()
+
+
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
     global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE, CA_FILE, STORE
@@ -1119,16 +1167,7 @@ def inspect_domains(domains, options):
         # "Custom" Option from the sslyze output.
         STORE = "Custom"
 
-    # Download HSTS preload list, caches locally.
-    global preload_list
-    preload_list = create_preload_list()
-
-    # Download HSTS pending preload list. Not cached.
-    global preload_pending
-    preload_pending = fetch_preload_pending()
-
-    global suffix_list
-    suffix_list = load_suffix_list()
+    initialize_external_data()
 
     # For every given domain, get inspect data.
     for domain in domains:
