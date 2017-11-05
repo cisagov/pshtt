@@ -65,7 +65,7 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -d --debug                    Print debug output.
   -u --user-agent=AGENT         Override user agent.
   -t --timeout=TIMEOUT          Override timeout (in seconds).
-  -p --cache-third-parties=DIR  Cache third party data, and what directory to cache it in.
+  -c --cache-third-parties=DIR  Cache third party data, and what directory to cache it in.
   -f --ca-file=PATH             Specify custom CA bundle (PEM format)
 ```
 
