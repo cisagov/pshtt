@@ -3,22 +3,20 @@
 """pshtt ("pushed") is a tool to test domains for HTTPS best practices.
 
 Usage:
-  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--markdown] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--preload-cache PRELOAD] [--cache] [--suffix-cache SUFFIX] [--ca-file PATH]
+  pshtt (INPUT ...) [--output OUTFILE] [--sorted] [--json] [--markdown] [--debug] [--timeout TIMEOUT] [--user-agent AGENT] [--cache-third-parties DIR] [--ca-file PATH]
   pshtt (-h | --help)
 
 Options:
-  -h --help                   Show this message.
-  -s --sorted                 Sort output by domain, A-Z.
-  -o --output=OUTFILE         Name output file. (Defaults to "results".)
-  -j --json                   Get results in JSON. (Defaults to CSV.)
-  -m --markdown               Get results in Markdown. (Defaults to CSV.)
-  -d --debug                  Print debug output.
-  -u --user-agent=AGENT       Override user agent
-  -t --timeout=TIMEOUT        Override timeout (in seconds)
-  -p --preload-cache=PRELOAD  Cache preload list, and where to cache it.
-  -c --cache                  Cache network requests to a directory.
-  -l --suffix-cache=SUFFIX    Cache suffix list, and where to cache it.
-  -f --ca-file=PATH           Specify custom CA bundle (PEM format)
+  -h --help                     Show this message.
+  -s --sorted                   Sort output by domain, A-Z.
+  -o --output=OUTFILE           Name output file. (Defaults to "results".)
+  -j --json                     Get results in JSON. (Defaults to CSV.)
+  -m --markdown                 Get results in Markdown. (Defaults to CSV.)
+  -d --debug                    Print debug output.
+  -u --user-agent=AGENT         Override user agent.
+  -t --timeout=TIMEOUT          Override timeout (in seconds).
+  -c --cache-third-parties=DIR  Cache third party data, and what directory to cache it in.
+  -f --ca-file=PATH             Specify custom CA bundle (PEM format)
 
 Notes:
   If the first INPUT ends with .csv, domains will be read from CSV.
@@ -107,9 +105,7 @@ def main():
     options = {
         'user_agent': args['--user-agent'],
         'timeout': args['--timeout'],
-        'preload_cache': args['--preload-cache'],
-        'suffix_cache': args['--suffix-cache'],
-        'cache': args['--cache'],
+        'cache-third-parties': args['--cache-third-parties'],
         'ca_file': args['--ca-file']
     }
 

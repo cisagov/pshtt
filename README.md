@@ -61,6 +61,7 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
   -s --sorted                   Sort output by domain, A-Z.
   -o --output=OUTFILE           Name output file. (Defaults to "results".)
   -j --json                     Get results in JSON. (Defaults to CSV.)
+  -m --markdown                 Get results in Markdown. (Defaults to CSV.)
   -d --debug                    Print debug output.
   -u --user-agent=AGENT         Override user agent.
   -t --timeout=TIMEOUT          Override timeout (in seconds).

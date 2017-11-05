@@ -1022,28 +1022,38 @@ def did_domain_error(domain):
     )
 
 
-def fetch_preload_pending():
+def load_preload_pending():
     """
     Fetch the Chrome preload pending list. Don't cache, it's quick/small.
     """
-    utils.debug("Fetching Chrome pending preload list...", divider=True)
+    pending_json = None
 
-    pending_url = "https://hstspreload.org/api/v2/pending"
-
-    try:
-        request = requests.get(pending_url)
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
-        logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
-        logging.debug('{}'.format(err))
-        return []
-
-    # TODO: abstract Py 2/3 check out to utils
-    if sys.version_info[0] < 3:
-        raw = request.content
+    if PRELOAD_PENDING_CACHE and os.path.exists(PRELOAD_PENDING_CACHE):
+        utils.debug("Using cached hstspreload.org pending list.", divider=True)
+        pending_json = json.loads(open(PRELOAD_PENDING_CACHE).read())
     else:
-        raw = str(request.content, 'utf-8')
+        utils.debug("Fetching hstspreload.org pending list...", divider=True)
 
-    pending_json = json.loads(raw)
+        pending_url = "https://hstspreload.org/api/v2/pending"
+
+        try:
+            request = requests.get(pending_url)
+        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+            logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
+            logging.debug('{}'.format(err))
+            return []
+
+        # TODO: abstract Py 2/3 check out to utils
+        if sys.version_info[0] < 3:
+            raw = request.content
+        else:
+            raw = str(request.content, 'utf-8')
+
+        pending_json = json.loads(raw)
+
+        if PRELOAD_PENDING_CACHE:
+            utils.debug("Caching preload pending list at %s" % PRELOAD_PENDING_CACHE, divider=True)
+            utils.write(utils.json_for(pending_json), PRELOAD_PENDING_CACHE)
 
     pending = []
     for entry in pending_json:
@@ -1053,7 +1063,7 @@ def fetch_preload_pending():
     return pending
 
 
-def create_preload_list():
+def load_preload_list():
     preload_json = None
 
     if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
@@ -1131,15 +1141,21 @@ def initialize_external_data():
     This is meant to be called explicitly by a user. Either the `pshtt` tool
     itself as part of `inspect_domains()` function, or if in a library, as part
     of the setup needed before using certain library functions.
+
+    All downloaded third party data will be cached in a directory, and
+    used from cache on the next pshtt run instead of hitting the network,
+    if the --cache-third-parties=[DIR] flag specifies a directory.
     """
-    # Download HSTS preload list, caches locally.
+
+    # Download Chrome's latest versioned HSTS preload list.
     global preload_list
-    preload_list = create_preload_list()
+    preload_list = load_preload_list()
 
-    # Download HSTS pending preload list. Not cached.
+    # Download Chrome's current HSTS pending preload list.
     global preload_pending
-    preload_pending = fetch_preload_pending()
+    preload_pending = load_preload_pending()
 
+    # Download Mozilla's current Public Suffix list.
     global suffix_list
     suffix_list = load_suffix_list()
 
@@ -1154,20 +1170,11 @@ def inspect_domains(domains, options):
         USER_AGENT = options['user_agent']
 
     # Supported cache flag, a directory to store all third party requests.
-    if options.get('cache_third_parties'):
-        THIRD_PARTIES_CACHE = options['cache_third_parties']
+    if options.get('cache-third-parties'):
+        THIRD_PARTIES_CACHE = options['cache-third-parties']
         PRELOAD_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_CACHE_DEFAULT)
         PRELOAD_PENDING_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_PENDING_CACHE_DEFAULT)
         PUBLIC_SUFFIX_CACHE = os.path.join(THIRD_PARTIES_CACHE, PUBLIC_SUFFIX_CACHE_DEFAULT)
-
-    # Legacy cache flags, undocumented but supported for backwards compatibility.
-    # These will also override the generic third parties dir.
-    if options.get('preload_cache'):
-        PRELOAD_CACHE = options['preload_cache']
-    if options.get('preload_pending_cache'):
-        PRELOAD_PENDING_CACHE = options['preload_pending_cache']
-    if options.get('suffix_cache'):
-        PUBLIC_SUFFIX_CACHE = options['suffix_cache']
 
     if options.get('ca_file'):
         CA_FILE = options['ca_file']
