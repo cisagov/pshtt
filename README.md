@@ -6,7 +6,7 @@
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal .gov domains must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget that requires federal agencies to enforce HTTPS on their public web sites and services by the end of 2016. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal agencies must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget, and [BOD 18-01](https://cyber.dhs.gov), a 2017 directive from the Department of Homeland Security, which require federal agencies to enforce HTTPS on their public web services. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
 `pshtt` is a collaboration between the [Department of Homeland Security's National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA, Lawrence Livermore National Laboratory, and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
