@@ -62,10 +62,14 @@ def load_domains(domain_csv):
     domains = []
     with open(domain_csv) as csvfile:
         for row in csv.reader(csvfile):
-            if (not row[0]) or (row[0].lower().startswith("domain")):
+            # Skip empty rows.
+            if (not row) or (not row[0].strip()):
                 continue
 
             row[0] = row[0].lower()
+            # Skip any header row.
+            if (not domains) and (row[0].startswith("domain")):
+                continue
 
             domains.append(row[0])
     return domains
