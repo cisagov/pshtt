@@ -4,9 +4,9 @@
 
 [![Build Status](https://travis-ci.org/dhs-ncats/pshtt.svg?branch=master)](https://travis-ci.org/dhs-ncats/pshtt)
 
-`pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
+`pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON) file.
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal agencies must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget, and [BOD 18-01](https://cyber.dhs.gov), a 2017 directive from the Department of Homeland Security, which require federal agencies to enforce HTTPS on their public web services. Much has been done, but there's [more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
+`pshtt` was developed to _push_ organizations — especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal agencies must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget, and [BOD 18-01](https://cyber.dhs.gov), a 2017 directive from the Department of Homeland Security, which require federal agencies to enforce HTTPS on their public web services. Much has been done, but there's [more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
 `pshtt` is a collaboration between the Department of Homeland Security's [National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA, Lawrence Livermore National Laboratory, and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
@@ -30,7 +30,7 @@ pshtt example.com [options]
 
 #### Running directly
 
-To run the tool locally from the repository, without installing , first install the requirements:
+To run the tool locally from the repository, without installing, first install the requirements:
 
 ```bash
 pip install -r requirements.txt
@@ -113,7 +113,7 @@ The following values are returned in `results.csv`:
 
 #### Common errors
 
-* `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoints contain a bad chain.
+* `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS endpoint contains a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS endpoint fails hostname validation
 * `HTTPS Expired Cert` - A domain has an expired certificate if the either HTTPS endpoint has an expired certificate.
 
@@ -142,7 +142,7 @@ These three fields use the previous results to come to high-level conclusions ab
 
 One issue which can occur when running `pshtt`, particularly for home / residential networks, with standard ISPs is the use of "DNS Assist" features, a.k.a. "DNS Blackholes".
 
-In these environments, you may see inconsistent results from `pshtt` owing to the fact that your ISP is attempting to detect a request for an unknown site without a DNS record and redirect you to a search page, looking for that page. This means that an endpoint which *should* resolve as "not-alive", will instead resolve as "live", owing to the detection of the live search result page.
+In these environments, you may see inconsistent results from `pshtt` owing to the fact that your ISP is attempting to detect a request for an unknown site without a DNS record and is redirecting you to a search page for that site. This means that an endpoint which *should* resolve as "not-alive", will instead resolve as "live", owing to the detection of the live search result page.
 
 If you would like to disable this "feature", several ISPs offer the ability to opt out of this service, and maintain their own instructions for doing so:
 
