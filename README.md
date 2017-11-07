@@ -6,9 +6,9 @@
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON).
 
-`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal agencies must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget, and [BOD 18-01](https://cyber.dhs.gov), a 2017 directive from the Department of Homeland Security, which require federal agencies to enforce HTTPS on their public web services. Much has been done, and [still more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
+`pshtt` was developed to _push_ organizations— especially large ones like the US Federal Government :us: — to adopt HTTPS across the enterprise. Federal agencies must comply with [M-15-13](https://https.cio.gov), a 2015 memorandum from the White House Office of Management and Budget, and [BOD 18-01](https://cyber.dhs.gov), a 2017 directive from the Department of Homeland Security, which require federal agencies to enforce HTTPS on their public web services. Much has been done, but there's [more yet to do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
-`pshtt` is a collaboration between the [Department of Homeland Security's National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA, Lawrence Livermore National Laboratory, and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
+`pshtt` is a collaboration between the Department of Homeland Security's [National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA, Lawrence Livermore National Laboratory, and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
 ## Getting Started
 
@@ -52,7 +52,7 @@ pshtt dhs.gov
 pshtt --output=homeland.csv --debug dhs.gov us-cert.gov usss.gov
 pshtt --sorted current-federal.csv
 ```
-Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
+Note: if INPUT ends with `.csv`, domains will be read from the first column of the CSV. CSV output will always be written to disk (unless --json is specified), defaulting to `results.csv`.
 
 #### Options
 
@@ -71,7 +71,7 @@ Note: if INPUT ends with `.csv`, domains will be read from CSV. CSV output will 
 
 ##### Using your own CA Bundle
 
-By default, `pshtt` relies on the root CAs that are trusted in the [Mozilla root store](https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt) If you work behind a corporate proxy or have your own certificates that aren't publicly trusted, you can specify your own CA bundle:
+By default, `pshtt` relies on the root CAs that are trusted in the [Mozilla root store](https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt). If you work behind a corporate proxy or have your own certificates that aren't publicly trusted, you can specify your own CA bundle:
 
 ```bash
 pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
