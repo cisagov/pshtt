@@ -31,9 +31,6 @@ import sslyze.synchronous_scanner
 # We're going to be making requests with certificate validation disabled.
 requests.packages.urllib3.disable_warnings()
 
-# whether/where to cache, set via --cache
-WEB_CACHE = None
-
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
 
@@ -53,13 +50,23 @@ HEADERS = [
     "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "Unknown Error",
 ]
 
+# Used for caching the HSTS preload list from Chromium's source.
 PRELOAD_CACHE = None
+PRELOAD_CACHE_DEFAULT = "preloaded.json"
 preload_list = None
+
+# Used for caching the HSTS pending preload list from hstspreload.org.
+PRELOAD_PENDING_CACHE = None
+PRELOAD_PENDING_CACHE_DEFAULT = "preload-pending.json"
 preload_pending = None
 
 # Used for determining base domain via Mozilla's public suffix list.
-SUFFIX_CACHE = None
+PUBLIC_SUFFIX_CACHE = None
+PUBLIC_SUFFIX_CACHE_DEFAULT = "public-suffix-list.txt"
 suffix_list = None
+
+# Directory to cache all third party responses, if set by user.
+THIRD_PARTIES_CACHE = None
 
 # Set if user wants to use a custom CA bundle
 CA_FILE = None
@@ -1015,28 +1022,38 @@ def did_domain_error(domain):
     )
 
 
-def fetch_preload_pending():
+def load_preload_pending():
     """
     Fetch the Chrome preload pending list. Don't cache, it's quick/small.
     """
-    utils.debug("Fetching Chrome pending preload list...", divider=True)
+    pending_json = None
 
-    pending_url = "https://hstspreload.org/api/v2/pending"
-
-    try:
-        request = requests.get(pending_url)
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
-        logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
-        logging.debug('{}'.format(err))
-        return []
-
-    # TODO: abstract Py 2/3 check out to utils
-    if sys.version_info[0] < 3:
-        raw = request.content
+    if PRELOAD_PENDING_CACHE and os.path.exists(PRELOAD_PENDING_CACHE):
+        utils.debug("Using cached hstspreload.org pending list.", divider=True)
+        pending_json = json.loads(open(PRELOAD_PENDING_CACHE).read())
     else:
-        raw = str(request.content, 'utf-8')
+        utils.debug("Fetching hstspreload.org pending list...", divider=True)
 
-    pending_json = json.loads(raw)
+        pending_url = "https://hstspreload.org/api/v2/pending"
+
+        try:
+            request = requests.get(pending_url)
+        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+            logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
+            logging.debug('{}'.format(err))
+            return []
+
+        # TODO: abstract Py 2/3 check out to utils
+        if sys.version_info[0] < 3:
+            raw = request.content
+        else:
+            raw = str(request.content, 'utf-8')
+
+        pending_json = json.loads(raw)
+
+        if PRELOAD_PENDING_CACHE:
+            utils.debug("Caching preload pending list at %s" % PRELOAD_PENDING_CACHE, divider=True)
+            utils.write(utils.json_for(pending_json), PRELOAD_PENDING_CACHE)
 
     pending = []
     for entry in pending_json:
@@ -1046,7 +1063,7 @@ def fetch_preload_pending():
     return pending
 
 
-def create_preload_list():
+def load_preload_list():
     preload_json = None
 
     if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
@@ -1094,9 +1111,9 @@ def create_preload_list():
 
 
 def load_suffix_list():
-    if SUFFIX_CACHE and os.path.exists(SUFFIX_CACHE):
+    if PUBLIC_SUFFIX_CACHE and os.path.exists(PUBLIC_SUFFIX_CACHE):
         utils.debug("Using cached suffix list.", divider=True)
-        cache_file = codecs.open(SUFFIX_CACHE, encoding='utf-8')
+        cache_file = codecs.open(PUBLIC_SUFFIX_CACHE, encoding='utf-8')
         suffixes = PublicSuffixList(cache_file)
     else:
         # File does not exist, download current list and cache it at given location.
@@ -1110,9 +1127,9 @@ def load_suffix_list():
         content = cache_file.readlines()
         suffixes = PublicSuffixList(content)
 
-        if SUFFIX_CACHE:
-            utils.debug("Caching suffix list at %s" % SUFFIX_CACHE, divider=True)
-            utils.write(''.join(content), SUFFIX_CACHE)
+        if PUBLIC_SUFFIX_CACHE:
+            utils.debug("Caching suffix list at %s" % PUBLIC_SUFFIX_CACHE, divider=True)
+            utils.write(''.join(content), PUBLIC_SUFFIX_CACHE)
 
     return suffixes
 
@@ -1124,42 +1141,41 @@ def initialize_external_data():
     This is meant to be called explicitly by a user. Either the `pshtt` tool
     itself as part of `inspect_domains()` function, or if in a library, as part
     of the setup needed before using certain library functions.
+
+    All downloaded third party data will be cached in a directory, and
+    used from cache on the next pshtt run instead of hitting the network,
+    if the --cache-third-parties=[DIR] flag specifies a directory.
     """
-    # Download HSTS preload list, caches locally.
+
+    # Download Chrome's latest versioned HSTS preload list.
     global preload_list
-    preload_list = create_preload_list()
+    preload_list = load_preload_list()
 
-    # Download HSTS pending preload list. Not cached.
+    # Download Chrome's current HSTS pending preload list.
     global preload_pending
-    preload_pending = fetch_preload_pending()
+    preload_pending = load_preload_pending()
 
+    # Download Mozilla's current Public Suffix list.
     global suffix_list
     suffix_list = load_suffix_list()
 
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, WEB_CACHE, SUFFIX_CACHE, CA_FILE, STORE
+    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, PUBLIC_SUFFIX_CACHE, PRELOAD_PENDING_CACHE, THIRD_PARTIES_CACHE, CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
     if options.get('user_agent'):
         USER_AGENT = options['user_agent']
-    if options.get('preload_cache'):
-        PRELOAD_CACHE = options['preload_cache']
-    if options.get('cache'):
-        # TODO: requests-cache has a blocking bug for us, now
-        # that we're tweaking allow_redirects and verify parameters.
-        # Caching disabled until bug is fixed, or routed around.
-        #
-        # https://github.com/reclosedev/requests-cache/issues/70
-        #
-        # cache_dir = ".cache"
-        # utils.mkdir_p(cache_dir)
-        # requests_cache.install_cache("%s/cache" % cache_dir)
-        logging.warn("WARNING: Caching disabled.")
-    if options.get('suffix_cache'):
-        SUFFIX_CACHE = options['suffix_cache']
+
+    # Supported cache flag, a directory to store all third party requests.
+    if options.get('cache-third-parties'):
+        THIRD_PARTIES_CACHE = options['cache-third-parties']
+        PRELOAD_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_CACHE_DEFAULT)
+        PRELOAD_PENDING_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_PENDING_CACHE_DEFAULT)
+        PUBLIC_SUFFIX_CACHE = os.path.join(THIRD_PARTIES_CACHE, PUBLIC_SUFFIX_CACHE_DEFAULT)
+
     if options.get('ca_file'):
         CA_FILE = options['ca_file']
         # By default, the store that we want to check is the Mozilla store
