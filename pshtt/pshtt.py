@@ -1138,7 +1138,7 @@ def initialize_external_data(
     init_preload_list=None,
     init_preload_pending=None,
     init_suffix_list=None
-    ):
+):
     """
     This function serves to load all of third party external data.
 
