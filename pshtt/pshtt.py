@@ -1134,30 +1134,46 @@ def load_suffix_list():
     return suffixes
 
 
-def initialize_external_data():
+def initialize_external_data(
+    init_preload_list=None,
+    init_preload_pending=None,
+    init_suffix_list=None
+    ):
     """
-    This function serves to load all of the third party external data used
+    This function serves to load all of third party external data.
 
     This is meant to be called explicitly by a user. Either the `pshtt` tool
     itself as part of `inspect_domains()` function, or if in a library, as part
     of the setup needed before using certain library functions.
 
-    All downloaded third party data will be cached in a directory, and
-    used from cache on the next pshtt run instead of hitting the network,
-    if the --cache-third-parties=[DIR] flag specifies a directory.
+    If values are passed in to this function, they will be assigned to
+    be the cached values. This allows a caller of the Python API to manage
+    cached data in a customized way.
+
+    It also potentially allows clients to pass in subsets of these lists,
+    for testing or novel performance reasons.
+
+    Otherwise, if the --cache-third-parties=[DIR] flag specifies a directory,
+    all downloaded third party data will be cached in a directory, and
+    used from cache on the next pshtt run instead of hitting the network.
+
+    If no values are passed in, and no --cache-third-parties flag is used,
+    then no cached third party data will be created or used, and pshtt will
+    download the latest data from those third party sources.
+
+    It can be run idempotently, and running it a second time will not
+    cause data to be loaded (or read from cache) again.
     """
+    global preload_list, preload_pending, suffix_list
 
     # Download Chrome's latest versioned HSTS preload list.
-    global preload_list
-    preload_list = load_preload_list()
+    preload_list = preload_list or init_preload_list or load_preload_list()
 
     # Download Chrome's current HSTS pending preload list.
-    global preload_pending
-    preload_pending = load_preload_pending()
+    preload_pending = preload_pending or init_preload_pending or load_preload_pending()
 
     # Download Mozilla's current Public Suffix list.
-    global suffix_list
-    suffix_list = load_suffix_list()
+    suffix_list = suffix_list or init_suffix_list or load_suffix_list()
 
 
 def inspect_domains(domains, options):
@@ -1183,6 +1199,9 @@ def inspect_domains(domains, options):
         # "Custom" Option from the sslyze output.
         STORE = "Custom"
 
+    # If this has been run once already by a Python API client, it
+    # can be safely run without hitting the network or disk again,
+    # and without overriding the data the Python user set for them.
     initialize_external_data()
 
     # For every given domain, get inspect data.
