@@ -1142,7 +1142,6 @@ def initialize_external_data(
     if init_suffix_list is not None:
         suffix_list = init_suffix_list
 
-
     # If there's a specified cache dir, prepare paths.
     # Only used when no data has been set yet for a source.
     if THIRD_PARTIES_CACHE:
@@ -1151,7 +1150,6 @@ def initialize_external_data(
         cache_suffix_list = os.path.join(THIRD_PARTIES_CACHE, cache_suffix_list_default)
     else:
         cache_preload_list, cache_preload_pending, cache_suffix_list = None, None, None
-
 
     # Load Chrome's latest versioned HSTS preload list.
     if preload_list is None:
@@ -1164,7 +1162,6 @@ def initialize_external_data(
             if cache_preload_list:
                 utils.debug("Caching preload list at %s" % cache_preload_list, divider=True)
                 utils.write(utils.json_for(preload_list), cache_preload_list)
-
 
     # Load Chrome's current HSTS pending preload list.
     if preload_pending is None:
@@ -1190,7 +1187,6 @@ def initialize_external_data(
             if cache_suffix_list:
                 utils.debug("Caching suffix list at %s" % cache_suffix_list, divider=True)
                 utils.write(''.join(raw_content), cache_suffix_list)
-
 
 
 def inspect_domains(domains, options):
