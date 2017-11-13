@@ -1089,6 +1089,8 @@ def load_preload_list():
     return fully_preloaded
 
 
+# Returns an instantiated PublicSuffixList object, and the
+# list of lines read from the file.
 def load_suffix_list():
     # File does not exist, download current list and cache it at given location.
     utils.debug("Downloading the Public Suffix List...", divider=True)
