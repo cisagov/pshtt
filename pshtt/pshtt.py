@@ -1134,13 +1134,17 @@ def initialize_external_data(
     """
     global preload_list, preload_pending, suffix_list
 
-    # If initial values are passed in, always set them.
+    # The preload list should be sent in as a list of domains.
     if init_preload_list is not None:
         preload_list = init_preload_list
+
+    # The preload_pending list should be sent in as a list of domains.
     if init_preload_pending is not None:
         preload_pending = init_preload_pending
+
+    # The public suffix list should be sent in as a list of file lines.
     if init_suffix_list is not None:
-        suffix_list = init_suffix_list
+        suffix_list = PublicSuffixList(init_suffix_list)
 
     # If there's a specified cache dir, prepare paths.
     # Only used when no data has been set yet for a source.
