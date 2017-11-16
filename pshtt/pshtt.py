@@ -160,7 +160,7 @@ def ping(url, allow_redirects=False, verify=True):
 
     By changing the verify param from a boolean to a .pem file, the
     requests module will use the .pem to validate HTTPS connections.
-    
+
     Note that we are using the streaming variant of the
     python-requests library here and we are not actually reading the
     content of the request.  As a result, the close() method MUST be
