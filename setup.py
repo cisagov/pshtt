@@ -62,6 +62,7 @@ setup(
         'sslyze>=1.1.0',
         'wget>=3.2',
         'docopt',
+        'pytablereader',
         'pytablewriter',
         'publicsuffix',
         'pyopenssl>=17.2.0'
