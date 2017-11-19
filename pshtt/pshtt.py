@@ -165,6 +165,13 @@ def ping(url, allow_redirects=False, verify=True):
     ONLY way the connection can be closed and released back into the
     pool.  One way to ensure this happens is to use the "with" Python
     construct.
+
+    If we ever begin reading response bodies, they will need to be
+    explicitly read from Response.content, and we will also want to
+    use conditional logic to read from response bodies where they
+    exist and are useful. We'll also need to watch for Content-Type
+    values like multipart/x-mixed-replace;boundary=ffserver that
+    indicate that the response body will stream indefinitely.
     """
     if CA_FILE and verify:
         verify = CA_FILE
