@@ -62,7 +62,6 @@ setup(
         'sslyze>=1.1.0',
         'wget>=3.2',
         'docopt',
-        'requests_cache',
         'pytablereader',
         'pytablewriter',
         'publicsuffix',
