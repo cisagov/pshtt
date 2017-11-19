@@ -51,18 +51,15 @@ HEADERS = [
 ]
 
 # Used for caching the HSTS preload list from Chromium's source.
-PRELOAD_CACHE = None
-PRELOAD_CACHE_DEFAULT = "preloaded.json"
+cache_preload_list_default = "preloaded.json"
 preload_list = None
 
 # Used for caching the HSTS pending preload list from hstspreload.org.
-PRELOAD_PENDING_CACHE = None
-PRELOAD_PENDING_CACHE_DEFAULT = "preload-pending.json"
+cache_preload_pending_default = "preload-pending.json"
 preload_pending = None
 
 # Used for determining base domain via Mozilla's public suffix list.
-PUBLIC_SUFFIX_CACHE = None
-PUBLIC_SUFFIX_CACHE_DEFAULT = "public-suffix-list.txt"
+cache_suffix_list_default = "public-suffix-list.txt"
 suffix_list = None
 
 # Directory to cache all third party responses, if set by user.
@@ -1043,36 +1040,26 @@ def did_domain_error(domain):
 
 def load_preload_pending():
     """
-    Fetch the Chrome preload pending list. Don't cache, it's quick/small.
+    Fetch the Chrome preload pending list.
     """
-    pending_json = None
 
-    if PRELOAD_PENDING_CACHE and os.path.exists(PRELOAD_PENDING_CACHE):
-        utils.debug("Using cached hstspreload.org pending list.", divider=True)
-        pending_json = json.loads(open(PRELOAD_PENDING_CACHE).read())
+    utils.debug("Fetching hstspreload.org pending list...", divider=True)
+    pending_url = "https://hstspreload.org/api/v2/pending"
+
+    try:
+        request = requests.get(pending_url)
+    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+        logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
+        logging.debug('{}'.format(err))
+        return []
+
+    # TODO: abstract Py 2/3 check out to utils
+    if sys.version_info[0] < 3:
+        raw = request.content
     else:
-        utils.debug("Fetching hstspreload.org pending list...", divider=True)
+        raw = str(request.content, 'utf-8')
 
-        pending_url = "https://hstspreload.org/api/v2/pending"
-
-        try:
-            request = requests.get(pending_url)
-        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
-            logging.warn('Failed to fetch pending preload list: {}'.format(pending_url))
-            logging.debug('{}'.format(err))
-            return []
-
-        # TODO: abstract Py 2/3 check out to utils
-        if sys.version_info[0] < 3:
-            raw = request.content
-        else:
-            raw = str(request.content, 'utf-8')
-
-        pending_json = json.loads(raw)
-
-        if PRELOAD_PENDING_CACHE:
-            utils.debug("Caching preload pending list at %s" % PRELOAD_PENDING_CACHE, divider=True)
-            utils.write(utils.json_for(pending_json), PRELOAD_PENDING_CACHE)
+    pending_json = json.loads(raw)
 
     pending = []
     for entry in pending_json:
@@ -1085,40 +1072,32 @@ def load_preload_pending():
 def load_preload_list():
     preload_json = None
 
-    if PRELOAD_CACHE and os.path.exists(PRELOAD_CACHE):
-        utils.debug("Using cached Chrome preload list.", divider=True)
-        preload_json = json.loads(open(PRELOAD_CACHE).read())
-    else:
-        utils.debug("Fetching Chrome preload list from source...", divider=True)
+    utils.debug("Fetching Chrome preload list from source...", divider=True)
 
-        # Downloads the chromium preloaded domain list and sets it to a global set
-        file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
+    # Downloads the chromium preloaded domain list and sets it to a global set
+    file_url = 'https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT'
 
-        try:
-            request = requests.get(file_url)
-        except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
-            logging.warn('Failed to fetch preload list: {}'.format(file_url))
-            logging.debug('{}'.format(err))
-            return []
+    try:
+        request = requests.get(file_url)
+    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+        logging.warn('Failed to fetch preload list: {}'.format(file_url))
+        logging.debug('{}'.format(err))
+        return []
 
-        raw = request.content
+    raw = request.content
 
-        # To avoid parsing the contents of the file out of the source tree viewer's
-        # HTML, we download it as a raw file. googlesource.com Base64-encodes the
-        # file to avoid potential content injection issues, so we need to decode it
-        # before using it. https://code.google.com/p/gitiles/issues/detail?id=7
-        raw = base64.b64decode(raw).decode('utf-8')
+    # To avoid parsing the contents of the file out of the source tree viewer's
+    # HTML, we download it as a raw file. googlesource.com Base64-encodes the
+    # file to avoid potential content injection issues, so we need to decode it
+    # before using it. https://code.google.com/p/gitiles/issues/detail?id=7
+    raw = base64.b64decode(raw).decode('utf-8')
 
-        # The .json file contains '//' comments, which are not actually valid JSON,
-        # and confuse Python's JSON decoder. Begone, foul comments!
-        raw = ''.join([re.sub(r'^\s*//.*$', '', line)
-                       for line in raw.splitlines()])
+    # The .json file contains '//' comments, which are not actually valid JSON,
+    # and confuse Python's JSON decoder. Begone, foul comments!
+    raw = ''.join([re.sub(r'^\s*//.*$', '', line)
+                   for line in raw.splitlines()])
 
-        preload_json = json.loads(raw)
-
-        if PRELOAD_CACHE:
-            utils.debug("Caching preload list at %s" % PRELOAD_CACHE, divider=True)
-            utils.write(utils.json_for(preload_json), PRELOAD_CACHE)
+    preload_json = json.loads(raw)
 
     # For our purposes, we only care about entries that includeSubDomains
     fully_preloaded = []
@@ -1129,59 +1108,113 @@ def load_preload_list():
     return fully_preloaded
 
 
+# Returns an instantiated PublicSuffixList object, and the
+# list of lines read from the file.
 def load_suffix_list():
-    if PUBLIC_SUFFIX_CACHE and os.path.exists(PUBLIC_SUFFIX_CACHE):
-        utils.debug("Using cached suffix list.", divider=True)
-        cache_file = codecs.open(PUBLIC_SUFFIX_CACHE, encoding='utf-8')
-        suffixes = PublicSuffixList(cache_file)
+    # File does not exist, download current list and cache it at given location.
+    utils.debug("Downloading the Public Suffix List...", divider=True)
+    try:
+        cache_file = fetch()
+    except URLError as err:
+        logging.warn("Unable to download the Public Suffix List...")
+        utils.debug("{}".format(err))
+        return []
+    content = cache_file.readlines()
+    suffixes = PublicSuffixList(content)
+    return suffixes, content
+
+
+def initialize_external_data(
+    init_preload_list=None,
+    init_preload_pending=None,
+    init_suffix_list=None
+):
+    """
+    This function serves to load all of third party external data.
+
+    This can be called explicitly by a library, as part of the setup needed
+    before calling other library functions, or called as part of running
+    inspect_domains() or CLI operation.
+
+    If values are passed in to this function, they will be assigned to
+    be the cached values. This allows a caller of the Python API to manage
+    cached data in a customized way.
+
+    It also potentially allows clients to pass in subsets of these lists,
+    for testing or novel performance reasons.
+
+    Otherwise, if the --cache-third-parties=[DIR] flag specifies a directory,
+    all downloaded third party data will be cached in a directory, and
+    used from cache on the next pshtt run instead of hitting the network.
+
+    If no values are passed in, and no --cache-third-parties flag is used,
+    then no cached third party data will be created or used, and pshtt will
+    download the latest data from those third party sources.
+    """
+    global preload_list, preload_pending, suffix_list
+
+    # The preload list should be sent in as a list of domains.
+    if init_preload_list is not None:
+        preload_list = init_preload_list
+
+    # The preload_pending list should be sent in as a list of domains.
+    if init_preload_pending is not None:
+        preload_pending = init_preload_pending
+
+    # The public suffix list should be sent in as a list of file lines.
+    if init_suffix_list is not None:
+        suffix_list = PublicSuffixList(init_suffix_list)
+
+    # If there's a specified cache dir, prepare paths.
+    # Only used when no data has been set yet for a source.
+    if THIRD_PARTIES_CACHE:
+        cache_preload_list = os.path.join(THIRD_PARTIES_CACHE, cache_preload_list_default)
+        cache_preload_pending = os.path.join(THIRD_PARTIES_CACHE, cache_preload_pending_default)
+        cache_suffix_list = os.path.join(THIRD_PARTIES_CACHE, cache_suffix_list_default)
     else:
-        # File does not exist, download current list and cache it at given location.
-        utils.debug("Downloading the Public Suffix List...", divider=True)
-        try:
-            cache_file = fetch()
-        except URLError as err:
-            logging.warn("Unable to download the Public Suffix List...")
-            utils.debug("{}".format(err))
-            return []
-        content = cache_file.readlines()
-        suffixes = PublicSuffixList(content)
+        cache_preload_list, cache_preload_pending, cache_suffix_list = None, None, None
 
-        if PUBLIC_SUFFIX_CACHE:
-            utils.debug("Caching suffix list at %s" % PUBLIC_SUFFIX_CACHE, divider=True)
-            utils.write(''.join(content), PUBLIC_SUFFIX_CACHE)
+    # Load Chrome's latest versioned HSTS preload list.
+    if preload_list is None:
+        if cache_preload_list and os.path.exists(cache_preload_list):
+            utils.debug("Using cached Chrome preload list.", divider=True)
+            preload_list = json.loads(open(cache_preload_list).read())
+        else:
+            preload_list = load_preload_list()
 
-    return suffixes
+            if cache_preload_list:
+                utils.debug("Caching preload list at %s" % cache_preload_list, divider=True)
+                utils.write(utils.json_for(preload_list), cache_preload_list)
 
+    # Load Chrome's current HSTS pending preload list.
+    if preload_pending is None:
+        if cache_preload_pending and os.path.exists(cache_preload_pending):
+            utils.debug("Using cached hstspreload.org pending list.", divider=True)
+            preload_pending = json.loads(open(cache_preload_pending).read())
+        else:
+            preload_pending = load_preload_pending()
 
-def initialize_external_data():
-    """
-    This function serves to load all of the third party external data used
+            if cache_preload_pending:
+                utils.debug("Caching preload pending list at %s" % cache_preload_pending, divider=True)
+                utils.write(utils.json_for(preload_pending), cache_preload_pending)
 
-    This is meant to be called explicitly by a user. Either the `pshtt` tool
-    itself as part of `inspect_domains()` function, or if in a library, as part
-    of the setup needed before using certain library functions.
+    # Load Mozilla's current Public Suffix list.
+    if suffix_list is None:
+        if cache_suffix_list and os.path.exists(cache_suffix_list):
+            utils.debug("Using cached suffix list.", divider=True)
+            cache_file = codecs.open(cache_suffix_list, encoding='utf-8')
+            suffix_list = PublicSuffixList(cache_file)
+        else:
+            suffix_list, raw_content = load_suffix_list()
 
-    All downloaded third party data will be cached in a directory, and
-    used from cache on the next pshtt run instead of hitting the network,
-    if the --cache-third-parties=[DIR] flag specifies a directory.
-    """
-
-    # Download Chrome's latest versioned HSTS preload list.
-    global preload_list
-    preload_list = load_preload_list()
-
-    # Download Chrome's current HSTS pending preload list.
-    global preload_pending
-    preload_pending = load_preload_pending()
-
-    # Download Mozilla's current Public Suffix list.
-    global suffix_list
-    suffix_list = load_suffix_list()
+            if cache_suffix_list:
+                utils.debug("Caching suffix list at %s" % cache_suffix_list, divider=True)
+                utils.write(''.join(raw_content), cache_suffix_list)
 
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
-    global TIMEOUT, USER_AGENT, PRELOAD_CACHE, PUBLIC_SUFFIX_CACHE, PRELOAD_PENDING_CACHE, THIRD_PARTIES_CACHE, CA_FILE, STORE
+    global TIMEOUT, USER_AGENT, THIRD_PARTIES_CACHE, CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
@@ -1191,9 +1224,6 @@ def inspect_domains(domains, options):
     # Supported cache flag, a directory to store all third party requests.
     if options.get('cache-third-parties'):
         THIRD_PARTIES_CACHE = options['cache-third-parties']
-        PRELOAD_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_CACHE_DEFAULT)
-        PRELOAD_PENDING_CACHE = os.path.join(THIRD_PARTIES_CACHE, PRELOAD_PENDING_CACHE_DEFAULT)
-        PUBLIC_SUFFIX_CACHE = os.path.join(THIRD_PARTIES_CACHE, PUBLIC_SUFFIX_CACHE_DEFAULT)
 
     if options.get('ca_file'):
         CA_FILE = options['ca_file']
@@ -1202,6 +1232,9 @@ def inspect_domains(domains, options):
         # "Custom" Option from the sslyze output.
         STORE = "Custom"
 
+    # If this has been run once already by a Python API client, it
+    # can be safely run without hitting the network or disk again,
+    # and without overriding the data the Python user set for them.
     initialize_external_data()
 
     # For every given domain, get inspect data.
