@@ -157,6 +157,21 @@ def ping(url, allow_redirects=False, verify=True):
 
     By changing the verify param from a boolean to a .pem file, the
     requests module will use the .pem to validate HTTPS connections.
+
+    Note that we are using the streaming variant of the
+    python-requests library here and we are not actually reading the
+    content of the request.  As a result, the close() method MUST be
+    called on the Request object returned by this method.  That is the
+    ONLY way the connection can be closed and released back into the
+    pool.  One way to ensure this happens is to use the "with" Python
+    construct.
+
+    If we ever begin reading response bodies, they will need to be
+    explicitly read from Response.content, and we will also want to
+    use conditional logic to read from response bodies where they
+    exist and are useful. We'll also need to watch for Content-Type
+    values like multipart/x-mixed-replace;boundary=ffserver that
+    indicate that the response body will stream indefinitely.
     """
     if CA_FILE and verify:
         verify = CA_FILE
@@ -168,6 +183,16 @@ def ping(url, allow_redirects=False, verify=True):
 
         # Validate certificates.
         verify=verify,
+
+        # Setting this to true delays the retrieval of the content
+        # until we access Response.content.  Since we aren't
+        # interested in the actual content of the request, this will
+        # save us time and bandwidth.
+        #
+        # This will also stop pshtt from hanging on URLs that stream
+        # neverending data, like webcams.  See issue #138:
+        # https://github.com/dhs-ncats/pshtt/issues/138
+        stream=True,
 
         # set by --user_agent
         headers={'User-Agent': USER_AGENT},
@@ -192,11 +217,10 @@ def basic_check(endpoint):
     utils.debug("Pinging %s..." % endpoint.url, divider=True)
 
     try:
-        req = ping(endpoint.url)
-
-        endpoint.live = True
-        if endpoint.protocol == "https":
-            endpoint.https_valid = True
+        with ping(endpoint.url) as req:
+            endpoint.live = True
+            if endpoint.protocol == "https":
+                endpoint.https_valid = True
 
     except requests.exceptions.SSLError as err:
         logging.warn("Error validating certificate.")
@@ -204,7 +228,8 @@ def basic_check(endpoint):
 
         # Retry with certificate validation disabled.
         try:
-            req = ping(endpoint.url, verify=False)
+            with ping(endpoint.url, verify=False) as req:
+                pass
         except requests.exceptions.SSLError as err:
             # If it's a protocol error or other, it's not live.
             endpoint.live = False
@@ -282,7 +307,8 @@ def basic_check(endpoint):
             pass
 
         try:
-            ultimate_req = ping(endpoint.url, allow_redirects=True, verify=False)
+            with ping(endpoint.url, allow_redirects=True, verify=False) as ultimate_req:
+                pass
         except requests.exceptions.RequestException:
             # Swallow connection errors, but we won't be saving redirect info.
             pass
