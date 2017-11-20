@@ -68,6 +68,14 @@ setup(
         'pyopenssl>=17.2.0'
     ],
 
+    extras_require={
+        # 'dev': ['check-manifest'],
+        'test': [
+            'tox',
+            'pytest'
+        ],
+    },
+
     # Conveniently allows one to run the CLI tool as `pshtt`
     entry_points={
         'console_scripts': [
