@@ -1,7 +1,18 @@
-FROM python:3.5.4
+FROM python:3.6.3
 
-COPY . /
-RUN pip install --no-cache-dir -r requirements.txt
+# Create an unprivileged user
+ENV PSHTT_HOME=/home/pshtt
+RUN mkdir ${PSHTT_HOME} 
+RUN groupadd --system pshtt \
+    && useradd --system --comment="pshtt user" --gid="pshtt" pshtt
 
-ENTRYPOINT ["./entrypoint.sh"]
+# Install pshtt
+COPY . ${PSHTT_HOME}
+RUN chown -R pshtt:pshtt ${PSHTT_HOME}
+RUN pip install --no-cache ${PSHTT_HOME}
+
+# Prepare to run
+WORKDIR PSHTT_HOME
+USER pshtt:pshtt
+ENTRYPOINT ["pshtt"]
 CMD ["--help"]
