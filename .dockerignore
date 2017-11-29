@@ -1,0 +1,16 @@
+*.egg-info
+cache
+.coverage
+gce-scripts
+.git
+.gitignore
+LICENSE.md
+mailer.egg-info
+README.md
+requirements.txt
+run
+tests
+.tox
+tox.ini
+.travis.yml
+venv
