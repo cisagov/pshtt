@@ -3,13 +3,9 @@
 set -e
 set -x
 
-
 docker build -t pshtt/cli .
 
 docker run --rm -it \
   --name pshtt \
-  -v $(pwd):/data \
-  `# Change the ownership of the files (**e.g** results) to the user with id 1042 and to the group with id 1042` \
-  -e USER_ID=1042 \
-  -e GROUP_ID=1042 \
+  -v $(pwd):/home/pshtt \
   pshtt/cli $@
