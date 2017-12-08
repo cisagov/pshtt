@@ -76,9 +76,10 @@ setup(
         ],
     },
 
-    # For linking to "unpublished" dependencies... When necessary.
+    # For forcing pip to pull from GitHub, if we need code that has
+    # not yet been pushed to PyPI
     # dependency_links=[
-    #     'git+https://github.com/nabla-c0d3/sslyze.git#egg=sslyze-1.2.1'
+    #     'git+https://github.com/nabla-c0d3/sslyze.git@master#egg=sslyze-1.2.0'
     #  ],
 
     # Conveniently allows one to run the CLI tool as `pshtt`
