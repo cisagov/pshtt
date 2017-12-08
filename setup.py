@@ -58,21 +58,21 @@ setup(
     packages=['pshtt'],
 
     install_requires=[
-        'requests>=2.18.4',
-        'sslyze>=1.1.0',
-        'wget>=3.2',
-        'docopt',
-        'pytablereader',
-        'pytablewriter',
-        'publicsuffix',
-        'pyopenssl>=17.2.0'
+        'requests==2.18.4',
+        'sslyze==1.2.0',
+        'wget==3.2',
+        'docopt==0.6.2',
+        'pytablereader==0.15.0',
+        'pytablewriter==0.27.1',
+        'publicsuffix==1.1.0',
+        'pyopenssl==17.4.0'
     ],
 
     extras_require={
         # 'dev': ['check-manifest'],
         'test': [
-            'tox',
-            'pytest'
+            'tox==2.9.1',
+            'pytest==3.3.0'
         ],
     },
 
