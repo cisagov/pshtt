@@ -347,8 +347,7 @@ def basic_check(endpoint):
             # of itself (not whether it redirects to www prepended to any other
             # hostname, even within the same parent domain).
             endpoint.redirect_immediately_to_www = (
-                subdomain_immediate.startswith("www.") and
-                (re.sub("www\.", "", subdomain_immediate) == subdomain_original)
+                subdomain_immediate == ("www.%s" % subdomain_original)
             )
 
             if ultimate_req is not None:
