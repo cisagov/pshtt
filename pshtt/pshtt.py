@@ -335,13 +335,20 @@ def basic_check(endpoint):
             base_immediate = parent_domain_for(subdomain_immediate)
 
             endpoint.redirect_immediately_to = immediate
-            endpoint.redirect_immediately_to_www = (re.match(r'^https?://www\.', immediate) is not None)
             endpoint.redirect_immediately_to_https = immediate.startswith("https://")
             endpoint.redirect_immediately_to_http = immediate.startswith("http://")
             endpoint.redirect_immediately_to_external = (base_original != base_immediate)
             endpoint.redirect_immediately_to_subdomain = (
                 (base_original == base_immediate) and
                 (subdomain_original != subdomain_immediate)
+            )
+
+            # We're interested in whether an endpoint redirects to the www version
+            # of itself (not whether it redirects to www prepended to any other
+            # hostname, even within the same parent domain).
+            endpoint.redirect_immediately_to_www = (
+                subdomain_immediate.startswith("www.") and
+                (re.sub("www\.", "", subdomain_immediate) == subdomain_original)
             )
 
             if ultimate_req is not None:
@@ -592,12 +599,6 @@ def canonical_endpoint(http, httpwww, https, httpswww):
             )
         )
 
-    def goes_to_www(endpoint):
-        return (
-            endpoint.redirect_immediately_to_www and
-            (not endpoint.redirect_immediately_to_external)
-        )
-
     all_roots_unused = root_unused(https) and root_unused(http)
 
     all_roots_down = root_down(https) and root_down(http)
@@ -606,8 +607,8 @@ def canonical_endpoint(http, httpwww, https, httpswww):
         at_least_one_www_used and
         all_roots_unused and (
             all_roots_down or
-            goes_to_www(https) or
-            goes_to_www(http)
+            https.redirect_immediately_to_www or
+            http.redirect_immediately_to_www
         )
     )
 
