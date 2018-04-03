@@ -26,6 +26,7 @@ except ImportError:
     from urllib2 import URLError
 
 import sslyze
+import sslyze.server_connectivity
 import sslyze.synchronous_scanner
 
 # We're going to be making requests with certificate validation disabled.
