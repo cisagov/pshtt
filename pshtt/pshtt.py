@@ -448,17 +448,10 @@ def https_check(endpoint):
     # remove the https:// from prefix for sslyze
     try:
         hostname = endpoint.url[8:]
-        server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
-    except Exception as err:
-        endpoint.unknown_error = True
-        logging.warn("Unknown exception when checking server connectivity info with sslyze.")
-        utils.debug("{0}".format(err))
-        return
-
-    try:
-        server_info.test_connectivity_to_server()
+        server_tester = sslyze.server_connectivity.ServerConnectivityTester(hostname=hostname, port=443)
+        server_info = server_tester.perform()
     except sslyze.server_connectivity.ServerConnectivityError as err:
-        logging.warn("Error in sslyze server connectivity check")
+        logging.warn("Error in sslyze server connectivity check when connecting to {}".format(err.server_info.hostname))
         utils.debug("{0}".format(err))
         return
     except Exception as err:
