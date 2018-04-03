@@ -26,7 +26,7 @@ except ImportError:
     from urllib2 import URLError
 
 import sslyze
-import sslyze.server_connectivity
+from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError
 import sslyze.synchronous_scanner
 
 # We're going to be making requests with certificate validation disabled.
@@ -449,9 +449,9 @@ def https_check(endpoint):
     # remove the https:// from prefix for sslyze
     try:
         hostname = endpoint.url[8:]
-        server_tester = sslyze.server_connectivity.ServerConnectivityTester(hostname=hostname, port=443)
+        server_tester = ServerConnectivityTester(hostname=hostname, port=443)
         server_info = server_tester.perform()
-    except sslyze.server_connectivity.ServerConnectivityError as err:
+    except ServerConnectivityError as err:
         logging.warn("Error in sslyze server connectivity check when connecting to {}".format(err.server_info.hostname))
         utils.debug("{0}".format(err))
         return
