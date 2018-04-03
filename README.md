@@ -12,6 +12,8 @@
 
 ## Getting Started
 
+`pshtt` requires **Python 3.4+**. Python 2 is not supported.
+
 `pshtt` can be installed as a module, or run directly from the repository.
 
 #### Installed as a module
