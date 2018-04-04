@@ -1,7 +1,7 @@
 ## Pushing HTTPS :lock:
 
+[![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.python.org/pypi/pshtt/)
 [![Coverage Status](https://coveralls.io/repos/github/dhs-ncats/pshtt/badge.svg)](https://coveralls.io/github/dhs-ncats/pshtt)
-
 [![Build Status](https://travis-ci.org/dhs-ncats/pshtt.svg?branch=master)](https://travis-ci.org/dhs-ncats/pshtt)
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best practices. It saves its results to a CSV (or JSON) file.
@@ -11,6 +11,8 @@
 `pshtt` is a collaboration between the Department of Homeland Security's [National Cybersecurity Assessments and Technical Services (NCATS) team](https://github.com/dhs-ncats) and [the General Service Administration's 18F team](https://18f.gsa.gov), with [contributions from NASA, Lawrence Livermore National Laboratory, and various non-governmental organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
 ## Getting Started
+
+`pshtt` requires **Python 3.4+**. Python 2 is not supported.
 
 `pshtt` can be installed as a module, or run directly from the repository.
 
@@ -124,9 +126,9 @@ The following values are returned in `results.csv`:
 * `HSTS Max Age` - A domain's HSTS max-age is its canonical endpoint's max-age.
 * `HSTS Entire Domain` - A domain has HSTS enabled for the entire domain if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled and uses the HSTS `includeSubDomains` flag.
 * `HSTS Preload Ready` - A domain is HSTS "preload ready" if its **root HTTPS endpoint** (_not the canonical HTTPS endpoint_) has HSTS enabled, has a max-age of at least 18 weeks, and uses the `includeSubDomains` and `preload` flag.
-* `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.org/api/v2/pending).
-* `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json), regardless of what header is present on any endpoint.
-* `Base Domain HSTS Preloaded` - A domain's base domain is HSTS preloaded. This is subtly different from `HSTS Entire Domain`, which inpects headers on the base domain to see if HSTS is set correctly to encompass the entire zone. This checks the preload list directly.
+* `HSTS Preload Pending` - A domain is "preload pending" when it appears in the [Chrome preload pending list](https://hstspreload.org/api/v2/pending) with the `include_subdomains` flag equal to `true`.  The intent of `pshtt` is to make sure that the user is _fully_ protected, so it only counts domains as HSTS preloaded if they are _fully_ HSTS preloaded (meaning that all subdomains are included as well).
+* `HSTS Preloaded` - A domain is HSTS preloaded if its domain name appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json) with the `include_subdomains` flag equal to `true`, regardless of what header is present on any endpoint.  The intent of `pshtt` is to make sure that the user is _fully_ protected, so it only counts domains as HSTS preloaded if they are _fully_ HSTS preloaded (meaning that all subdomains are included as well).
+* `Base Domain HSTS Preloaded` - A domain's base domain is HSTS preloaded if its base domain appears in the [Chrome preload list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json) with the `include_subdomains` flag equal to `true`. This is subtly different from `HSTS Entire Domain`, which inpects headers on the base domain to see if HSTS is set correctly to encompass the entire zone.
 
 #### Scoring
 

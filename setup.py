@@ -44,8 +44,6 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -59,7 +57,7 @@ setup(
 
     install_requires=[
         'requests>=2.18.4',
-        'sslyze>=1.1.0',
+        'sslyze>=1.4.1',
         'wget>=3.2',
         'docopt',
         'pytablereader',
@@ -70,9 +68,10 @@ setup(
 
     extras_require={
         # 'dev': ['check-manifest'],
-        'test': [
+        'dev': [
+            'pytest',
+            'semver',
             'tox',
-            'pytest'
         ],
     },
 
