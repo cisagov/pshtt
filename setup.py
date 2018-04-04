@@ -68,9 +68,10 @@ setup(
 
     extras_require={
         # 'dev': ['check-manifest'],
-        'test': [
+        'dev': [
+            'pytest',
+            'semver',
             'tox',
-            'pytest'
         ],
     },
 
