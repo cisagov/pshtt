@@ -72,6 +72,7 @@ setup(
             'pytest',
             'semver',
             'tox',
+            'wheel'
         ],
     },
 
