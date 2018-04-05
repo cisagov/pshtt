@@ -24,7 +24,7 @@ install:
 script:
   - pytest --cov=pshtt
   - flake8 .
-  - bash travis_scripts/build_docker.sh
+  - bash travis_scripts/build_docker_image.sh
 
 after_success:
   - coveralls
