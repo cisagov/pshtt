@@ -6,7 +6,6 @@ gce-scripts
 .gitignore
 LICENSE.md
 mailer.egg-info
-README.md
 requirements.txt
 run
 tests
