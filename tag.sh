@@ -2,4 +2,4 @@
 
 version=$(./bump_version.sh show)
 
-git tag $version && git push --tags
+git tag v$version && git push --tags
