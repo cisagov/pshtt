@@ -10,9 +10,11 @@ Based on:
 from setuptools import setup
 from pshtt import __version__
 
+
 def readme():
     with open('README.md') as f:
         return f.read()
+
 
 setup(
     name='pshtt',
