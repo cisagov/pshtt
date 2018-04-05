@@ -10,12 +10,17 @@ Based on:
 from setuptools import setup
 from pshtt import __version__
 
+def readme():
+    with open('README.md') as f:
+        return f.read()
+
 setup(
     name='pshtt',
 
     # Versions should comply with PEP440
     version=__version__,
     description='Scan websites for HTTPS deployment best practices',
+    long_description=readme(),
 
     # NCATS "homepage"
     url='https://www.dhs.gov/cyber-incident-response',
