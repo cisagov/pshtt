@@ -23,6 +23,7 @@ setup(
     version=__version__,
     description='Scan websites for HTTPS deployment best practices',
     long_description=readme(),
+    long_description_content_type='text/markdown',
 
     # NCATS "homepage"
     url='https://www.dhs.gov/cyber-incident-response',
