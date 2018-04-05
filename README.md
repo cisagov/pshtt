@@ -98,7 +98,7 @@ aren't publicly trusted, you can specify your own CA bundle:
 pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
 ```
 
-#### Using Docker (optional) ####
+##### Using Docker (optional) #####
 
 ```bash
 ./run [opts]
