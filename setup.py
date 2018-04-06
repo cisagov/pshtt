@@ -75,20 +75,14 @@ setup(
     ],
 
     extras_require={
-        # 'dev': ['check-manifest'],
         'dev': [
+            'check-manifest>=0.36',
             'pytest>=3.5.0',
             'semver>=2.7.9',
             'tox>=3.0.0',
             'wheel>=0.31.0'
         ],
     },
-
-    # For forcing pip to pull from GitHub, if we need code that has
-    # not yet been pushed to PyPI
-    # dependency_links=[
-    #     'git+https://github.com/nabla-c0d3/sslyze.git@master#egg=sslyze-1.2.0'
-    #  ],
 
     # Conveniently allows one to run the CLI tool as `pshtt`
     entry_points={
