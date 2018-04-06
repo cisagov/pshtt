@@ -26,6 +26,7 @@ except ImportError:
     from urllib2 import URLError
 
 import sslyze
+from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError
 import sslyze.synchronous_scanner
 
 # We're going to be making requests with certificate validation disabled.
@@ -335,13 +336,19 @@ def basic_check(endpoint):
             base_immediate = parent_domain_for(subdomain_immediate)
 
             endpoint.redirect_immediately_to = immediate
-            endpoint.redirect_immediately_to_www = (re.match(r'^https?://www\.', immediate) is not None)
             endpoint.redirect_immediately_to_https = immediate.startswith("https://")
             endpoint.redirect_immediately_to_http = immediate.startswith("http://")
             endpoint.redirect_immediately_to_external = (base_original != base_immediate)
             endpoint.redirect_immediately_to_subdomain = (
                 (base_original == base_immediate) and
                 (subdomain_original != subdomain_immediate)
+            )
+
+            # We're interested in whether an endpoint redirects to the www version
+            # of itself (not whether it redirects to www prepended to any other
+            # hostname, even within the same parent domain).
+            endpoint.redirect_immediately_to_www = (
+                subdomain_immediate == ("www.%s" % subdomain_original)
             )
 
             if ultimate_req is not None:
@@ -442,17 +449,10 @@ def https_check(endpoint):
     # remove the https:// from prefix for sslyze
     try:
         hostname = endpoint.url[8:]
-        server_info = sslyze.server_connectivity.ServerConnectivityInfo(hostname=hostname, port=443)
-    except Exception as err:
-        endpoint.unknown_error = True
-        logging.warn("Unknown exception when checking server connectivity info with sslyze.")
-        utils.debug("{0}".format(err))
-        return
-
-    try:
-        server_info.test_connectivity_to_server()
-    except sslyze.server_connectivity.ServerConnectivityError as err:
-        logging.warn("Error in sslyze server connectivity check")
+        server_tester = ServerConnectivityTester(hostname=hostname, port=443)
+        server_info = server_tester.perform()
+    except ServerConnectivityError as err:
+        logging.warn("Error in sslyze server connectivity check when connecting to {}".format(err.server_info.hostname))
         utils.debug("{0}".format(err))
         return
     except Exception as err:
@@ -592,12 +592,6 @@ def canonical_endpoint(http, httpwww, https, httpswww):
             )
         )
 
-    def goes_to_www(endpoint):
-        return (
-            endpoint.redirect_immediately_to_www and
-            (not endpoint.redirect_immediately_to_external)
-        )
-
     all_roots_unused = root_unused(https) and root_unused(http)
 
     all_roots_down = root_down(https) and root_down(http)
@@ -606,8 +600,8 @@ def canonical_endpoint(http, httpwww, https, httpswww):
         at_least_one_www_used and
         all_roots_unused and (
             all_roots_down or
-            goes_to_www(https) or
-            goes_to_www(http)
+            https.redirect_immediately_to_www or
+            http.redirect_immediately_to_www
         )
     )
 

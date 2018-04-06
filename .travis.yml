@@ -1,9 +1,16 @@
 language: python
 
-sudo: false
+sudo: required
+services:
+  - docker
+
+env:
+  global:
+    - IMAGE_NAME=dhsncats/pshtt
+    - DOCKER_USER=jsf9k
+    - secure: "A/Qmbd4TpQ1k9PAArd3mkx/vxghcFI0/X2pnUL++AhJKDq2NcV36zm24ot8q8BF5geJYGDi+de3Pcr+FV3Ld5WkSCDHjvhI+rEB9KDO2dJ+rYDnunXMpnKrQ73jYKv0vkLD4drPKv5Cb26nPVnk6KJ7TNVouCrdSHLtdugmvc35FOlOz0vL5WWW44vYj6+ldI/HUAVwO+kBd2pzwH22ZM1uTGreUbydKZEpXEpcVlASP7yHPg+LV4123woLXwZGAt17GHrhID8xeVwRwFfzcEvP3cRt8H9KOjE3WT+edIBnJibXMGzu/qna3bpLbFNZYyS+BWbghju8b44u8l87oIp20nxo73/8jpzE05CKxIeGaaN71c0T016HqYLP2pwUwll/qE6AXrvTLlUX43C9nVB6RTr04k4ooEfqSt4jtRu/xm0fC4wlriPPGoq0OrQFaOHLE2xbA8xw0Jub8KWPTKickZSBNa7RwlOsfifbnWqFZQ5sXsmabMVI1CJNPxXY3tfScSxnPUuXGbRJyjyRag90rstKS888QQXAYstTLSfGhVvTcbsW2gO2Ul+MhcndtQMyDrP/6STBQ41lTaZHoAna0YBnmwfm9Di73CUSz1sHHoVd98mRCIaTvb8ph8KyZOAuQlufDChHzntsq2T5WRAPCfiZsB+/Vgyag+gxh6+4="
 
 python:
-  - '2.7'
   - '3.4'
   - '3.5'
   - '3.6'
@@ -17,6 +24,22 @@ install:
 script:
   - pytest --cov=pshtt
   - flake8 .
+  - bash travis_scripts/build_docker_image.sh
 
 after_success:
   - coveralls
+
+deploy:
+  - provider: pypi
+    user: jsf9k
+    password:
+      secure: j41EqJy+kcDqP/f6j9NbEg1r8oAH5Kpj7vstIpkdOoHSPN63iERAoAdgfoL9wb0Y6N4LPmnXhQEA2Ey0KsJXaK7kcRymURsJ7ZlK/843rXKz24+fIRt+UoLGqm59QYbDdkEoTx+2yKBlWX1qz7fC8hVficvRdIzWtq7QNs54XtdJUtiM2bsnIRclB3mrBZpJLnuw6dP4sPQQ4GglItRN6QcFJn/Xrhe17YouXvszM4hwSVdAYDS/V/nzMVEyDdAuTb1evZoWv56RdiZdiRGjkkFpZLG2TVzMYVE1mnDSTixYryRA5qRermJC+vwiI8HXlWqpwrg6m9y5XpU6tg7epOpvZHCTUT4K6Sn+tvpBnamqHqh4TQJJmpuGi+/Q4j/kIstie7oS6eQvcTg17AznDDA0trZKtg+Q4vUBqq5IgCCGvkLpuhwvgX7NcsFS90mdruc3YIdZktCl3Jzucsb9JMiIBp+ES2Q3DDWXk0Xt82ju/6uJ7pFlBO6W6sb+5se7tZV97k3jGbD3pYgy7VDL1VAm+HqmC3veS2E96MOBQQ5yeLGVng42iSH4xws5z0vAb+3IIZAYn+g2WCubGa8w9tltj6O1FJ5jYkQUCPsTG2yPa2NDWfbzWfwpOUqaX7t4pcbzvSp6WdVv3XvhkI4ZgxTjKD7YQ0fz9dksamxFJKk=
+    distributions: sdist bdist_wheel
+    on:
+      tags: true
+      python: '3.6'
+  - provider: script
+    script: bash travis_scripts/deploy_to_docker_hub.sh
+    on:
+      tags: true
+      python: '3.6'
