@@ -67,20 +67,20 @@ setup(
         'requests>=2.18.4',
         'sslyze>=1.4.1',
         'wget>=3.2',
-        'docopt',
-        'pytablereader',
-        'pytablewriter',
-        'publicsuffix',
-        'pyopenssl>=17.2.0'
+        'docopt>=0.6.2',
+        'pytablereader>=0.15.0',
+        'pytablewriter>=0.27.2',
+        'publicsuffix>=1.1.0',
+        'pyopenssl>=17.5.0'
     ],
 
     extras_require={
         'dev': [
-            'check-manifest',
-            'pytest',
-            'semver',
-            'tox',
-            'wheel'
+            'check-manifest>=0.36',
+            'pytest>=3.5.0',
+            'semver>=2.7.9',
+            'tox>=3.0.0',
+            'wheel>=0.31.0'
         ],
     },
 
