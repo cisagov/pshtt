@@ -19,6 +19,7 @@ else
             sed -i "s/$old_version/$new_version/" $VERSION_FILE
             git add $VERSION_FILE
             git commit -m"Bumped version from $old_version to $new_version"
+            git push
             ;;
         finalize)
             new_version=$(python -c "import semver; print(semver.finalize_version('$old_version'))")
@@ -26,6 +27,7 @@ else
             sed -i "s/$old_version/$new_version/" $VERSION_FILE
             git add $VERSION_FILE
             git commit -m"Bumped version from $old_version to $new_version"
+            git push
             ;;
         show)
             echo $old_version
