@@ -67,22 +67,28 @@ setup(
         'requests>=2.18.4',
         'sslyze>=1.4.1',
         'wget>=3.2',
-        'docopt',
-        'pytablereader',
-        'pytablewriter',
-        'publicsuffix',
-        'pyopenssl>=17.2.0'
+        'docopt>=0.6.2',
+        'pytablereader>=0.15.0',
+        'pytablewriter>=0.27.2',
+        'publicsuffix>=1.1.0',
+        'pyopenssl>=17.5.0'
     ],
 
     extras_require={
         # 'dev': ['check-manifest'],
         'dev': [
-            'pytest',
-            'semver',
-            'tox',
-            'wheel'
+            'pytest>=3.5.0',
+            'semver>=2.7.9',
+            'tox>=3.0.0',
+            'wheel>=0.31.0'
         ],
     },
+
+    # For forcing pip to pull from GitHub, if we need code that has
+    # not yet been pushed to PyPI
+    # dependency_links=[
+    #     'git+https://github.com/nabla-c0d3/sslyze.git@master#egg=sslyze-1.2.0'
+    #  ],
 
     # Conveniently allows one to run the CLI tool as `pshtt`
     entry_points={
