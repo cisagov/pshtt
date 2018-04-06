@@ -17,11 +17,15 @@ else
             new_version=$(python -c "import semver; print(semver.bump_$1('$old_version'))")
             echo Changing version from $old_version to $new_version
             sed -i "s/$old_version/$new_version/" $VERSION_FILE
+            git add $VERSION_FILE
+            git commit -m"Bumped version from $old_version to $new_version"
             ;;
         finalize)
             new_version=$(python -c "import semver; print(semver.finalize_version('$old_version'))")
             echo Changing version from $old_version to $new_version
             sed -i "s/$old_version/$new_version/" $VERSION_FILE
+            git add $VERSION_FILE
+            git commit -m"Bumped version from $old_version to $new_version"
             ;;
         show)
             echo $old_version
