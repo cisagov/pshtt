@@ -28,7 +28,7 @@ organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
 
 ## Getting Started ##
 
-`pshtt` requires **Python 3.4+**. Python 2 is not supported.
+`pshtt` requires **Python 3.6 or 3.7+**. Python 2 is not supported.
 
 `pshtt` can be installed as a module, or run directly from the
 repository.
