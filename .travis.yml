@@ -12,7 +12,6 @@ env:
 
 python:
   - '3.6'
-  - '3.7'
 
 install:
   - pip install flake8 pytest-cov pytest coveralls
@@ -34,9 +33,9 @@ deploy:
     distributions: sdist bdist_wheel
     on:
       tags: true
-      python: '3.7'
+      python: '3.6'
   - provider: script
     script: bash travis_scripts/deploy_to_docker_hub.sh
     on:
       tags: true
-      python: '3.7'
+      python: '3.6'
