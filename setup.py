@@ -53,9 +53,8 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ],
 
     # What does your project relate to?
@@ -65,7 +64,7 @@ setup(
 
     install_requires=[
         'requests>=2.18.4',
-        'sslyze>=1.4.2',
+        'sslyze>=2.0.0',
         'wget>=3.2',
         'docopt>=0.6.2',
         'pytablereader>=0.15.0',
