@@ -55,7 +55,11 @@ class Endpoint(object):
         # Only HTTPS endpoints have these.
         # Initialize all of them to None, so that it's
         # discernible if they don't get explicitly set.
+        self.https_full_connection = None
+        self.https_client_auth_required = False
         self.https_valid = None
+        self.https_public_trusted = None
+        self.https_custom_trusted = None
         self.https_bad_chain = None
         self.https_bad_hostname = None
         self.https_expired_cert = None
@@ -98,7 +102,11 @@ class Endpoint(object):
         }
 
         if self.protocol == "https":
+            obj['https_full_connection'] = self.https_full_connection
+            obj['https_client_auth_required'] = self.https_client_auth_required
             obj['https_valid'] = self.https_valid
+            obj['https_public_trusted'] = self.https_public_trusted
+            obj['https_custom_trusted'] = self.https_custom_trusted
             obj['https_bad_chain'] = self.https_bad_chain
             obj['https_bad_hostname'] = self.https_bad_hostname
             obj['https_expired_cert'] = self.https_expired_cert

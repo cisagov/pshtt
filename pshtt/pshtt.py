@@ -41,8 +41,11 @@ TIMEOUT = 10
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
 HEADERS = [
-    "Domain", "Base Domain", "Canonical URL", "Live", "Redirect", "Redirect To",
-    "Valid HTTPS", "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
+    "Domain", "Base Domain", "Canonical URL", "Live", 
+    "HTTPS Full Connection", "HTTPS Client Auth Required", 
+    "Redirect", "Redirect To", 
+    "Valid HTTPS", "HTTPS Publicly Trusted", "HTTPS Custom Truststore Trusted",
+    "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
     "HTTPS Bad Chain", "HTTPS Bad Hostname", "HTTPS Expired Cert",
     "HTTPS Self Signed Cert",
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
@@ -105,10 +108,15 @@ def result_for(domain):
         'Base Domain': parent_domain_for(domain.domain),
         'Canonical URL': domain.canonical.url,
         'Live': is_live(domain),
-        'Redirect': is_redirect(domain),
+        'Redirect': is_redirect_domain(domain),
         'Redirect To': redirects_to(domain),
 
+        'HTTPS Full Connection': is_full_connection(domain),
+        'HTTPS Client Auth Required': is_client_auth_required(domain),
+
         'Valid HTTPS': is_valid_https(domain),
+        'HTTPS Publicly Trusted': is_publicly_trusted(domain),
+        'HTTPS Custom Truststore Trusted': is_custom_trusted(domain),
         'Defaults to HTTPS': is_defaults_to_https(domain),
         'Downgrades HTTPS': is_downgrades_https(domain),
         'Strictly Forces HTTPS': is_strictly_forces_https(domain),
@@ -144,6 +152,11 @@ def result_for(domain):
     for header in HEADERS:
         if header in ("HSTS Header", "HSTS Max Age", "Redirect To"):
             continue
+
+        if result['HTTPS Full Connection'] == False:
+            if header in ('HSTS', 'HSTS Header', 'HSTS Max Age', 'HSTS Entire Domain', 'HSTS Preload Ready', 'Domain Uses Strong HSTS'):
+               result[header] = 'Unknown'
+               continue
 
         if result[header] is None:
             result[header] = False
@@ -217,66 +230,100 @@ def basic_check(endpoint):
 
     utils.debug("Pinging %s..." % endpoint.url, divider=True)
 
+    req = None
+
     try:
         with ping(endpoint.url) as req:
             endpoint.live = True
             if endpoint.protocol == "https":
+                endpoint.https_full_connection = True
                 endpoint.https_valid = True
 
     except requests.exceptions.SSLError as err:
-        logging.warn("Error validating certificate.")
-        utils.debug("{0}".format(err))
+        if "bad handshake" in str(err) and (
+                "Unexpected EOF" in str(err) or 
+                "sslv3 alert handshake failure" in str(err)
+            ):
+            logging.warn("{}: Error completing TLS handshake usually due to required client authentication.".format(endpoint.url))
+            utils.debug("{}: {}".format(endpoint.url, err))
+            endpoint.live = True
+            endpoint.https_full_connection = False
+            if endpoint.protocol == "https":
+                # The https can still be valid with a handshake error, 
+                # sslyze will run later and check if it is not valid
+                endpoint.https_valid = True
 
-        # Retry with certificate validation disabled.
-        try:
-            with ping(endpoint.url, verify=False) as req:
-                pass
-        except requests.exceptions.SSLError as err:
-            # If it's a protocol error or other, it's not live.
-            endpoint.live = False
-            logging.warn("Unexpected SSL protocol (or other) error during retry.")
-            utils.debug("{0}".format(err))
-            return
-        except requests.exceptions.RequestException as err:
-            endpoint.live = False
-            logging.warn("Unexpected requests exception during retry.")
-            utils.debug("{0}".format(err))
-            return
-        except OpenSSL.SSL.Error as err:
-            endpoint.live = False
-            logging.warn("Unexpected OpenSSL exception during retry.")
-            utils.debug("{0}".format(err))
-            return
-        except Exception as err:
-            endpoint.unknown_error = True
-            logging.warn("Unexpected other unknown exception during requests retry.")
-            utils.debug("{0}".format(err))
-            return
+        else:
+            logging.warn("{}: Error connecting over SSL/TLS or validating certificate.".format(endpoint.url))
+            utils.debug("{}: {}".format(endpoint.url, err))
 
-        # If it was a certificate error of any kind, it's live.
+            # Retry with certificate validation disabled.
+            try:
+                with ping(endpoint.url, verify=False) as req:
+                    endpoint.live = True
+                    endpoint.https_full_connection = True
+                    endpoint.https_valid = False
+            except requests.exceptions.SSLError as err:
+                # If it's a protocol error or other, it's not a full connection,
+                # but it is live.
+                endpoint.live = True
+                logging.warn("{}: Unexpected SSL protocol (or other) error during retry.".format(endpoint.url))
+                utils.debug("{}: {}".format(endpoint.url, err))
+                # continue on to SSLyze to check the connection
+            except requests.exceptions.RequestException as err:
+                endpoint.live = False
+                logging.warn("{}: Unexpected requests exception during retry.".format(endpoint.url))
+                utils.debug("{}: {}".format(endpoint.url, err))
+                return
+            except OpenSSL.SSL.Error as err:
+                endpoint.live = False
+                logging.warn("{}: Unexpected OpenSSL exception during retry.".format(endpoint.url))
+                utils.debug("{}: {}".format(endpoint.url, err))
+                return
+            except Exception as err:
+                endpoint.unknown_error = True
+                logging.warn("{}: Unexpected other unknown exception during requests retry.".format(endpoint.url))
+                utils.debug("{}: {}".format(endpoint.url, err))
+                return
+
+        # If it was a certificate error of any kind, it's live,
+        # unless SSLyze encounters a connection error later
         endpoint.live = True
 
-        # Figure out the error(s).
-        https_check(endpoint)
-
     except requests.exceptions.ConnectionError as err:
-        endpoint.live = False
-        utils.debug("{0}".format(err))
-        return
+        # We can get this for some endpoints that are actually live, 
+        # so if it's https let's try sslyze to be sure
+        if(endpoint.protocol == "https"):
+            # https check later will set whether the endpoint is live
+            endpoint.https_full_connection = False
+        else:
+            endpoint.live = False
+        logging.warn("{}: Error connecting.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
 
     # And this is the parent of ConnectionError and other things.
     # For example, "too many redirects".
     # See https://github.com/kennethreitz/requests/blob/master/requests/exceptions.py
     except requests.exceptions.RequestException as err:
         endpoint.live = False
-        logging.warn("Unexpected other requests exception.")
-        utils.debug("{0}".format(err))
+        logging.warn("{}: Unexpected other requests exception.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
         return
 
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warn("Unexpected other unknown exception during initial request.")
-        utils.debug("{0}".format(err))
+        logging.warn("{}: Unexpected other unknown exception during initial request.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
+        return
+
+    # Run SSLyze to see if there are any errors
+    if(endpoint.protocol == "https"):
+        https_check(endpoint)
+
+    if endpoint.https_full_connection == False:
+        return
+        
+    if req is None:
         return
 
     # Endpoint is live, analyze the response.
@@ -286,6 +333,7 @@ def basic_check(endpoint):
 
     if (req.headers.get('Location') is not None) and str(endpoint.status).startswith('3'):
         endpoint.redirect = True
+        logging.warn("{}: Found redirect.".format(endpoint.url))
 
     if endpoint.redirect:
         try:
@@ -303,8 +351,8 @@ def basic_check(endpoint):
             ultimate_req = None
         except Exception as err:
             endpoint.unknown_error = True
-            logging.warn("Unexpected other unknown exception when handling Requests Header.")
-            utils.debug("{0}".format(err))
+            logging.warn("{}: Unexpected other unknown exception when handling Requests Header.".format(endpoint.url))
+            utils.debug("{} {}".format(endpoint.url, err))
             pass
 
         try:
@@ -313,10 +361,16 @@ def basic_check(endpoint):
         except requests.exceptions.RequestException:
             # Swallow connection errors, but we won't be saving redirect info.
             pass
+        except requests.exceptions.SSLError:
+            # Swallow connection errors, but we won't be saving redirect info.
+            pass
+        except OpenSSL.SSL.Error as err:
+            # Swallow connection errors, but we won't be saving redirect info.
+            pass
         except Exception as err:
             endpoint.unknown_error = True
-            logging.warn("Unexpected other unknown exception when handling redirect.")
-            utils.debug("{0}".format(err))
+            logging.warn("{}: Unexpected other unknown exception when handling redirect.".format(endpoint.url))
+            utils.debug("{}: {}".format(endpoint.url, err))
             return
 
         try:
@@ -384,8 +438,8 @@ def basic_check(endpoint):
                 endpoint.redirect_eventually_to_subdomain = endpoint.redirect_immediately_to_subdomain
         except Exception as err:
             endpoint.unknown_error = True
-            logging.warn("Unexpected other unknown exception when establishing redirects.")
-            utils.debug("{0}".format(err))
+            logging.warn("{}: Unexpected other unknown exception when establishing redirects.".format(endpoint.url))
+            utils.debug("{}: {}".format(endpoint.url, err))
             pass
 
 
@@ -435,8 +489,8 @@ def hsts_check(endpoint):
             endpoint.hsts_preload = True
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warn("Unknown exception when handling HSTS check.")
-        utils.debug("{0}".format(err))
+        logging.warn("{}: Unknown exception when handling HSTS check.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
         return
 
 
@@ -451,35 +505,86 @@ def https_check(endpoint):
         hostname = endpoint.url[8:]
         server_tester = ServerConnectivityTester(hostname=hostname, port=443)
         server_info = server_tester.perform()
+        endpoint.live = True
+        if server_info.client_auth_requirement.name == 'REQUIRED':
+            endpoint.https_client_auth_required = True
+            logging.warn("{}: Client Authentication REQUIRED".format(endpoint.url))
     except ServerConnectivityError as err:
-        logging.warn("Error in sslyze server connectivity check when connecting to {}".format(err.server_info.hostname))
-        utils.debug("{0}".format(err))
+        endpoint.live = False
+        logging.warn("{}: Error in sslyze server connectivity check when connecting to {}".format(endpoint.url, err.server_info.hostname))
+        utils.debug("{}: {}".format(endpoint.url, err))
         return
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warn("Unknown exception in sslyze server connectivity check.")
-        utils.debug("{0}".format(err))
+        logging.warn("{}: Unknown exception in sslyze server connectivity check.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
         return
 
     try:
         command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=CA_FILE)
         scanner = sslyze.synchronous_scanner.SynchronousScanner()
         cert_plugin_result = scanner.run_scan_command(server_info, command)
+        try:
+            if (
+                cert_plugin_result.successful_trust_store == None and 
+                len(cert_plugin_result.certificate_chain) < 2
+            ):
+                logging.warn("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
+                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
+        except Exception as err:
+            # Squash exceptions
+            pass        
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warn("Unknown exception in sslyze scanner.")
-        utils.debug("{0}".format(err))
+        logging.warn("{}: Unknown exception in sslyze scanner.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
         return
+
+    try:
+        public_trust = None
+        custom_trust = None
+        if endpoint.https_valid == True:  
+            public_trust = True
+            public_not_trusted_string = ""
+            validation_results = cert_plugin_result.path_validation_result_list
+            for result in validation_results:
+                if result.is_certificate_trusted == True:
+                    if 'Custom' in result.trust_store.name:
+                        custom_trust = True
+                else:
+                    if 'Custom' in result.trust_store.name:
+                        custom_trust = False
+                    else:
+                        public_trust = False
+                        if len(public_not_trusted_string) > 0:
+                            public_not_trusted_string += ", "
+                        public_not_trusted_string += result.trust_store.name
+            if public_trust == False:
+                logging.warn("{}: Not publicly trusted - not trusted by {}.".format(endpoint.url, public_not_trusted_string))
+            if custom_trust == True:
+                logging.warn("{}: Trusted by custom trust store.".format(endpoint.url))
+            if custom_trust == False:
+                logging.warn("{}: Not trusted by custom trust store.".format(endpoint.url))
+        else:
+            public_trust = False
+            if CA_FILE is not None:
+                custom_trust = False
+        endpoint.https_public_trusted = public_trust
+        endpoint.https_custom_trusted = custom_trust
+    except Exception as err:
+        # Ignore exception
+        utils.debug("{}: Unknown exception examining trust: {}".format(endpoint.url, err))
+        pass
 
     try:
         cert_response = cert_plugin_result.as_text()
     except AttributeError as err:
-        logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
+        logging.warn("{}: Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215".format(endpoint.url))
         return None
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warn("Unknown exception in cert plugin.")
-        utils.debug("{0}".format(err))
+        logging.warn("{}: Unknown exception in cert plugin.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
         return
 
     # Debugging
@@ -547,7 +652,15 @@ def https_check(endpoint):
             (("Certificate does NOT match") in msg)
         ):
             endpoint.https_bad_hostname = True
-
+    
+    # If anything is wrong then https is not valid
+    if (
+        endpoint.https_expired_cert or 
+        endpoint.https_self_signed_cert or 
+        endpoint.https_bad_chain or 
+        endpoint.https_bad_hostname
+    ):
+        endpoint.https_valid = False
 
 def canonical_endpoint(http, httpwww, https, httpswww):
     """
@@ -675,41 +788,62 @@ def is_live(domain):
 
     return http.live or httpwww.live or https.live or httpswww.live
 
+def is_full_connection(domain):
+    """
+    Domain is "fully connected" if any https endpoint is fully connected.
+    """
+    http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
 
-def is_redirect(domain):
+    return https.https_full_connection or httpswww.https_full_connection
+
+def is_client_auth_required(domain):
+    """
+    Domain requires client authentication if *any* HTTPS endpoint requires it for full TLS connection.
+    """
+    https, httpswww = domain.https, domain.httpswww
+    
+    return https.https_client_auth_required or httpswww.https_client_auth_required
+
+def is_redirect_or_down(endpoint):
+    """
+    Endpoint is a redirect or down if it is a redirect to an external site or it is down in any of 3 ways:
+    it is not live, it is HTTPS and has a bad hostname in the cert, or it responds with a 4xx error code
+    """
+    return (
+        endpoint.redirect_eventually_to_external or
+        (not endpoint.live) or
+        (
+            endpoint.protocol == "https" and 
+            endpoint.https_bad_hostname
+        ) or 
+        (
+            endpoint.status is not None and 
+            endpoint.status >= 400
+        )           
+    )
+
+def is_redirect(endpoint):
+    """ 
+    Endpoint is a redirect if it is a redirect to an external site
+    """
+    return endpoint.redirect_eventually_to_external
+    
+def is_redirect_domain(domain):
     """
     Domain is "a redirect domain" if at least one endpoint is
     a redirect, and all endpoints are either redirects or down.
     """
     http, httpwww, https, httpswww = domain.http, domain.httpwww, domain.https, domain.httpswww
 
-    # TODO: make sub-function of the conditional below.
-    # def is_redirect_or_down(endpoint):
-
     return is_live(domain) and (
         (
-            https.redirect_eventually_to_external or
-            (not https.live) or
-            https.https_bad_hostname or
-            https.status >= 400
-        ) and
-        (
-            httpswww.redirect_eventually_to_external or
-            (not httpswww.live) or
-            httpswww.https_bad_hostname or
-            httpswww.status >= 400
-        ) and
-        (
-            httpwww.redirect_eventually_to_external or
-            (not httpwww.live) or
-            httpwww.status >= 400
-        ) and
-        (
-            http.redirect_eventually_to_external or
-            (not http.live) or
-            http.status >= 400
-        ))
-
+            is_redirect(http) or is_redirect(httpwww) or is_redirect(https) or is_redirect(httpswww)
+        ) and 
+        is_redirect_or_down(https) and
+        is_redirect_or_down(httpswww) and
+        is_redirect_or_down(httpwww) and
+        is_redirect_or_down(http)
+    )
 
 def redirects_to(domain):
     """
@@ -717,7 +851,7 @@ def redirects_to(domain):
     """
     canonical = domain.canonical
 
-    if is_redirect(domain):
+    if is_redirect_domain(domain):
         return canonical.redirect_eventually_to
     else:
         return None
@@ -801,6 +935,27 @@ def is_strictly_forces_https(domain):
 
     return https_somewhere and all_http_unused
 
+def is_publicly_trusted(domain):
+    """
+    Domain is publicly trusted if either https endpoint is publicly trusted
+    """
+    if domain.https.live == False and domain.httpswww.live == False:
+        return "N/A"
+    if domain.https.https_public_trusted == True or domain.httpswww.https_public_trusted == True:
+        return True
+    else:
+        return False
+
+def is_custom_trusted(domain):
+    """
+    Domain is custom trusted if either https endpoint is trusted by the custom trust store
+    """
+    if CA_FILE == None or (domain.https.live == False and domain.httpswww.live == False):
+        return "N/A"
+    if domain.https.https_custom_trusted == True or domain.httpswww.https_custom_trusted == True:
+        return True
+    else:
+        return False
 
 def is_bad_chain(domain):
     """
@@ -1007,7 +1162,7 @@ def is_domain_enforces_https(domain):
         is_strictly_forces_https(domain) and
         (
             is_defaults_to_https(domain) or
-            is_redirect(domain)
+            is_redirect_domain(domain)
         ) or (
             (not is_strictly_forces_https(domain)) and
             is_defaults_to_https(domain)
