@@ -995,22 +995,16 @@ def is_domain_supports_https(domain):
 
 
 def is_domain_enforces_https(domain):
-    """
-    A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to HTTPS.
-    For websites (where Redirect is false) they are allowed to eventually
-    redirect to an https:// URI. For "redirect domains" (domains where the
-    Redirect value is true) they must immediately redirect clients to an
-    https:// URI (even if that URI is on another domain) in order to be said to
-    enforce HTTPS.
+    """A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to
+    HTTPS.  For websites (where Redirect is false) they are allowed to
+    eventually redirect to an https:// URI. For "redirect domains"
+    (domains where the Redirect value is true) they must immediately
+    redirect clients to an https:// URI (even if that URI is on
+    another domain) in order to be said to enforce HTTPS.
     """
     return is_domain_supports_https(domain) and (
-        is_strictly_forces_https(domain) and
-        (
-            is_defaults_to_https(domain) or
-            is_redirect(domain)
-        ) or (
-            (not is_strictly_forces_https(domain)) and
-            is_defaults_to_https(domain)
+        is_defaults_to_https(domain) or (
+            is_strictly_forces_https(domain) and is_redirect(domain)
         )
     )
 
