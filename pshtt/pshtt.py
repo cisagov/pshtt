@@ -414,10 +414,10 @@ def hsts_check(endpoint):
         # TODO: make this more resilient to pathological HSTS headers.
 
         # handle multiple HSTS headers, requests comma-separates them
-        first_pass = re.split(',\s?', header)[0]
-        second_pass = re.sub('\'', '', first_pass)
+        first_pass = re.split(r',\s?', header)[0]
+        second_pass = re.sub(r'\'', '', first_pass)
 
-        temp = re.split(';\s?', second_pass)
+        temp = re.split(r';\s?', second_pass)
 
         if "max-age" in header.lower():
             endpoint.hsts_max_age = int(temp[0][len("max-age="):])
@@ -473,7 +473,7 @@ def https_check(endpoint):
 
     try:
         cert_response = cert_plugin_result.as_text()
-    except AttributeError as err:
+    except AttributeError:
         logging.warn("Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215")
         return None
     except Exception as err:

@@ -90,7 +90,7 @@ def format_domains(domains):
 
     for domain in domains:
         # Replace a single instance of http://, https://, and www. if present.
-        formatted_domains.append(re.sub("^(https?://)?(www\.)?", "", domain))
+        formatted_domains.append(re.sub(r"^(https?://)?(www\.)?", "", domain))
 
     return formatted_domains
 
