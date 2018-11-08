@@ -19,10 +19,12 @@ install:
 
 script:
   - pytest --cov=pshtt
-  # There are A LOT of these warnings, and getting rid of them is
+  # Let's ignore E501 (line too long) warnings for now.
+  #
+  # There are A LOT of W504 warnings, and getting rid of them is
   # dangerous because there are lots of parentheses and making flake8
   # happy but changing the logic would be easy to do.
-  - flake8 --ignore=W504 .
+  - flake8 --ignore=E501,W504 .
   - bash travis_scripts/build_docker_image.sh
   - pshtt --help
   - pshtt --version
