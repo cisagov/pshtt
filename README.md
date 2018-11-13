@@ -157,9 +157,11 @@ The following values are returned in `results.csv`:
 * `HTTPS Bad Chain` - A domain has a bad chain if either HTTPS
   endpoint contains a bad chain.
 * `HTTPS Bad Hostname` - A domain has a bad hostname if either HTTPS
-  endpoint fails hostname validation
-* `HTTPS Expired Cert` - A domain has an expired certificate if the
-  either HTTPS endpoint has an expired certificate.
+  endpoint fails hostname validation.
+* `HTTPS Expired Cert` - A domain has an expired certificate if either
+  HTTPS endpoint has an expired certificate.
+* `HTTPS Self-Signed Cert` - A domain has a self-signed certificate if
+  either HTTPS endpoint has a self-signed certificate.
 
 ### HSTS ###
 

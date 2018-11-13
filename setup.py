@@ -70,7 +70,9 @@ setup(
         'pytablereader>=0.15.0',
         'pytablewriter>=0.27.2',
         'publicsuffix>=1.1.0',
-        'pyopenssl>=17.5.0'
+        'pyopenssl>=17.5.0',
+        'python-dateutil>=2.7.3',
+        'pytz>=2018.5',
     ],
 
     extras_require={

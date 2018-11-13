@@ -21,6 +21,8 @@ script:
   - pytest --cov=pshtt
   - flake8 .
   - bash travis_scripts/build_docker_image.sh
+  - pshtt --help
+  - pshtt --version
 
 after_success:
   - coveralls
