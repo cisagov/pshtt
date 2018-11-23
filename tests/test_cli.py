@@ -62,8 +62,8 @@ class TestToCSV(unittest.TestCase):
             ('Redirect', 'False'),
             ('Redirect To', ''),
             ('Valid HTTPS', 'False'),
-            ('HTTPS Publicly Trusted', 'False')
-            ('HTTPS Custom Truststore Trusted', 'False')
+            ('HTTPS Publicly Trusted', 'False'),
+            ('HTTPS Custom Truststore Trusted', 'False'),
             ('Defaults to HTTPS', 'False'),
             ('Downgrades HTTPS', 'False'),
             ('Strictly Forces HTTPS', 'False'),
