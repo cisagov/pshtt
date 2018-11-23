@@ -63,7 +63,7 @@ class TestToCSV(unittest.TestCase):
             ('Redirect To', ''),
             ('Valid HTTPS', 'False'),
             ('HTTPS Publicly Trusted', 'False'),
-            ('HTTPS Custom Truststore Trusted', 'False'),
+            ('HTTPS Custom Truststore Trusted', 'N/A'),
             ('Defaults to HTTPS', 'False'),
             ('Downgrades HTTPS', 'False'),
             ('Strictly Forces HTTPS', 'False'),
@@ -71,20 +71,21 @@ class TestToCSV(unittest.TestCase):
             ('HTTPS Bad Hostname', 'False'),
             ('HTTPS Expired Cert', 'False'),
             ('HTTPS Self Signed Cert', 'False'),
-            ('HSTS', 'False'),
+            ('HSTS', 'Unknown'),
             ('HSTS Header', ''),
             ('HSTS Max Age', ''),
             ('HSTS Entire Domain', 'False'),
-            ('HSTS Preload Ready', 'False'),
-            ('HSTS Preload Pending', 'False'),
+            ('HSTS Preload Ready', 'Unknown'),
+            ('HSTS Preload Pending', 'Unknown'),
             ('HSTS Preloaded', 'False'),
             ('Base Domain HSTS Preloaded', 'False'),
             ('Domain Supports HTTPS', 'False'),
             ('Domain Enforces HTTPS', 'False'),
-            ('Domain Uses Strong HSTS', 'False'),
+            ('Domain Uses Strong HSTS', 'Unknown'),
             ('Unknown Error', 'False'),
         ]
 
+        self.maxDiff = None
         header = ','.join(t[0] for t in domain_data)
         values = ','.join(t[1] for t in domain_data)
         expected = header + '\n' + values + '\n'
