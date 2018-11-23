@@ -74,9 +74,9 @@ class TestToCSV(unittest.TestCase):
             ('HSTS', 'Unknown'),
             ('HSTS Header', ''),
             ('HSTS Max Age', ''),
-            ('HSTS Entire Domain', 'False'),
+            ('HSTS Entire Domain', 'Unknown'),
             ('HSTS Preload Ready', 'Unknown'),
-            ('HSTS Preload Pending', 'Unknown'),
+            ('HSTS Preload Pending', 'False'),
             ('HSTS Preloaded', 'False'),
             ('Base Domain HSTS Preloaded', 'False'),
             ('Domain Supports HTTPS', 'False'),
@@ -85,7 +85,6 @@ class TestToCSV(unittest.TestCase):
             ('Unknown Error', 'False'),
         ]
 
-        self.maxDiff = None
         header = ','.join(t[0] for t in domain_data)
         values = ','.join(t[1] for t in domain_data)
         expected = header + '\n' + values + '\n'
