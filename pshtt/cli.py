@@ -49,7 +49,7 @@ def to_csv(results, out_filename):
             row = [result[header] for header in pshtt.HEADERS]
             writer.writerow(row)
 
-    logging.warn("Wrote results to %s.", out_filename)
+    logging.warning("Wrote results to %s.", out_filename)
 
 
 def to_json(results, out_filename):
@@ -62,7 +62,7 @@ def to_json(results, out_filename):
         out_file.write(json_content + '\n')
 
         if out_file is not sys.stdout:
-            logging.warn("Wrote results to %s.", out_filename)
+            logging.warning("Wrote results to %s.", out_filename)
 
 
 def to_markdown(results, out_filename):
