@@ -31,7 +31,7 @@ class Endpoint(object):
         self.host = host  # "www" or "root"
         self.base_domain = base_domain
         self.url = self.url_for(protocol, host, base_domain)
-        
+
         # all HTTP/HTTPS endpoints have these
         self.headers = {}  # will be replaced with a requests.structures.CaseInsensitiveDict
         self.status = None

@@ -29,9 +29,10 @@ import sslyze
 from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerConnectivityError
 import sslyze.synchronous_scanner
 
-# We're going to be making requests with certificate validation disabled.
-# Commented next line due to pylint warning that urllib3 is not in requests.packages
-#requests.packages.urllib3.disable_warnings()
+# We're going to be making requests with certificate validation
+# disabled.  Commented next line due to pylint warning that urllib3 is
+# not in requests.packages
+# requests.packages.urllib3.disable_warnings()
 import urllib3
 urllib3.disable_warnings()
 
@@ -54,7 +55,7 @@ HEADERS = [
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
-    "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "IP", 
+    "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "IP",
     "Server Header", "Server Version", "Notes", "Unknown Error",
 ]
 
@@ -335,8 +336,8 @@ def basic_check(endpoint):
     if req is None:
         return
 
-    #try to get IP address
-    #ip = req.raw._connection.sock.getpeername()
+    # try to get IP address
+    # ip = req.raw._connection.sock.getpeername()
     try:
         if req.raw.closed is False:
             ip = req.raw._connection.sock.socket.getpeername()[0]
@@ -347,7 +348,7 @@ def basic_check(endpoint):
                     utils.debug("{}: Endpoint IP is already {}, but requests IP is {}.".format(endpoint.url, endpoint.ip, ip))
     except:
         pass
-    
+
     # Endpoint is live, analyze the response.
     endpoint.headers = req.headers
 
@@ -355,7 +356,7 @@ def basic_check(endpoint):
 
     if (req.headers.get('Server') is not None):
         endpoint.server_header = req.headers.get('Server')
-        ### *** in the future add logic to convert header to server version if known
+        # *** in the future add logic to convert header to server version if known
 
     if (req.headers.get('Location') is not None) and str(endpoint.status).startswith('3'):
         endpoint.redirect = True
@@ -1215,6 +1216,7 @@ def is_domain_strong_hsts(domain):
     else:
         return None
 
+
 def get_domain_ip(domain):
     if domain.canonical.ip is not None:
         return domain.canonical.ip
@@ -1228,18 +1230,20 @@ def get_domain_ip(domain):
             return domain.http.ip
     return None
 
+
 def get_domain_server_header(domain):
     if domain.canonical.server_header is not None:
-        return domain.canonical.server_header.replace(',',';')
+        return domain.canonical.server_header.replace(',', ';')
     if domain.https.server_header is not None:
-            return domain.https.server_header.replace(',',';')
+            return domain.https.server_header.replace(',', ';')
     if domain.httpswww.server_header is not None:
-            return domain.httpswww.server_header.replace(',',';')
+            return domain.httpswww.server_header.replace(',', ';')
     if domain.httpwww.server_header is not None:
-            return domain.httpwww.server_header.replace(',',';')
+            return domain.httpwww.server_header.replace(',', ';')
     if domain.http.server_header is not None:
-            return domain.http.server_header.replace(',',';')
+            return domain.http.server_header.replace(',', ';')
     return None
+
 
 def get_domain_server_version(domain):
     if domain.canonical.server_version is not None:
@@ -1254,10 +1258,12 @@ def get_domain_server_version(domain):
             return domain.http.server_version
     return None
 
+
 def get_domain_notes(domain):
     all_notes = domain.http.notes + domain.httpwww.notes + domain.https.notes + domain.httpswww.notes
-    all_notes = all_notes.replace(',',';')
+    all_notes = all_notes.replace(',', ';')
     return all_notes
+
 
 def did_domain_error(domain):
     """
