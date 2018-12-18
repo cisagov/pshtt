@@ -336,8 +336,7 @@ def basic_check(endpoint):
     if req is None:
         return
 
-    # try to get IP address
-    # ip = req.raw._connection.sock.getpeername()
+    # try to get IP address if we can
     try:
         if req.raw.closed is False:
             ip = req.raw._connection.sock.socket.getpeername()[0]
@@ -346,7 +345,8 @@ def basic_check(endpoint):
             else:
                 if endpoint.ip != ip:
                     utils.debug("{}: Endpoint IP is already {}, but requests IP is {}.".format(endpoint.url, endpoint.ip, ip))
-    except:
+    except Exception:
+        # if the socket has already closed, it will throw an exception, but this is just best effort, so ignore it
         pass
 
     # Endpoint is live, analyze the response.
@@ -1218,6 +1218,9 @@ def is_domain_strong_hsts(domain):
 
 
 def get_domain_ip(domain):
+    """
+    Get the IP for the domain.  Any IP that responded is good enough. 
+    """
     if domain.canonical.ip is not None:
         return domain.canonical.ip
     if domain.https.ip is not None:
@@ -1232,6 +1235,9 @@ def get_domain_ip(domain):
 
 
 def get_domain_server_header(domain):
+    """
+    Get the Server header from the response for the domain.
+    """
     if domain.canonical.server_header is not None:
         return domain.canonical.server_header.replace(',', ';')
     if domain.https.server_header is not None:
@@ -1246,6 +1252,9 @@ def get_domain_server_header(domain):
 
 
 def get_domain_server_version(domain):
+    """
+    Get the Server version based on the Server header for the web server.
+    """
     if domain.canonical.server_version is not None:
         return domain.canonical.server_version
     if domain.https.server_version is not None:
@@ -1260,6 +1269,9 @@ def get_domain_server_version(domain):
 
 
 def get_domain_notes(domain):
+    """
+    Combine all domain notes if there are any.
+    """
     all_notes = domain.http.notes + domain.httpwww.notes + domain.https.notes + domain.httpswww.notes
     all_notes = all_notes.replace(',', ';')
     return all_notes
