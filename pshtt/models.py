@@ -31,13 +31,17 @@ class Endpoint(object):
         self.host = host  # "www" or "root"
         self.base_domain = base_domain
         self.url = self.url_for(protocol, host, base_domain)
-
+        
         # all HTTP/HTTPS endpoints have these
         self.headers = {}  # will be replaced with a requests.structures.CaseInsensitiveDict
         self.status = None
         self.live = None
+        self.ip = None
         self.redirect = None
+        self.server_header = None
+        self.server_version = None
         self.unknown_error = False
+        self.notes = ""
 
         # If an endpoint redirects, characterize the redirect behavior
         self.redirect_immediately_to = None
@@ -85,6 +89,7 @@ class Endpoint(object):
             'url': self.url,
             'headers': dict(self.headers),
             'status': self.status,
+            'ip': self.ip,
             'live': self.live,
             'redirect': self.redirect,
             'redirect_eventually_to': self.redirect_eventually_to,
@@ -98,6 +103,9 @@ class Endpoint(object):
             'redirect_eventually_to_http': self.redirect_eventually_to_http,
             'redirect_eventually_to_external': self.redirect_eventually_to_external,
             'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain,
+            'server_header': self.server_header,
+            'server_version': self.server_version,
+            'notes': self.notes,
             'unknown_error': self.unknown_error,
         }
 

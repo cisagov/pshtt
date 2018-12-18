@@ -30,13 +30,16 @@ from sslyze.server_connectivity_tester import ServerConnectivityTester, ServerCo
 import sslyze.synchronous_scanner
 
 # We're going to be making requests with certificate validation disabled.
-requests.packages.urllib3.disable_warnings()
+# Commented next line due to pylint warning that urllib3 is not in requests.packages
+#requests.packages.urllib3.disable_warnings()
+import urllib3
+urllib3.disable_warnings()
 
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
 
-# Defaults to 10 second, overrideable via --timeout
-TIMEOUT = 10
+# Defaults to 5 second, overrideable via --timeout
+TIMEOUT = 5
 
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
@@ -51,7 +54,8 @@ HEADERS = [
     "HSTS", "HSTS Header", "HSTS Max Age", "HSTS Entire Domain",
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
-    "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "Unknown Error",
+    "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "IP", 
+    "Server Header", "Server Version", "Notes", "Unknown Error",
 ]
 
 # Used for caching the HSTS preload list from Chromium's source.
@@ -139,6 +143,10 @@ def result_for(domain):
         'Domain Enforces HTTPS': is_domain_enforces_https(domain),
         'Domain Uses Strong HSTS': is_domain_strong_hsts(domain),
 
+        'IP': get_domain_ip(domain),
+        'Server Header': get_domain_server_header(domain),
+        'Server Version': get_domain_server_version(domain),
+        'Notes': get_domain_notes(domain),
         'Unknown Error': did_domain_error(domain),
     }
 
@@ -157,6 +165,10 @@ def result_for(domain):
             if header in ('HSTS', 'HSTS Header', 'HSTS Max Age', 'HSTS Entire Domain', 'HSTS Preload Ready', 'Domain Uses Strong HSTS'):
                 result[header] = 'Unknown'
                 continue
+
+        if header in ('IP', 'Server Header', 'Server Version') and result[header] is None:
+            result[header] = 'Unknown'
+            continue
 
         if result[header] is None:
             result[header] = False
@@ -320,16 +332,30 @@ def basic_check(endpoint):
     if(endpoint.protocol == "https"):
         https_check(endpoint)
 
-    if not endpoint.https_full_connection:
-        return
-
     if req is None:
         return
 
+    #try to get IP address
+    #ip = req.raw._connection.sock.getpeername()
+    try:
+        if req.raw.closed is False:
+            ip = req.raw._connection.sock.socket.getpeername()[0]
+            if endpoint.ip is None:
+                endpoint.ip = ip
+            else:
+                if endpoint.ip != ip:
+                    utils.debug("{}: Endpoint IP is already {}, but requests IP is {}.".format(endpoint.url, endpoint.ip, ip))
+    except:
+        pass
+    
     # Endpoint is live, analyze the response.
     endpoint.headers = req.headers
 
     endpoint.status = req.status_code
+
+    if (req.headers.get('Server') is not None):
+        endpoint.server_header = req.headers.get('Server')
+        ### *** in the future add logic to convert header to server version if known
 
     if (req.headers.get('Location') is not None) and str(endpoint.status).startswith('3'):
         endpoint.redirect = True
@@ -359,9 +385,6 @@ def basic_check(endpoint):
             with ping(endpoint.url, allow_redirects=True, verify=False) as ultimate_req:
                 pass
         except requests.exceptions.RequestException:
-            # Swallow connection errors, but we won't be saving redirect info.
-            pass
-        except requests.exceptions.SSLError:
             # Swallow connection errors, but we won't be saving redirect info.
             pass
         except OpenSSL.SSL.Error:
@@ -506,6 +529,12 @@ def https_check(endpoint):
         server_tester = ServerConnectivityTester(hostname=hostname, port=443)
         server_info = server_tester.perform()
         endpoint.live = True
+        ip = server_info.ip_address
+        if endpoint.ip is None:
+            endpoint.ip = ip
+        else:
+            if endpoint.ip != ip:
+                utils.debug("{}: Endpoint IP is already {}, but requests IP is {}.".format(endpoint.url, endpoint.ip, ip))
         if server_info.client_auth_requirement.name == 'REQUIRED':
             endpoint.https_client_auth_required = True
             logging.warning("{}: Client Authentication REQUIRED".format(endpoint.url))
@@ -529,6 +558,8 @@ def https_check(endpoint):
                     cert_plugin_result.successful_trust_store is None and
                     len(cert_plugin_result.certificate_chain) < 2
             ):
+                # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
+                endpoint.notes += "Untrusted certificate chain, probably due to missing intermediate certificate. "
                 logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
                 utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
         except Exception:
@@ -561,10 +592,11 @@ def https_check(endpoint):
                         public_not_trusted_string += result.trust_store.name
             if not public_trust:
                 logging.warning("{}: Not publicly trusted - not trusted by {}.".format(endpoint.url, public_not_trusted_string))
-            if custom_trust:
-                logging.warning("{}: Trusted by custom trust store.".format(endpoint.url))
-            else:
-                logging.warning("{}: Not trusted by custom trust store.".format(endpoint.url))
+            if CA_FILE is not None:
+                if custom_trust:
+                    logging.warning("{}: Trusted by custom trust store.".format(endpoint.url))
+                else:
+                    logging.warning("{}: Not trusted by custom trust store.".format(endpoint.url))
         else:
             public_trust = False
             if CA_FILE is not None:
@@ -1183,6 +1215,49 @@ def is_domain_strong_hsts(domain):
     else:
         return None
 
+def get_domain_ip(domain):
+    if domain.canonical.ip is not None:
+        return domain.canonical.ip
+    if domain.https.ip is not None:
+            return domain.https.ip
+    if domain.httpswww.ip is not None:
+            return domain.httpswww.ip
+    if domain.httpwww.ip is not None:
+            return domain.httpwww.ip
+    if domain.http.ip is not None:
+            return domain.http.ip
+    return None
+
+def get_domain_server_header(domain):
+    if domain.canonical.server_header is not None:
+        return domain.canonical.server_header.replace(',',';')
+    if domain.https.server_header is not None:
+            return domain.https.server_header.replace(',',';')
+    if domain.httpswww.server_header is not None:
+            return domain.httpswww.server_header.replace(',',';')
+    if domain.httpwww.server_header is not None:
+            return domain.httpwww.server_header.replace(',',';')
+    if domain.http.server_header is not None:
+            return domain.http.server_header.replace(',',';')
+    return None
+
+def get_domain_server_version(domain):
+    if domain.canonical.server_version is not None:
+        return domain.canonical.server_version
+    if domain.https.server_version is not None:
+            return domain.https.server_version
+    if domain.httpswww.server_version is not None:
+            return domain.httpswww.server_version
+    if domain.httpwww.server_version is not None:
+            return domain.httpwww.server_version
+    if domain.http.server_version is not None:
+            return domain.http.server_version
+    return None
+
+def get_domain_notes(domain):
+    all_notes = domain.http.notes + domain.httpwww.notes + domain.https.notes + domain.httpswww.notes
+    all_notes = all_notes.replace(',',';')
+    return all_notes
 
 def did_domain_error(domain):
     """
