@@ -1219,7 +1219,7 @@ def is_domain_strong_hsts(domain):
 
 def get_domain_ip(domain):
     """
-    Get the IP for the domain.  Any IP that responded is good enough. 
+    Get the IP for the domain.  Any IP that responded is good enough.
     """
     if domain.canonical.ip is not None:
         return domain.canonical.ip
