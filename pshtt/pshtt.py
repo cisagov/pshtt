@@ -320,9 +320,6 @@ def basic_check(endpoint):
     if(endpoint.protocol == "https"):
         https_check(endpoint)
 
-    if not endpoint.https_full_connection:
-        return
-
     if req is None:
         return
 
