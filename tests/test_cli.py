@@ -82,6 +82,10 @@ class TestToCSV(unittest.TestCase):
             ('Domain Supports HTTPS', 'False'),
             ('Domain Enforces HTTPS', 'False'),
             ('Domain Uses Strong HSTS', 'Unknown'),
+            ('IP', 'Unknown'),
+            ('Server Header', 'Unknown'),
+            ('Server Version', 'Unknown'),
+            ('Notes', ''),
             ('Unknown Error', 'False'),
         ]
 
