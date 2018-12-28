@@ -980,8 +980,6 @@ def is_publicly_trusted(domain):
     """
     Domain is publicly trusted if either https endpoint is publicly trusted
     """
-    if not domain.https.live and not domain.httpswww.live:
-        return "N/A"
     if domain.https.https_public_trusted or domain.httpswww.https_public_trusted:
         return True
     else:
@@ -992,8 +990,6 @@ def is_custom_trusted(domain):
     """
     Domain is custom trusted if either https endpoint is trusted by the custom trust store
     """
-    if CA_FILE is None or (not domain.https.live and not domain.httpswww.live):
-        return "N/A"
     if domain.https.https_custom_trusted or domain.httpswww.https_custom_trusted:
         return True
     else:
@@ -1202,7 +1198,7 @@ def is_domain_enforces_https(domain):
     """
     return is_domain_supports_https(domain) and (
         is_defaults_to_https(domain) or (
-            is_strictly_forces_https(domain) and is_redirect(domain)
+            is_strictly_forces_https(domain) and is_redirect_domain(domain)
         )
     )
 
