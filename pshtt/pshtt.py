@@ -46,7 +46,7 @@ TIMEOUT = 5
 # column headers in CSV.
 HEADERS = [
     "Domain", "Base Domain", "Canonical URL", "Live",
-    "HTTPS Full Connection", "HTTPS Client Auth Required",
+    "HTTPS Live", "HTTPS Full Connection", "HTTPS Client Auth Required",
     "Redirect", "Redirect To",
     "Valid HTTPS", "HTTPS Publicly Trusted", "HTTPS Custom Truststore Trusted",
     "Defaults to HTTPS", "Downgrades HTTPS", "Strictly Forces HTTPS",
@@ -116,6 +116,7 @@ def result_for(domain):
         'Redirect': is_redirect_domain(domain),
         'Redirect To': redirects_to(domain),
 
+        'HTTPS Live': is_https_live(domain),
         'HTTPS Full Connection': is_full_connection(domain),
         'HTTPS Client Auth Required': is_client_auth_required(domain),
 
@@ -254,32 +255,36 @@ def basic_check(endpoint):
 
     except requests.exceptions.SSLError as err:
         if "bad handshake" in str(err) and (
-                "Unexpected EOF" in str(err) or
-                "sslv3 alert handshake failure" in str(err)
+                "sslv3 alert handshake failure" in str(err) or 
+                "Unexpected EOF" in str(err)
         ):
             logging.warning("{}: Error completing TLS handshake usually due to required client authentication.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
             endpoint.live = True
-            endpoint.https_full_connection = False
             if endpoint.protocol == "https":
                 # The https can still be valid with a handshake error,
                 # sslyze will run later and check if it is not valid
                 endpoint.https_valid = True
+                endpoint.https_full_connection = False
 
         else:
             logging.warning("{}: Error connecting over SSL/TLS or validating certificate.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
-
             # Retry with certificate validation disabled.
             try:
                 with ping(endpoint.url, verify=False) as req:
                     endpoint.live = True
-                    endpoint.https_full_connection = True
-                    endpoint.https_valid = False
+                    if endpoint.protocol == "https":
+                        endpoint.https_full_connection = True
+                        endpoint.https_valid = False
             except requests.exceptions.SSLError as err:
                 # If it's a protocol error or other, it's not a full connection,
                 # but it is live.
                 endpoint.live = True
+                if endpoint.protocol == "https":
+                    endpoint.https_full_connection = False
+                    # HTTPS may still be valid, sslyze will double-check later
+                    endpoint.https_valid = True
                 logging.warning("{}: Unexpected SSL protocol (or other) error during retry.".format(endpoint.url))
                 utils.debug("{}: {}".format(endpoint.url, err))
                 # continue on to SSLyze to check the connection
@@ -307,8 +312,9 @@ def basic_check(endpoint):
         # We can get this for some endpoints that are actually live,
         # so if it's https let's try sslyze to be sure
         if(endpoint.protocol == "https"):
-            # https check later will set whether the endpoint is live
+            # https check later will set whether the endpoint is live and valid
             endpoint.https_full_connection = False
+            endpoint.https_valid = True
         else:
             endpoint.live = False
         logging.warning("{}: Error connecting.".format(endpoint.url))
@@ -334,6 +340,9 @@ def basic_check(endpoint):
         https_check(endpoint)
 
     if req is None:
+        # Ensuring that full_connection is set to False if we didn't get a response
+        if endpoint.protocol == "https":
+            endpoint.https_full_connection = False
         return
 
     # try to get IP address if we can
@@ -500,7 +509,7 @@ def hsts_check(endpoint):
         if "max-age" in header.lower():
             endpoint.hsts_max_age = int(temp[0][len("max-age="):])
 
-        if endpoint.hsts_max_age <= 0:
+        if endpoint.hsts_max_age is None or endpoint.hsts_max_age <= 0:
             endpoint.hsts = False
             return
 
@@ -522,7 +531,7 @@ def https_check(endpoint):
     """
     Uses sslyze to figure out the reason the endpoint wouldn't verify.
     """
-    utils.debug("sslyzing %s..." % endpoint.url)
+    utils.debug("sslyzing {}...".format(endpoint.url))
 
     # remove the https:// from prefix for sslyze
     try:
@@ -541,6 +550,7 @@ def https_check(endpoint):
             logging.warning("{}: Client Authentication REQUIRED".format(endpoint.url))
     except ServerConnectivityError as err:
         endpoint.live = False
+        endpoint.https_valid = False
         logging.warning("{}: Error in sslyze server connectivity check when connecting to {}".format(endpoint.url, err.server_info.hostname))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
@@ -554,54 +564,38 @@ def https_check(endpoint):
         command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=CA_FILE)
         scanner = sslyze.synchronous_scanner.SynchronousScanner()
         cert_plugin_result = scanner.run_scan_command(server_info, command)
-        try:
-            if (
-                    cert_plugin_result.successful_trust_store is None and
-                    len(cert_plugin_result.certificate_chain) < 2
-            ):
-                # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
-                endpoint.notes += "Untrusted certificate chain, probably due to missing intermediate certificate. "
-                logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
-                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
-        except Exception:
-            # Squash exceptions
-            pass
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warning("{}: Unknown exception in sslyze scanner.".format(endpoint.url))
+        logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
 
     try:
-        public_trust = None
-        custom_trust = None
-        if endpoint.https_valid:
-            public_trust = True
-            public_not_trusted_string = ""
-            validation_results = cert_plugin_result.path_validation_result_list
-            for result in validation_results:
-                if result.is_certificate_trusted:
-                    if 'Custom' in result.trust_store.name:
-                        custom_trust = True
+        public_trust = True
+        custom_trust = True
+        public_not_trusted_string = ""
+        validation_results = cert_plugin_result.path_validation_result_list
+        for result in validation_results:
+            if result.is_certificate_trusted:
+                # We're assuming that it is trusted to start with
+                pass
+            else:
+                if 'Custom' in result.trust_store.name:
+                    custom_trust = False
                 else:
-                    if 'Custom' in result.trust_store.name:
-                        custom_trust = False
-                    else:
-                        public_trust = False
-                        if len(public_not_trusted_string) > 0:
-                            public_not_trusted_string += ", "
-                        public_not_trusted_string += result.trust_store.name
-            if not public_trust:
-                logging.warning("{}: Not publicly trusted - not trusted by {}.".format(endpoint.url, public_not_trusted_string))
-            if CA_FILE is not None:
-                if custom_trust:
-                    logging.warning("{}: Trusted by custom trust store.".format(endpoint.url))
-                else:
-                    logging.warning("{}: Not trusted by custom trust store.".format(endpoint.url))
+                    public_trust = False
+                    if len(public_not_trusted_string) > 0:
+                        public_not_trusted_string += ", "
+                    public_not_trusted_string += result.trust_store.name
+        if public_trust:
+            logging.warning("{}: Publicly trusted by common trust stores.".format(endpoint.url))
         else:
-            public_trust = False
-            if CA_FILE is not None:
-                custom_trust = False
+            logging.warning("{}: Not publicly trusted - not trusted by {}.".format(endpoint.url, public_not_trusted_string))
+        if CA_FILE is not None:
+            if custom_trust:
+                logging.warning("{}: Trusted by custom trust store.".format(endpoint.url))
+            else:
+                logging.warning("{}: Not trusted by custom trust store.".format(endpoint.url))
         endpoint.https_public_trusted = public_trust
         endpoint.https_custom_trusted = custom_trust
     except Exception as err:
@@ -685,6 +679,20 @@ def https_check(endpoint):
             (("Certificate does NOT match") in msg)
         ):
             endpoint.https_bad_hostname = True
+
+    try:
+        if (
+                endpoint.https_self_signed_cert is False and 
+                cert_plugin_result.successful_trust_store is None and
+                len(cert_plugin_result.certificate_chain) < 2
+        ):
+            # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
+            endpoint.notes += "Untrusted certificate chain, probably due to missing intermediate certificate. "
+            logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
+            utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
+    except Exception:
+        # Squash exceptions
+        pass
 
     # If anything is wrong then https is not valid
     if (
@@ -823,6 +831,14 @@ def is_live(domain):
     return http.live or httpwww.live or https.live or httpswww.live
 
 
+def is_https_live(domain):
+    """
+    Domain is https live if any https endpoint is live.
+    """
+    https, httpswww = domain.https, domain.httpswww
+
+    return https.live or httpswww.live
+
 def is_full_connection(domain):
     """
     Domain is "fully connected" if any https endpoint is fully connected.
@@ -880,6 +896,22 @@ def is_redirect_domain(domain):
         ) and
         is_redirect_or_down(https) and
         is_redirect_or_down(httpswww) and
+        is_redirect_or_down(httpwww) and
+        is_redirect_or_down(http)
+    )
+
+
+def is_http_redirect_domain(domain):
+    """
+    Domain is "an http redirect domain" if at least one http endpoint is 
+    a redirect, and all other http endpoints are either redirects or down.
+    """
+    http, httpwww, = domain.http, domain.httpwww
+
+    return is_live(domain) and (
+        (
+            is_redirect(http) or is_redirect(httpwww) 
+        ) and
         is_redirect_or_down(httpwww) and
         is_redirect_or_down(http)
     )
@@ -1198,7 +1230,10 @@ def is_domain_enforces_https(domain):
     """
     return is_domain_supports_https(domain) and (
         is_defaults_to_https(domain) or (
-            is_strictly_forces_https(domain) and is_redirect_domain(domain)
+            is_strictly_forces_https(domain) and (
+                is_redirect_domain(domain) or 
+                is_http_redirect_domain(domain)
+            )
         )
     )
 

@@ -57,6 +57,7 @@ class TestToCSV(unittest.TestCase):
             ('Base Domain', 'example.com'),
             ('Canonical URL', 'http://example.com'),
             ('Live', 'False'),
+            ('HTTPS Live', 'False'),
             ('HTTPS Full Connection', 'False'),
             ('HTTPS Client Auth Required', 'False'),
             ('Redirect', 'False'),
