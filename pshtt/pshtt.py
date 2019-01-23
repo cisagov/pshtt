@@ -338,9 +338,20 @@ def basic_check(endpoint):
     # Run SSLyze to see if there are any errors
     if(endpoint.protocol == "https"):
         https_check(endpoint)
-
+        # Double-check in case sslyze failed the first time, but the regular conneciton succeeded
+        if(endpoint.live is False and req is not None):
+            logging.warning("{}: Trying sslyze again since it connected once already.".format(endpoint.url))
+            endpoint.live = True
+            endpoint.https_valid = True
+            https_check(endpoint)
+            if(endpoint.live is False):
+                # sslyze failed so back everything out and don't continue analyzing the existing response
+                req = None
+                endpoint.https_valid = False
+                endpoint.https_full_connection = False
+    
     if req is None:
-        # Ensuring that full_connection is set to False if we didn't get a response
+        # Ensure that full_connection is set to False if we didn't get a response
         if endpoint.protocol == "https":
             endpoint.https_full_connection = False
         return
