@@ -168,7 +168,7 @@ def result_for(domain):
                 result[header] = 'Unknown'
                 continue
 
-        if header in ('IP', 'Server Header', 'Server Version') and result[header] is None:
+        if header in ('Valid HTTPS', 'IP', 'Server Header', 'Server Version') and result[header] is None:
             result[header] = 'Unknown'
             continue
 
@@ -276,7 +276,8 @@ def basic_check(endpoint):
                     endpoint.live = True
                     if endpoint.protocol == "https":
                         endpoint.https_full_connection = True
-                        endpoint.https_valid = False
+                        # sslyze later will actually check if the cert is valid
+                        endpoint.https_valid = True 
             except requests.exceptions.SSLError as err:
                 # If it's a protocol error or other, it's not a full connection,
                 # but it is live.
@@ -572,14 +573,23 @@ def https_check(endpoint):
         return
 
     try:
+        cert_plugin_result = None
         command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=CA_FILE)
         scanner = sslyze.synchronous_scanner.SynchronousScanner()
         cert_plugin_result = scanner.run_scan_command(server_info, command)
     except Exception as err:
-        endpoint.unknown_error = True
-        logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
-        utils.debug("{}: {}".format(endpoint.url, err))
-        return
+        if("timed out" in err):
+            logging.warning("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
+            try:
+                cert_plugin_result = scanner.run_scan_command(server_info, command)
+            except Exception as err2:
+                pass
+        if(cert_plugin_result is None):
+            logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
+            utils.debug("{}: {}".format(endpoint.url, err))
+            endpoint.unknown_error = True
+            endpoint.https_valid = None  # could make this False, but there was an error so we don't know
+            return
 
     try:
         public_trust = True
