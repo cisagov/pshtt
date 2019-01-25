@@ -168,8 +168,15 @@ def result_for(domain):
                 result[header] = 'Unknown'
                 continue
 
-        if header in ('Valid HTTPS', 'IP', 'Server Header', 'Server Version') and result[header] is None:
+        if header in ('IP', 'Server Header', 'Server Version') and result[header] is None:
             result[header] = 'Unknown'
+            continue
+
+        if header in ('Valid HTTPS', 'HTTPS Publicly Trusted', 'HTTPS Custom Truststore Trusted'):
+            if result['HTTPS Live']:
+                result[header] = False
+            elif result[header] is None:
+                result[header] = 'Unknown'
             continue
 
         if result[header] is None:
