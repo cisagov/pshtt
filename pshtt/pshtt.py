@@ -173,7 +173,7 @@ def result_for(domain):
             continue
 
         if header in ('Valid HTTPS', 'HTTPS Publicly Trusted', 'HTTPS Custom Truststore Trusted'):
-            if result['HTTPS Live']:
+            if not result['HTTPS Live']:
                 result[header] = False
             elif result[header] is None:
                 result[header] = 'Unknown'
