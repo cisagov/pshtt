@@ -585,12 +585,12 @@ def https_check(endpoint):
         scanner = sslyze.synchronous_scanner.SynchronousScanner()
         cert_plugin_result = scanner.run_scan_command(server_info, command)
     except Exception as err:
-        if("timed out" in err):
-            logging.warning("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
-            try:
+        try:
+            if("timed out" in str(err)):
+                logging.warning("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
                 cert_plugin_result = scanner.run_scan_command(server_info, command)
-            except Exception as err2:
-                pass
+        except Exception as err2:
+            pass
         if(cert_plugin_result is None):
             logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
@@ -1038,27 +1038,37 @@ def is_strictly_forces_https(domain):
 
 def is_publicly_trusted(domain):
     """
-    Domain is publicly trusted if either https endpoint is publicly trusted
+    A domain has a "Publicly Trusted" certificate if its canonical endpoint has a 
+    publicly trusted certificate.
     """
-    if domain.https.https_public_trusted or domain.httpswww.https_public_trusted:
-        return True
-    else:
-        return False
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
+    # Evaluate the HTTPS version of the canonical hostname
+    if canonical.host == "root":
+        evaluate = https
+    else:
+        evaluate = httpswww
+
+    return evaluate.live and evaluate.https_public_trusted
 
 def is_custom_trusted(domain):
     """
-    Domain is custom trusted if either https endpoint is trusted by the custom trust store
+    A domain has a "Custom Trusted" certificate if its canonical endpoint has a 
+    certificate that is trusted by the custom truststore.
     """
-    if domain.https.https_custom_trusted or domain.httpswww.https_custom_trusted:
-        return True
-    else:
-        return False
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
+    # Evaluate the HTTPS version of the canonical hostname
+    if canonical.host == "root":
+        evaluate = https
+    else:
+        evaluate = httpswww
+
+    return evaluate.live and evaluate.https_custom_trusted
 
 def is_bad_chain(domain):
     """
-    Domain has a bad chain if either https endpoints contain a bad chain
+    Domain has a bad chain if its canonical https endpoint has a bad chain
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1072,7 +1082,7 @@ def is_bad_chain(domain):
 
 def is_bad_hostname(domain):
     """
-    Domain has a bad hostname if either https endpoint fails hostname validation
+    Domain has a bad hostname if its canonical https endpoint fails hostname validation
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1086,7 +1096,7 @@ def is_bad_hostname(domain):
 
 def is_expired_cert(domain):
     """
-    Returns if the either https endpoint has an expired cert
+    Returns if its canonical https endpoint has an expired cert
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1100,7 +1110,7 @@ def is_expired_cert(domain):
 
 def is_self_signed_cert(domain):
     """
-    Returns if the either https endpoint has a self-signed cert cert
+    Returns if its canonical https endpoint has a self-signed cert cert
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
