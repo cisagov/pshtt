@@ -12,7 +12,7 @@ like the US Federal Government :us: — to adopt HTTPS across the
 enterprise. Federal agencies must comply with
 [M-15-13](https://https.cio.gov), a 2015 memorandum from the White
 House Office of Management and Budget, and [BOD
-18-01](https://cyber.dhs.gov), a 2017 directive from the Department of
+18-01](https://cyber.dhs.gov/bod/18-01/), a 2017 directive from the Department of
 Homeland Security, which require federal agencies to enforce HTTPS on
 their public web services. Much has been done, but there's [more yet
 to
