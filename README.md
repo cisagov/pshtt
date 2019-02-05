@@ -12,10 +12,10 @@ like the US Federal Government :us: — to adopt HTTPS across the
 enterprise. Federal agencies must comply with
 [M-15-13](https://https.cio.gov), a 2015 memorandum from the White
 House Office of Management and Budget, and [BOD
-18-01](https://cyber.dhs.gov/bod/18-01/), a 2017 directive from the Department of
-Homeland Security, which require federal agencies to enforce HTTPS on
-their public web services. Much has been done, but there's [more yet
-to
+18-01](https://cyber.dhs.gov/bod/18-01/), a 2017 directive from the
+Department of Homeland Security, which require federal agencies to
+enforce HTTPS on their public web services. Much has been done, but
+there's [more yet to
 do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
 `pshtt` is a collaboration between the Department of Homeland
