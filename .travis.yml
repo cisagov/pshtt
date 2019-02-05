@@ -13,6 +13,13 @@ env:
 python:
   - '3.6'
 
+# Matrix approach here due to: https://github.com/travis-ci/travis-ci/issues/9815
+matrix:
+    include:
+        - python: 3.7
+          dist: xenial
+          sudo: true
+
 install:
   - pip install flake8 pytest-cov pytest coveralls
   - pip install -e .
@@ -40,9 +47,9 @@ deploy:
     distributions: sdist bdist_wheel
     on:
       tags: true
-      python: '3.6'
+      python: '3.7'
   - provider: script
     script: bash travis_scripts/deploy_to_docker_hub.sh
     on:
       tags: true
-      python: '3.6'
+      python: '3.7'
