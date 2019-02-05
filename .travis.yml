@@ -10,9 +10,6 @@ env:
     - DOCKER_USER=jsf9k
     - secure: "A/Qmbd4TpQ1k9PAArd3mkx/vxghcFI0/X2pnUL++AhJKDq2NcV36zm24ot8q8BF5geJYGDi+de3Pcr+FV3Ld5WkSCDHjvhI+rEB9KDO2dJ+rYDnunXMpnKrQ73jYKv0vkLD4drPKv5Cb26nPVnk6KJ7TNVouCrdSHLtdugmvc35FOlOz0vL5WWW44vYj6+ldI/HUAVwO+kBd2pzwH22ZM1uTGreUbydKZEpXEpcVlASP7yHPg+LV4123woLXwZGAt17GHrhID8xeVwRwFfzcEvP3cRt8H9KOjE3WT+edIBnJibXMGzu/qna3bpLbFNZYyS+BWbghju8b44u8l87oIp20nxo73/8jpzE05CKxIeGaaN71c0T016HqYLP2pwUwll/qE6AXrvTLlUX43C9nVB6RTr04k4ooEfqSt4jtRu/xm0fC4wlriPPGoq0OrQFaOHLE2xbA8xw0Jub8KWPTKickZSBNa7RwlOsfifbnWqFZQ5sXsmabMVI1CJNPxXY3tfScSxnPUuXGbRJyjyRag90rstKS888QQXAYstTLSfGhVvTcbsW2gO2Ul+MhcndtQMyDrP/6STBQ41lTaZHoAna0YBnmwfm9Di73CUSz1sHHoVd98mRCIaTvb8ph8KyZOAuQlufDChHzntsq2T5WRAPCfiZsB+/Vgyag+gxh6+4="
 
-python:
-  - '3.6'
-
 # Matrix approach here due to: https://github.com/travis-ci/travis-ci/issues/9815
 matrix:
     include:
