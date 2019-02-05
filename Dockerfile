@@ -1,4 +1,4 @@
-FROM python:3.6.3
+FROM python:3
 
 # Set up a workspace
 ENV PSHTT_HOME=/home/pshtt
