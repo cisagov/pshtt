@@ -198,7 +198,7 @@ The following values are returned in `results.csv`:
   preloaded if its base domain appears in the [Chrome preload
   list](https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json)
   with the `include_subdomains` flag equal to `true`. This is subtly
-  different from `HSTS Entire Domain`, which inpects headers on the
+  different from `HSTS Entire Domain`, which inspects headers on the
   base domain to see if HSTS is set correctly to encompass the entire
   zone.
 
