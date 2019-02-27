@@ -28,10 +28,10 @@ setup(
     # NCATS "homepage"
     url='https://www.dhs.gov/cyber-incident-response',
     # The project's main homepage
-    download_url='https://github.com/dhs-ncats/pshtt',
+    download_url='https://github.com/cisagov/pshtt',
 
     # Author details
-    author='Department of Homeland Security, National Cybersecurity Assessments and Technical Services team',
+    author='Cyber and Infrastructure Security Agency',
     author_email='ncats@hq.dhs.gov',
 
     license='License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication',

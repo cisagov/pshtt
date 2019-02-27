@@ -1,8 +1,8 @@
 # Pushing HTTPS :lock: #
 
 [![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.org/project/pshtt/)
-[![Coverage Status](https://coveralls.io/repos/github/dhs-ncats/pshtt/badge.svg)](https://coveralls.io/github/dhs-ncats/pshtt)
-[![Build Status](https://travis-ci.org/dhs-ncats/pshtt.svg?branch=master)](https://travis-ci.org/dhs-ncats/pshtt)
+[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
+[![Build Status](https://travis-ci.org/cisagov/pshtt.svg?branch=master)](https://travis-ci.org/cisagov/pshtt)
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.
@@ -20,11 +20,11 @@ do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-movin
 
 `pshtt` is a collaboration between the Department of Homeland
 Security's [National Cybersecurity Assessments and Technical Services
-(NCATS) team](https://github.com/dhs-ncats) and [the General Service
+(NCATS) team](https://github.com/cisagov) and [the General Service
 Administration's 18F team](https://18f.gsa.gov), with [contributions
 from NASA, Lawrence Livermore National Laboratory, and various
 non-governmental
-organizations](https://github.com/dhs-ncats/pshtt/graphs/contributors).
+organizations](https://github.com/cisagov/pshtt/graphs/contributors).
 
 ## Getting Started ##
 
