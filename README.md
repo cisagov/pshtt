@@ -18,12 +18,12 @@ enforce HTTPS on their public web services. Much has been done, but
 there's [more yet to
 do](https://18f.gsa.gov/2017/01/04/tracking-the-us-governments-progress-on-moving-https/).
 
-`pshtt` is a collaboration between the Department of Homeland
-Security's [National Cybersecurity Assessments and Technical Services
-(NCATS) team](https://github.com/cisagov) and [the General Service
-Administration's 18F team](https://18f.gsa.gov), with [contributions
-from NASA, Lawrence Livermore National Laboratory, and various
-non-governmental
+`pshtt` is a collaboration between the Cyber and Infrastructure
+Security Agency's [National Cybersecurity Assessments and Technical
+Services (NCATS) team](https://github.com/cisagov) and [the General
+Service Administration's 18F team](https://18f.gsa.gov), with
+[contributions from NASA, Lawrence Livermore National Laboratory, and
+various non-governmental
 organizations](https://github.com/cisagov/pshtt/graphs/contributors).
 
 ## Getting Started ##
