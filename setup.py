@@ -26,7 +26,7 @@ setup(
     long_description_content_type='text/markdown',
 
     # NCATS "homepage"
-    url='https://www.dhs.gov/cyber-incident-response',
+    url='https://www.us-cert.gov/resources/ncats',
     # The project's main homepage
     download_url='https://github.com/cisagov/pshtt',
 
