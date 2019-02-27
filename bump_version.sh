@@ -2,6 +2,10 @@
 
 # bump_version.sh (show|major|minor|patch|prerelease|build)
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 VERSION_FILE=pshtt/__init__.py
 
 HELP_INFORMATION="bump_version.sh (show|major|minor|patch|prerelease|build|finalize)"
