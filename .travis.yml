@@ -1,6 +1,5 @@
 language: python
 
-sudo: required
 services:
   - docker
 
@@ -17,11 +16,15 @@ matrix:
           dist: xenial
           sudo: true
 
+before_install:
+  - sudo apt-get install -y shellcheck
+
 install:
   - pip install flake8 pytest-cov pytest coveralls
   - pip install -e .
 
 script:
+  - shellcheck bump_version.sh tag.sh travis_scripts/*.sh
   - pytest --cov=pshtt
   # Let's ignore E501 (line too long) warnings for now.
   #
