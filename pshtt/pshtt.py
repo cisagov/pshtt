@@ -56,7 +56,8 @@ HEADERS = [
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
     "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "IP",
-    "Server Header", "Server Version", "Notes", "Unknown Error",
+    "Server Header", "Server Version", "HTTPS Cert Chain Length", 
+    "HTTPS Probably Missing Intermediate Cert", "Notes", "Unknown Error",
 ]
 
 # Used for caching the HSTS preload list from Chromium's source.
@@ -77,6 +78,7 @@ THIRD_PARTIES_CACHE = None
 # Set if user wants to use a custom CA bundle
 CA_FILE = None
 STORE = "Mozilla"
+PT_INT_CA_FILE = None
 
 
 def inspect(base_domain):
@@ -131,6 +133,8 @@ def result_for(domain):
         'HTTPS Bad Hostname': is_bad_hostname(domain),
         'HTTPS Expired Cert': is_expired_cert(domain),
         'HTTPS Self Signed Cert': is_self_signed_cert(domain),
+        'HTTPS Cert Chain Length': cert_chain_length(domain),
+        'HTTPS Probably Missing Intermediate Cert': is_missing_intermediate_cert(domain),
 
         'HSTS': is_hsts(domain),
         'HSTS Header': hsts_header(domain),
@@ -168,7 +172,7 @@ def result_for(domain):
                 result[header] = 'Unknown'
                 continue
 
-        if header in ('IP', 'Server Header', 'Server Version') and result[header] is None:
+        if header in ('IP', 'Server Header', 'Server Version', 'HTTPS Cert Chain Length') and result[header] is None:
             result[header] = 'Unknown'
             continue
 
@@ -709,15 +713,32 @@ def https_check(endpoint):
             endpoint.https_bad_hostname = True
 
     try:
+        endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_chain)
         if (
                 endpoint.https_self_signed_cert is False and 
-                cert_plugin_result.successful_trust_store is None and
                 len(cert_plugin_result.certificate_chain) < 2
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
-            endpoint.notes += "Untrusted certificate chain, probably due to missing intermediate certificate. "
-            logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
-            utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
+            endpoint.https_missing_intermediate_cert = True
+            if(cert_plugin_result.successful_trust_store is None):
+                logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
+                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
+            elif(custom_trust is True and public_trust is False):
+                # recheck public trust using custom public trust store with manually added intermediate certificates
+                if(PT_INT_CA_FILE is not None):
+                    try:
+                        cert_plugin_result = None
+                        command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=PT_INT_CA_FILE)
+                        cert_plugin_result = scanner.run_scan_command(server_info, command)
+                        if(cert_plugin_result.successful_trust_store is not None):
+                            public_trust = True
+                            endpoint.https_public_trusted = public_trust
+                            logging.warning("{}: Trusted by special public trust store with intermediate certificates.".format(endpoint.url))
+                    except Exception as err:
+                        
+                        pass
+        else:
+            endpoint.https_missing_intermediate_cert = False
     except Exception:
         # Squash exceptions
         pass
@@ -1121,6 +1142,31 @@ def is_self_signed_cert(domain):
 
     return canonical_https.https_self_signed_cert
 
+def cert_chain_length(domain):
+    """
+    Returns the cert chain length for the canonical HTTPS endpoint
+    """
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_cert_chain_len
+
+def is_missing_intermediate_cert(domain):
+    """
+    Returns whether the served cert chain is probably missing the needed intermediate certificate for the canonical HTTPS endpoint
+    """
+    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+
+    if canonical.host == "www":
+        canonical_https = httpswww
+    else:
+        canonical_https = https
+
+    return canonical_https.https_missing_intermediate_cert
 
 def is_hsts(domain):
     """
@@ -1536,7 +1582,7 @@ def initialize_external_data(
 
 def inspect_domains(domains, options):
     # Override timeout, user agent, preload cache, default CA bundle
-    global TIMEOUT, USER_AGENT, THIRD_PARTIES_CACHE, CA_FILE, STORE
+    global TIMEOUT, USER_AGENT, THIRD_PARTIES_CACHE, CA_FILE, PT_INT_CA_FILE, STORE
 
     if options.get('timeout'):
         TIMEOUT = int(options['timeout'])
@@ -1553,6 +1599,9 @@ def inspect_domains(domains, options):
         # However, if a user wants to use their own CA bundle, check the
         # "Custom" Option from the sslyze output.
         STORE = "Custom"
+
+    if options.get('pt_int_ca_file'):
+        PT_INT_CA_FILE = options['pt_int_ca_file']
 
     # If this has been run once already by a Python API client, it
     # can be safely run without hitting the network or disk again,
