@@ -628,6 +628,8 @@ def https_check(endpoint):
                 logging.warning("{}: Trusted by custom trust store.".format(endpoint.url))
             else:
                 logging.warning("{}: Not trusted by custom trust store.".format(endpoint.url))
+        else:
+            custom_trust = None
         endpoint.https_public_trusted = public_trust
         endpoint.https_custom_trusted = custom_trust
     except Exception as err:
