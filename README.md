@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.org/project/pshtt/)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
-[![Build Status](https://travis-ci.org/cisagov/pshtt.svg?branch=master)](https://travis-ci.org/cisagov/pshtt)
+[![Build Status](https://travis-ci.com/cisagov/pshtt.svg?branch=develop)](https://travis-ci.com/cisagov/pshtt)
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.
@@ -255,8 +255,7 @@ instructions for doing so:
   and promote the adoption of HTTPS encryption by major news
   organizations' websites". [Secure the News is open
   source](https://securethe.news/blog/secure-news-open-source/).
-* DHS issues [HTTPS
-  Reports](https://18f.gsa.gov/2017/01/06/open-source-collaboration-across-agencies-to-improve-https-deployment/)
+* DHS issues [HTTPS Reports](https://18f.gsa.gov/2017/01/06/open-source-collaboration-across-agencies-to-improve-https-deployment/)
   to federal executive branch agencies.
 
 ## Acknowledgements ##
