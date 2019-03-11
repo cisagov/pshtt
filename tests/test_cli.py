@@ -86,6 +86,8 @@ class TestToCSV(unittest.TestCase):
             ('IP', 'Unknown'),
             ('Server Header', 'Unknown'),
             ('Server Version', 'Unknown'),
+            ('HTTPS Cert Chain Length', 2),
+            ('HTTPS Probably Missing Intermediate Cert', 'False'),
             ('Notes', ''),
             ('Unknown Error', 'False'),
         ]
