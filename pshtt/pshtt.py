@@ -56,7 +56,7 @@ HEADERS = [
     "HSTS Preload Ready", "HSTS Preload Pending", "HSTS Preloaded",
     "Base Domain HSTS Preloaded", "Domain Supports HTTPS",
     "Domain Enforces HTTPS", "Domain Uses Strong HSTS", "IP",
-    "Server Header", "Server Version", "HTTPS Cert Chain Length", 
+    "Server Header", "Server Version", "HTTPS Cert Chain Length",
     "HTTPS Probably Missing Intermediate Cert", "Notes", "Unknown Error",
 ]
 
@@ -265,9 +265,12 @@ def basic_check(endpoint):
                 endpoint.https_valid = True
 
     except requests.exceptions.SSLError as err:
-        if "bad handshake" in str(err) and (
-                "sslv3 alert handshake failure" in str(err) or 
-                "Unexpected EOF" in str(err)
+        if (
+                "bad handshake" in str(err) and (
+                    "sslv3 alert handshake failure" in str(err) or (
+                        "Unexpected EOF" in str(err)
+                    )
+                )
         ):
             logging.warning("{}: Error completing TLS handshake usually due to required client authentication.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
@@ -288,7 +291,7 @@ def basic_check(endpoint):
                     if endpoint.protocol == "https":
                         endpoint.https_full_connection = True
                         # sslyze later will actually check if the cert is valid
-                        endpoint.https_valid = True 
+                        endpoint.https_valid = True
             except requests.exceptions.SSLError as err:
                 # If it's a protocol error or other, it's not a full connection,
                 # but it is live.
@@ -361,7 +364,7 @@ def basic_check(endpoint):
                 req = None
                 endpoint.https_valid = False
                 endpoint.https_full_connection = False
-    
+
     if req is None:
         # Ensure that full_connection is set to False if we didn't get a response
         if endpoint.protocol == "https":
@@ -717,8 +720,9 @@ def https_check(endpoint):
     try:
         endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_chain)
         if (
-                endpoint.https_self_signed_cert is False and 
-                len(cert_plugin_result.certificate_chain) < 2
+                endpoint.https_self_signed_cert is False and (
+                    len(cert_plugin_result.certificate_chain) < 2
+                )
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
@@ -737,7 +741,6 @@ def https_check(endpoint):
                             endpoint.https_public_trusted = public_trust
                             logging.warning("{}: Trusted by special public trust store with intermediate certificates.".format(endpoint.url))
                     except Exception as err:
-                        
                         pass
         else:
             endpoint.https_missing_intermediate_cert = False
@@ -890,6 +893,7 @@ def is_https_live(domain):
 
     return https.live or httpswww.live
 
+
 def is_full_connection(domain):
     """
     Domain is "fully connected" if any https endpoint is fully connected.
@@ -954,14 +958,15 @@ def is_redirect_domain(domain):
 
 def is_http_redirect_domain(domain):
     """
-    Domain is "an http redirect domain" if at least one http endpoint is 
-    a redirect, and all other http endpoints are either redirects or down.
+    Domain is "an http redirect domain" if at least one http endpoint
+    is a redirect, and all other http endpoints are either redirects
+    or down.
     """
     http, httpwww, = domain.http, domain.httpwww
 
     return is_live(domain) and (
         (
-            is_redirect(http) or is_redirect(httpwww) 
+            is_redirect(http) or is_redirect(httpwww)
         ) and
         is_redirect_or_down(httpwww) and
         is_redirect_or_down(http)
@@ -1061,8 +1066,8 @@ def is_strictly_forces_https(domain):
 
 def is_publicly_trusted(domain):
     """
-    A domain has a "Publicly Trusted" certificate if its canonical endpoint has a 
-    publicly trusted certificate.
+    A domain has a "Publicly Trusted" certificate if its canonical
+    endpoint has a publicly trusted certificate.
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1074,10 +1079,12 @@ def is_publicly_trusted(domain):
 
     return evaluate.live and evaluate.https_public_trusted
 
+
 def is_custom_trusted(domain):
     """
-    A domain has a "Custom Trusted" certificate if its canonical endpoint has a 
-    certificate that is trusted by the custom truststore.
+    A domain has a "Custom Trusted" certificate if its canonical
+    endpoint has a certificate that is trusted by the custom
+    truststore.
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1089,9 +1096,11 @@ def is_custom_trusted(domain):
 
     return evaluate.live and evaluate.https_custom_trusted
 
+
 def is_bad_chain(domain):
     """
-    Domain has a bad chain if its canonical https endpoint has a bad chain
+    Domain has a bad chain if its canonical https endpoint has a bad
+    chain
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1105,7 +1114,8 @@ def is_bad_chain(domain):
 
 def is_bad_hostname(domain):
     """
-    Domain has a bad hostname if its canonical https endpoint fails hostname validation
+    Domain has a bad hostname if its canonical https endpoint fails
+    hostname validation
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1144,6 +1154,7 @@ def is_self_signed_cert(domain):
 
     return canonical_https.https_self_signed_cert
 
+
 def cert_chain_length(domain):
     """
     Returns the cert chain length for the canonical HTTPS endpoint
@@ -1157,9 +1168,11 @@ def cert_chain_length(domain):
 
     return canonical_https.https_cert_chain_len
 
+
 def is_missing_intermediate_cert(domain):
     """
-    Returns whether the served cert chain is probably missing the needed intermediate certificate for the canonical HTTPS endpoint
+    Returns whether the served cert chain is probably missing the
+    needed intermediate certificate for the canonical HTTPS endpoint
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1169,6 +1182,7 @@ def is_missing_intermediate_cert(domain):
         canonical_https = https
 
     return canonical_https.https_missing_intermediate_cert
+
 
 def is_hsts(domain):
     """
@@ -1317,7 +1331,7 @@ def is_domain_enforces_https(domain):
     return is_domain_supports_https(domain) and (
         is_defaults_to_https(domain) or (
             is_strictly_forces_https(domain) and (
-                is_redirect_domain(domain) or 
+                is_redirect_domain(domain) or
                 is_http_redirect_domain(domain)
             )
         )
