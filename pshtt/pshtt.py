@@ -596,7 +596,7 @@ def https_check(endpoint):
             if("timed out" in str(err)):
                 logging.warning("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
                 cert_plugin_result = scanner.run_scan_command(server_info, command)
-        except Exception as err2:
+        except Exception:
             pass
         if(cert_plugin_result is None):
             logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
@@ -740,7 +740,7 @@ def https_check(endpoint):
                             public_trust = True
                             endpoint.https_public_trusted = public_trust
                             logging.warning("{}: Trusted by special public trust store with intermediate certificates.".format(endpoint.url))
-                    except Exception as err:
+                    except Exception:
                         pass
         else:
             endpoint.https_missing_intermediate_cert = False
@@ -1355,13 +1355,13 @@ def get_domain_ip(domain):
     if domain.canonical.ip is not None:
         return domain.canonical.ip
     if domain.https.ip is not None:
-            return domain.https.ip
+        return domain.https.ip
     if domain.httpswww.ip is not None:
-            return domain.httpswww.ip
+        return domain.httpswww.ip
     if domain.httpwww.ip is not None:
-            return domain.httpwww.ip
+        return domain.httpwww.ip
     if domain.http.ip is not None:
-            return domain.http.ip
+        return domain.http.ip
     return None
 
 
@@ -1372,13 +1372,13 @@ def get_domain_server_header(domain):
     if domain.canonical.server_header is not None:
         return domain.canonical.server_header.replace(',', ';')
     if domain.https.server_header is not None:
-            return domain.https.server_header.replace(',', ';')
+        return domain.https.server_header.replace(',', ';')
     if domain.httpswww.server_header is not None:
-            return domain.httpswww.server_header.replace(',', ';')
+        return domain.httpswww.server_header.replace(',', ';')
     if domain.httpwww.server_header is not None:
-            return domain.httpwww.server_header.replace(',', ';')
+        return domain.httpwww.server_header.replace(',', ';')
     if domain.http.server_header is not None:
-            return domain.http.server_header.replace(',', ';')
+        return domain.http.server_header.replace(',', ';')
     return None
 
 
@@ -1389,13 +1389,13 @@ def get_domain_server_version(domain):
     if domain.canonical.server_version is not None:
         return domain.canonical.server_version
     if domain.https.server_version is not None:
-            return domain.https.server_version
+        return domain.https.server_version
     if domain.httpswww.server_version is not None:
-            return domain.httpswww.server_version
+        return domain.httpswww.server_version
     if domain.httpwww.server_version is not None:
-            return domain.httpwww.server_version
+        return domain.httpwww.server_version
     if domain.http.server_version is not None:
-            return domain.http.server_version
+        return domain.http.server_version
     return None
 
 
