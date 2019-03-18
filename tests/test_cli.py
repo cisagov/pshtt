@@ -93,7 +93,7 @@ class TestToCSV(unittest.TestCase):
         ]
 
         header = ','.join(t[0] for t in domain_data)
-        values = ','.join(t[1] for t in domain_data)
+        values = ','.join(t[1] if t[1] is not None else '' for t in domain_data)
         expected = header + '\n' + values + '\n'
         self.assertEqual(content, expected)
 
