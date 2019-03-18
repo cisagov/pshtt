@@ -426,7 +426,6 @@ def basic_check(endpoint):
             endpoint.unknown_error = True
             logging.warning("{}: Unexpected other unknown exception when handling Requests Header.".format(endpoint.url))
             utils.debug("{} {}".format(endpoint.url, err))
-            pass
 
         try:
             with ping(endpoint.url, allow_redirects=True, verify=False) as ultimate_req:
@@ -510,7 +509,6 @@ def basic_check(endpoint):
             endpoint.unknown_error = True
             logging.warning("{}: Unexpected other unknown exception when establishing redirects.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
-            pass
 
 
 def hsts_check(endpoint):
@@ -649,7 +647,6 @@ def https_check(endpoint):
     except Exception as err:
         # Ignore exception
         utils.debug("{}: Unknown exception examining trust: {}".format(endpoint.url, err))
-        pass
 
     try:
         cert_response = cert_plugin_result.as_text()
