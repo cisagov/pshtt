@@ -72,28 +72,30 @@ class TestToCSV(unittest.TestCase):
             ('HTTPS Bad Hostname', 'False'),
             ('HTTPS Expired Cert', 'False'),
             ('HTTPS Self Signed Cert', 'False'),
-            ('HSTS', None),
+            ('HSTS', ''),
             ('HSTS Header', ''),
             ('HSTS Max Age', ''),
-            ('HSTS Entire Domain', None),
-            ('HSTS Preload Ready', None),
+            ('HSTS Entire Domain', ''),
+            ('HSTS Preload Ready', 'False'),
             ('HSTS Preload Pending', 'False'),
             ('HSTS Preloaded', 'False'),
             ('Base Domain HSTS Preloaded', 'False'),
             ('Domain Supports HTTPS', 'False'),
             ('Domain Enforces HTTPS', 'False'),
-            ('Domain Uses Strong HSTS', None),
-            ('IP', None),
-            ('Server Header', None),
-            ('Server Version', None),
-            ('HTTPS Cert Chain Length', None),
+            ('Domain Uses Strong HSTS', ''),
+            ('IP', ''),
+            ('Server Header', ''),
+            ('Server Version', ''),
+            ('HTTPS Cert Chain Length', ''),
             ('HTTPS Probably Missing Intermediate Cert', 'False'),
             ('Notes', ''),
             ('Unknown Error', 'False'),
         ]
 
+        self.maxDiff = None
+
         header = ','.join(t[0] for t in domain_data)
-        values = ','.join(t[1] if t[1] is not None else '' for t in domain_data)
+        values = ','.join(t[1] for t in domain_data)
         expected = header + '\n' + values + '\n'
         self.assertEqual(content, expected)
 

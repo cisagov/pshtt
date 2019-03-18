@@ -169,8 +169,10 @@ def result_for(domain):
 
         if not result['HTTPS Full Connection']:
             if header in ('HSTS', 'HSTS Header', 'HSTS Max Age', 'HSTS Entire Domain', 'HSTS Preload Ready', 'Domain Uses Strong HSTS'):
-                result[header] = None
                 continue
+
+        if header in ('IP', 'Server Header', 'Server Version', 'HTTPS Cert Chain Length') and result[header] is None:
+            continue
 
         if header in ('Valid HTTPS', 'HTTPS Publicly Trusted', 'HTTPS Custom Truststore Trusted'):
             if not result['HTTPS Live']:
