@@ -159,6 +159,21 @@ def result_for(domain):
     # But also capture the extended data for those who want it.
     result['endpoints'] = domain.to_object()
 
+    # This bit is complicated because of the continue statements,
+    # perhaps overly so.  For instance, the continue statement
+    # following the "if header in ..." statement after "if not
+    # result['HTTPS Full Connection]" means that the final if
+    # statement that sets None values to False does not apply to those
+    # fields.  This code should be rewritten to more clear, or at
+    # least commented so that it is clearer what is happening to the
+    # various fields.  There is some implied logic due to the continue
+    # statements that is tricky, at least at first glance.
+    #
+    # Also, the comment before "for header in HEADERS" is not accurate
+    # for the same reason.
+    #
+    # - jsf9k
+
     # Convert Header fields from None to False, except for:
     # - "HSTS Header"
     # - "HSTS Max Age"
