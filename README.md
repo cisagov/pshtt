@@ -1,8 +1,10 @@
 # Pushing HTTPS :lock: #
 
 [![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.org/project/pshtt/)
-[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
 [![Build Status](https://travis-ci.com/cisagov/pshtt.svg?branch=develop)](https://travis-ci.com/cisagov/pshtt)
+[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/pshtt.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/pshtt/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/pshtt.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/pshtt/context:python)
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.
@@ -128,6 +130,14 @@ The following values are returned in `results.csv`:
 * `Canonical URL` - One of the four endpoints described above; a
   judgment call based on the observed redirect logic of the domain.
 * `Live` - The domain is "live" if any endpoint is live.
+* `HTTPS Live` - The domain is "HTTPS live" if any HTTPS endpoint is
+  live.
+* `HTTPS Full Connection` - The domain is "fully connected" if any
+  HTTPS endpoint is fully connected.  A "fully connected" HTTPS
+  endpoint is one with which pshtt could make a full TLS connection.
+* `HTTPS Client Auth Required` - A domain requires client
+  authentication if *any* HTTPS endpoint requires it for a full TLS
+  connection.
 * `Redirect` - The domain is a "redirect domain" if at least one
   endpoint is a redirect, and all endpoints are either redirects or
   down.
@@ -140,6 +150,11 @@ The following values are returned in `results.csv`:
   443 at the hostname in its Canonical URL with an unexpired valid
   certificate for the hostname. This can be true even if the Canonical
   URL uses HTTP.
+* `HTTPS Publicly Trusted` - A domain is "publicly trusted" if its
+  canonical endpoint has a publicly trusted certificate.
+* `HTTPS Custom Truststore Trusted` - A domain is "custom truststore
+  trusted" if its canonical endpoint has a certificate that is trusted
+  by the custom truststore.
 * `Defaults to HTTPS` - A domain "defaults to HTTPS" if its canonical
   endpoint uses HTTPS.
 * `Downgrades HTTPS` - A domain "downgrades HTTPS" if HTTPS is
@@ -162,6 +177,9 @@ The following values are returned in `results.csv`:
   HTTPS endpoint has an expired certificate.
 * `HTTPS Self-Signed Cert` - A domain has a self-signed certificate if
   either HTTPS endpoint has a self-signed certificate.
+* `HTTPS Probably Missing Intermediate Cert` - A domain is "probably
+  missing intermediate certificate" if the canonical HTTPS endpoint is
+  probably missing an intermediate certificate.
 
 ### HSTS ###
 
@@ -222,6 +240,24 @@ conclusions about a domain's behavior.
   be said to enforce HTTPS.
 * `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the
   max-age ≥ 31536000.
+
+### General information ###
+
+* `IP` - The IP for the domain.
+* `Server Header` - The server header from the response for the
+  domain.
+* `Server Version` - The server version, as extracted from the server
+  header.
+* `HTTPS Cert Chain Length` - The certificate chain length for the
+  canonical HTTPS endpoint.
+* `Notes` - A field where free-form notes about the domain can be
+  stored.
+
+### Uncommon errors ###
+* `Unknown Error` - A Boolean value indicating whether or not an
+  unexpected exception was encountered when testing the domain.  The
+  purpose of this field is to flag any odd websites for further
+  debugging.
 
 ## Troubleshooting ##
 

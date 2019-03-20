@@ -18,8 +18,8 @@ def main():
             filenames.append(line.rstrip())
     # For each shard, read it in and append to the final list to
     # print out.
-    for item in filenames:
-        with open(item, 'r') as input_file:
+    for f in filenames:
+        with open(f, 'r') as input_file:
             json_data = json.load(input_file)
             for item in json_data:
                 print(json.dumps(item))
