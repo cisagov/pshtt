@@ -36,8 +36,12 @@ class Endpoint(object):
         self.headers = {}  # will be replaced with a requests.structures.CaseInsensitiveDict
         self.status = None
         self.live = None
+        self.ip = None
         self.redirect = None
+        self.server_header = None
+        self.server_version = None
         self.unknown_error = False
+        self.notes = ""
 
         # If an endpoint redirects, characterize the redirect behavior
         self.redirect_immediately_to = None
@@ -55,11 +59,17 @@ class Endpoint(object):
         # Only HTTPS endpoints have these.
         # Initialize all of them to None, so that it's
         # discernible if they don't get explicitly set.
+        self.https_full_connection = None
+        self.https_client_auth_required = False
         self.https_valid = None
+        self.https_public_trusted = None
+        self.https_custom_trusted = None
         self.https_bad_chain = None
         self.https_bad_hostname = None
         self.https_expired_cert = None
         self.https_self_signed_cert = None
+        self.https_cert_chain_len = None
+        self.https_missing_intermediate_cert = None
         self.hsts = None
         self.hsts_header = None
         self.hsts_max_age = None
@@ -81,6 +91,7 @@ class Endpoint(object):
             'url': self.url,
             'headers': dict(self.headers),
             'status': self.status,
+            'ip': self.ip,
             'live': self.live,
             'redirect': self.redirect,
             'redirect_eventually_to': self.redirect_eventually_to,
@@ -94,15 +105,24 @@ class Endpoint(object):
             'redirect_eventually_to_http': self.redirect_eventually_to_http,
             'redirect_eventually_to_external': self.redirect_eventually_to_external,
             'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain,
+            'server_header': self.server_header,
+            'server_version': self.server_version,
+            'notes': self.notes,
             'unknown_error': self.unknown_error,
         }
 
         if self.protocol == "https":
+            obj['https_full_connection'] = self.https_full_connection
+            obj['https_client_auth_required'] = self.https_client_auth_required
             obj['https_valid'] = self.https_valid
+            obj['https_public_trusted'] = self.https_public_trusted
+            obj['https_custom_trusted'] = self.https_custom_trusted
             obj['https_bad_chain'] = self.https_bad_chain
             obj['https_bad_hostname'] = self.https_bad_hostname
             obj['https_expired_cert'] = self.https_expired_cert
             obj['https_self_signed_cert'] = self.https_self_signed_cert
+            obj['https_cert_chain_len'] = self.https_cert_chain_len
+            obj['https_missing_intermediate_cert'] = self.https_missing_intermediate_cert
             obj['hsts'] = self.hsts
             obj['hsts_header'] = self.hsts_header
             obj['hsts_max_age'] = self.hsts_max_age
