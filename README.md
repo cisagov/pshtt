@@ -133,7 +133,7 @@ The following values are returned in `results.csv`:
 * `HTTPS Full Connection` - The domain is "fully connected" if any
   HTTPS endpoint is fully connected.  A "fully connected" HTTPS
   endpoint is one with which pshtt could make a full TLS connection.
-* `HTTPS Client Auth Required` - A domsin requires client
+* `HTTPS Client Auth Required` - A domain requires client
   authentication if *any* HTTPS endpoint requires it for a full TLS
   connection.
 * `Redirect` - The domain is a "redirect domain" if at least one
