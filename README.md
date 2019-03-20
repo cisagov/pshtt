@@ -1,8 +1,10 @@
 # Pushing HTTPS :lock: #
 
 [![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.org/project/pshtt/)
-[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
 [![Build Status](https://travis-ci.com/cisagov/pshtt.svg?branch=develop)](https://travis-ci.com/cisagov/pshtt)
+[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/pshtt.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/pshtt/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/pshtt.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/pshtt/context:python)
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.
