@@ -64,7 +64,7 @@ setup(
 
     install_requires=[
         'requests>=2.18.4',
-        'sslyze>=2.0.0',
+        'sslyze>=2.0.6',
         'wget>=3.2',
         'docopt>=0.6.2',
         'pytablereader>=0.15.0',
