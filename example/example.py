@@ -32,14 +32,17 @@ def main():
 
     # Set up logging
     log_level = logging.getLevelName(logging.WARNING)
-    if args['--log-level']:
-        log_level = args['--log-level']
+    if args["--log-level"]:
+        log_level = args["--log-level"]
     try:
-        logging.basicConfig(format='%(asctime)-15s %(levelname)s %(message)s',
-                            level=log_level.upper())
+        logging.basicConfig(
+            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
+        )
     except ValueError:
-        logging.critical('"{}" is not a valid logging level.  Possible values '
-                         'are debug, info, warn, and error.'.format(log_level))
+        logging.critical(
+            '"{}" is not a valid logging level.  Possible values '
+            "are debug, info, warn, and error.".format(log_level)
+        )
         return 1
 
     example()
@@ -48,5 +51,5 @@ def main():
     logging.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
