@@ -26,12 +26,7 @@ install:
 script:
   - shellcheck bump_version.sh tag.sh travis_scripts/*.sh
   - pytest --cov=pshtt
-  # Let's ignore E501 (line too long) warnings for now.
-  #
-  # There are A LOT of W504 warnings, and getting rid of them is
-  # dangerous because there are lots of parentheses and making flake8
-  # happy but changing the logic would be easy to do.
-  - flake8 --ignore=E501,W504 .
+  - flake8 .
   - bash travis_scripts/build_docker_image.sh
   - pshtt --help
   - pshtt --version
