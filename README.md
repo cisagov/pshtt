@@ -1,16 +1,16 @@
-# skeleton-generic #
+# skeleton-python-library #
 
-[![Build Status](https://travis-ci.com/cisagov/skeleton-generic.svg?branch=develop)](https://travis-ci.com/cisagov/skeleton-generic)
+[![Build Status](https://travis-ci.com/cisagov/skeleton-python-library.svg?branch=develop)](https://travis-ci.com/cisagov/skeleton-python-library)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/skeleton-python-library.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/skeleton-python-library/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/skeleton-python-library.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/skeleton-python-library/context:python)
 
 This is a generic skeleton project that can be used to quickly get a
-new [cisagov](https://github.com/cisagov) GitHub project started.
-This skeleton project contains [licensing information](LICENSE.md), as
-well as [pre-commit hooks](https://pre-commit.com) and a [Travis
-CI](https://travis-ci.com) configuration appropriate for the major
-languages that we use.
-
-In many cases you will instead want to use one of the more specific
-skeleton projects derived from this one.
+new [cisagov](https://github.com/cisagov) Python library GitHub
+project started.  This skeleton project contains [licensing
+information](LICENSE.md), as well as [pre-commit
+hooks](https://pre-commit.com) and a [Travis
+CI](https://travis-ci.com) configuration appropriate for a Python
+library project.
 
 ## Contributing ##
 
