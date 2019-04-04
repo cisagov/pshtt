@@ -1,1 +1,1 @@
-pre-commit
+-e .[test]
