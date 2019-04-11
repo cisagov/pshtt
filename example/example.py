@@ -9,11 +9,12 @@ Usage:
 Options:
   -h --help              Show this message.
   --log-level=LEVEL      If specified, then the log level will be set to
-                         the specified value.  Valid values are "debug",
-                         "info", "warn", "error", and "critical".
+                         the specified value.  Valid values are "debug", "info",
+                         "warning", "error", and "critical". [default: warning]
 """
 
 import logging
+import sys
 
 import docopt
 
@@ -22,7 +23,7 @@ def example():
     """A dummy function."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
-    logging.warn("This is a warning message")
+    logging.warning("This is a warning message")
     logging.error("This is an error message")
     logging.critical("This is a critical message")
 
@@ -31,17 +32,15 @@ def main():
     args = docopt.docopt(__doc__, version="0.0.1")
 
     # Set up logging
-    log_level = logging.getLevelName(logging.WARNING)
-    if args["--log-level"]:
-        log_level = args["--log-level"]
+    log_level = args["--log-level"]
     try:
         logging.basicConfig(
             format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
         )
     except ValueError:
         logging.critical(
-            '"{}" is not a valid logging level.  Possible values '
-            "are debug, info, warn, and error.".format(log_level)
+            f'"{log_level}" is not a valid logging level.  Possible values '
+            "are debug, info, warning, and error."
         )
         return 1
 
@@ -52,4 +51,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
