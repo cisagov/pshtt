@@ -1338,10 +1338,7 @@ def is_domain_enforces_https(domain):
     """
     return is_domain_supports_https(domain) and (
         is_defaults_to_https(domain) or (
-            is_strictly_forces_https(domain) and (
-                is_redirect_domain(domain) or
-                is_http_redirect_domain(domain)
-            )
+            is_strictly_forces_https(domain) and is_redirect_domain(domain)
         )
     )
 
