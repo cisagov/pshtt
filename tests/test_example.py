@@ -60,6 +60,20 @@ def test_division(dividend, divisor, quotient):
     assert result == quotient, "result should equal quotient"
 
 
+@pytest.mark.slow
+def test_slow_division():
+    """Example of using a custom marker.
+
+    This test will only be run if --runslow is passed to pytest.
+    Look in conftest.py to see how this is implemented.
+    """
+    import time
+
+    result = example.example_div(256, 16)
+    time.sleep(4)
+    assert result == 16, "result should equal be 16"
+
+
 def test_zero_division():
     """Verify that division by zero throws the correct exception."""
     with pytest.raises(ZeroDivisionError):
