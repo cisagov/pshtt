@@ -17,7 +17,7 @@ def readme():
 
 
 setup(
-    name="add",
+    name="example",
     # Versions should comply with PEP440
     version="0.0.1",
     description="Example python library",
@@ -52,7 +52,7 @@ setup(
     keywords="skeleton",
     packages=["example"],
     install_requires=["docopt"],
-    extras_require={"test": ["pre-commit", "pytest"]},
+    extras_require={"test": ["pre-commit", "pytest", "pytest-cov"]},
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["example = example.example:main"]},
 )
