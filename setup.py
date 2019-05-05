@@ -9,8 +9,6 @@ Based on:
 
 from setuptools import setup
 
-from example import __version__
-
 
 def readme():
     """Read in and return the contents of the project's README.md file."""
@@ -21,7 +19,7 @@ def readme():
 setup(
     name="example",
     # Versions should comply with PEP440
-    version=__version__,
+    version="0.0.1",
     description="Example python library",
     long_description=readme(),
     long_description_content_type="text/markdown",
