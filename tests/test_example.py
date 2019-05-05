@@ -28,7 +28,7 @@ log_levels = (
 
 
 def test_version(capsys):
-    """Verify that version is output, and agrees with the module."""
+    """Verify that version string sent to stdout, and agrees with the module."""
     with pytest.raises(SystemExit):
         with patch.object(sys, "argv", ["bogus", "--version"]):
             example.example.main()
