@@ -57,7 +57,7 @@ def test_log_levels(level):
 def test_division(dividend, divisor, quotient):
     """Verify division results."""
     result = example.example_div(dividend, divisor)
-    assert result == quotient, "result should equal quotient"  # nosec
+    assert result == quotient, "result should equal quotient"
 
 
 def test_zero_division():
