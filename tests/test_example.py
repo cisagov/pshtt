@@ -23,7 +23,7 @@ log_levels = (
     "warning",
     "error",
     "critical",
-    pytest.param("high2", marks=pytest.mark.xfail),
+    pytest.param("critical2", marks=pytest.mark.xfail),
 )
 
 
