@@ -18,6 +18,8 @@ import sys
 
 import docopt
 
+import example  # to access __version__
+
 
 def example_div(x, y):
     """Print some logging messages."""
@@ -31,8 +33,7 @@ def example_div(x, y):
 
 def main():
     """Set up logging and call the example function."""
-    args = docopt.docopt(__doc__, version="0.0.1")
-
+    args = docopt.docopt(__doc__, version=example.__version__)
     # Set up logging
     log_level = args["--log-level"]
     try:
