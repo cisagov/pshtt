@@ -52,7 +52,7 @@ setup(
     keywords="skeleton",
     packages=["example"],
     install_requires=["docopt"],
-    extras_require={"test": ["pre-commit"]},
+    extras_require={"test": ["pre-commit", "pytest"]},
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["example = example.example:main"]},
 )

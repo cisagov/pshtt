@@ -19,13 +19,14 @@ import sys
 import docopt
 
 
-def example():
+def example_div(x, y):
     """Print some logging messages."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
     logging.warning("This is a warning message")
     logging.error("This is an error message")
     logging.critical("This is a critical message")
+    return x / y
 
 
 def main():
@@ -45,7 +46,7 @@ def main():
         )
         return 1
 
-    example()
+    print(example_div(8, 2))
 
     # Stop logging and clean up
     logging.shutdown()
