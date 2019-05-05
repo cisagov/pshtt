@@ -8,6 +8,6 @@ install:
   - pip install --upgrade -r requirements-test.txt
 script:
   - pre-commit run --all-files
-  - pytest -v --cov=example --cov-report term-missing
+  - pytest
 after_success:
   - coveralls
