@@ -2,7 +2,7 @@
 # https://coverage.readthedocs.io/en/latest/config.html
 
 [run]
-source = example
+source = src/example
 omit =
 branch = true
 
