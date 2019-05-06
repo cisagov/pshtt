@@ -18,7 +18,7 @@ import sys
 
 import docopt
 
-import example  # to access __version__
+from ._version import __version__
 
 
 def example_div(x, y):
@@ -33,7 +33,7 @@ def example_div(x, y):
 
 def main():
     """Set up logging and call the example function."""
-    args = docopt.docopt(__doc__, version=example.__version__)
+    args = docopt.docopt(__doc__, version=__version__)
     # Set up logging
     log_level = args["--log-level"]
     try:

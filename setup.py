@@ -20,10 +20,18 @@ def readme():
         return f.read()
 
 
+def package_vars(version_file):
+    """Read in and return the variables defined by the version_file."""
+    pkg_vars = {}
+    with open(version_file) as f:
+        exec(f.read(), pkg_vars)  # nosec
+    return pkg_vars
+
+
 setup(
     name="example",
     # Versions should comply with PEP440
-    version="0.0.1",
+    version=package_vars("src/example/_version.py")["__version__"],
     description="Example python library",
     long_description=readme(),
     long_description_content_type="text/markdown",
