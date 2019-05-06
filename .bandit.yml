@@ -1,6 +1,7 @@
 ---
 # Configuration file for the Bandit python security scanner
 # https://bandit.readthedocs.io/en/latest/config.html
+# This config is applied to bandit when scanning the "tests" tree
 
 # Tests are first included by `tests`, and then excluded by `skips`.
 # If `tests` is empty, all tests are are considered included.
@@ -10,4 +11,4 @@ tests:
 # - B102
 
 skips:
-# - B101 # skip "assert used" check since assertions are required in pytests
+  - B101 # skip "assert used" check since assertions are required in pytests

@@ -18,20 +18,22 @@ import sys
 
 import docopt
 
+from ._version import __version__
 
-def example():
+
+def example_div(x, y):
     """Print some logging messages."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
     logging.warning("This is a warning message")
     logging.error("This is an error message")
     logging.critical("This is a critical message")
+    return x / y
 
 
 def main():
     """Set up logging and call the example function."""
-    args = docopt.docopt(__doc__, version="0.0.1")
-
+    args = docopt.docopt(__doc__, version=__version__)
     # Set up logging
     log_level = args["--log-level"]
     try:
@@ -45,10 +47,11 @@ def main():
         )
         return 1
 
-    example()
+    print(example_div(8, 2))
 
     # Stop logging and clean up
     logging.shutdown()
+    return 0
 
 
 if __name__ == "__main__":

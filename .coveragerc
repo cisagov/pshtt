@@ -1,0 +1,12 @@
+# This is the configuration for code coverage checks
+# https://coverage.readthedocs.io/en/latest/config.html
+
+[run]
+source = src/example
+omit =
+branch = true
+
+[report]
+exclude_lines =
+    if __name__ == "__main__":
+show_missing = true

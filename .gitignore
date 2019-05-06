@@ -1,3 +1,5 @@
 *.egg-info
 __pycache__
 .python-version
+.coverage
+.pytest_cache
