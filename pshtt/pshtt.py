@@ -493,6 +493,9 @@ def basic_check(endpoint):
                     (subdomain_original != subdomain_eventual)
                 )
 
+                # Store the redirect responses to check for HSTS later
+                endpoint.ultimate_req = ultimate_req
+
             # If we were able to make the first redirect, but not the ultimate redirect,
             # and if the immediate redirect is external, then it's accurate enough to
             # say that the eventual redirect is the immediate redirect, since you're capturing
@@ -524,6 +527,20 @@ def hsts_check(endpoint):
             return
 
         header = endpoint.headers.get("Strict-Transport-Security")
+
+        # If there is no HSTS header, check the eventual response from redirects
+        if header is None and endpoint.ultimate_req and endpoint.url in endpoint.ultimate_req.url: 
+            header = endpoint.ultimate_req.headers.get("Strict-Transport-Security")
+            if header:
+                logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, endpoint.ultimate_req.url))
+
+        # If there is still no HSTS header, check all the redirect responses
+        if header is None and endpoint.ultimate_req and endpoint.ultimate_req.history:
+            for entry in endpoint.ultimate_req.history:
+                if header is None and endpoint.url in entry.url:
+                    header = entry.headers.get("Strict-Transport-Security")
+                    if header:
+                        logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, entry.url))
 
         if header is None:
             endpoint.hsts = False
