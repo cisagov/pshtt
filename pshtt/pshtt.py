@@ -529,7 +529,7 @@ def hsts_check(endpoint):
         header = endpoint.headers.get("Strict-Transport-Security")
 
         # If there is no HSTS header, check the eventual response from redirects
-        if header is None and endpoint.ultimate_req and endpoint.url in endpoint.ultimate_req.url: 
+        if header is None and endpoint.ultimate_req and endpoint.url in endpoint.ultimate_req.url:
             header = endpoint.ultimate_req.headers.get("Strict-Transport-Security")
             if header:
                 logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, endpoint.ultimate_req.url))
