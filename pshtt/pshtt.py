@@ -1336,13 +1336,8 @@ def is_domain_enforces_https(domain):
     redirect clients to an https:// URI (even if that URI is on
     another domain) in order to be said to enforce HTTPS.
     """
-    return is_domain_supports_https(domain) and (
-        is_defaults_to_https(domain) or (
-            is_strictly_forces_https(domain) and (
-                is_redirect_domain(domain) or
-                is_http_redirect_domain(domain)
-            )
-        )
+    return is_domain_supports_https(domain) and is_strictly_forces_https(domain) and (
+        is_defaults_to_https(domain) or is_http_redirect_domain(domain)
     )
 
 
