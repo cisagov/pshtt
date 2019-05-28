@@ -576,7 +576,7 @@ def hsts_check(endpoint):
                     if header:
                         endpoint.hsts_url = redirect_entry.url
                         logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, redirect_entry.url))
-                
+
         if header is None:
             endpoint.hsts = False
             endpoint.hsts_url = None
