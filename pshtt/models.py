@@ -35,6 +35,7 @@ class Endpoint(object):
         # all HTTP/HTTPS endpoints have these
         self.headers = {}  # will be replaced with a requests.structures.CaseInsensitiveDict
         self.ultimate_req = None  # used to track redirects
+        self.redirect_chain = []
         self.status = None
         self.live = None
         self.ip = None
@@ -73,6 +74,7 @@ class Endpoint(object):
         self.https_missing_intermediate_cert = None
         self.hsts = None
         self.hsts_header = None
+        self.hsts_url = None
         self.hsts_max_age = None
         self.hsts_all_subdomains = None
         self.hsts_preload = None
@@ -106,6 +108,7 @@ class Endpoint(object):
             'redirect_eventually_to_http': self.redirect_eventually_to_http,
             'redirect_eventually_to_external': self.redirect_eventually_to_external,
             'redirect_eventually_to_subdomain': self.redirect_eventually_to_subdomain,
+            'redirect_chain': self.redirect_chain,
             'server_header': self.server_header,
             'server_version': self.server_version,
             'notes': self.notes,
@@ -126,6 +129,7 @@ class Endpoint(object):
             obj['https_missing_intermediate_cert'] = self.https_missing_intermediate_cert
             obj['hsts'] = self.hsts
             obj['hsts_header'] = self.hsts_header
+            obj['hsts_url'] = self.hsts_url
             obj['hsts_max_age'] = self.hsts_max_age
             obj['hsts_all_subdomains'] = self.hsts_all_subdomains
             obj['hsts_preload'] = self.hsts_preload

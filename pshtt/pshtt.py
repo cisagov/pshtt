@@ -495,6 +495,7 @@ def basic_check(endpoint):
 
                 # Store the redirect responses to check for HSTS later
                 endpoint.ultimate_req = ultimate_req
+                check_redirect_chain(endpoint, ultimate_req)
 
             # If we were able to make the first redirect, but not the ultimate redirect,
             # and if the immediate redirect is external, then it's accurate enough to
@@ -514,6 +515,40 @@ def basic_check(endpoint):
             utils.debug("{}: {}".format(endpoint.url, err))
 
 
+def check_redirect_chain(endpoint, ultimate_req):
+    try:
+        downgrade = False
+        https = False
+        if "https://" in endpoint.url:
+            https = True
+        redirects = []
+        redirect_chain = []
+        if endpoint.ultimate_req:
+            if endpoint.ultimate_req.history:
+                redirects.extend(endpoint.ultimate_req.history)
+            redirects.append(endpoint.ultimate_req)
+        for redirect_entry in redirects:
+            entry_downgrade = ""
+            entry_https = "HTTP"
+            entry_hsts = ""
+            if "https://" in redirect_entry.url:
+                https = True
+                entry_https = "HTTPS"
+                if redirect_entry.headers.get("Strict-Transport-Security"):
+                    entry_hsts = "+HSTS"
+            if https and "http://" in redirect_entry.url:
+                downgrade = True
+                entry_downgrade = "-Downgrade"
+                logging.warning("{}: Downgrade in redirect to {}.".format(endpoint.url, redirect_entry.url))
+            redirect_chain.append("{} ({}{}{})".format(redirect_entry.url, entry_https, entry_hsts, entry_downgrade))
+        if downgrade:
+            logging.warning("{}: Downgrade found in redirect chain {}.".format(endpoint.url, redirect_chain))
+        endpoint.redirect_chain = redirect_chain
+    except Exception as err:
+        logging.warning("{}: Unexpected exception when checking for downgrades in redirects.".format(endpoint.url))
+        utils.debug("{}: {}".format(endpoint.url, err))
+
+
 def hsts_check(endpoint):
     """
     Given an endpoint and its detected headers, extract and parse
@@ -527,23 +562,24 @@ def hsts_check(endpoint):
             return
 
         header = endpoint.headers.get("Strict-Transport-Security")
+        endpoint.hsts_url = endpoint.url
 
         # If there is no HSTS header, check the eventual response from redirects
-        if header is None and endpoint.ultimate_req and endpoint.url in endpoint.ultimate_req.url:
-            header = endpoint.ultimate_req.headers.get("Strict-Transport-Security")
-            if header:
-                logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, endpoint.ultimate_req.url))
-
-        # If there is still no HSTS header, check all the redirect responses
-        if header is None and endpoint.ultimate_req and endpoint.ultimate_req.history:
-            for entry in endpoint.ultimate_req.history:
-                if header is None and endpoint.url in entry.url:
-                    header = entry.headers.get("Strict-Transport-Security")
+        if header is None and endpoint.ultimate_req:
+            redirects = []
+            if endpoint.ultimate_req.history:
+                redirects.extend(endpoint.ultimate_req.history)
+            redirects.append(endpoint.ultimate_req)
+            for redirect_entry in redirects:
+                if header is None and endpoint.url in redirect_entry.url:
+                    header = redirect_entry.headers.get("Strict-Transport-Security")
                     if header:
-                        logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, entry.url))
-
+                        endpoint.hsts_url = redirect_entry.url
+                        logging.warning("{}: Found HSTS in redirected response from {}.".format(endpoint.url, redirect_entry.url))
+                
         if header is None:
             endpoint.hsts = False
+            endpoint.hsts_url = None
             return
 
         endpoint.hsts = True
