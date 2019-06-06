@@ -14,11 +14,15 @@ Options:
 """
 
 import logging
+import os
 import sys
 
 import docopt
+import pkg_resources
 
 from ._version import __version__
+
+DEFAULT_ECHO_MESSAGE = "Hello World from the example default!"
 
 
 def example_div(x, y):
@@ -47,7 +51,19 @@ def main():
         )
         return 1
 
-    print(example_div(8, 2))
+    print(f"8 / 2 == {example_div(8, 2)}")
+
+    # Access some data from an environment variable
+    message = os.getenv("ECHO_MESSAGE", DEFAULT_ECHO_MESSAGE)
+    print(f'ECHO_MESSAGE="{message}"')
+
+    # Access some data from our package data (see the setup.py)
+    secret_message = (
+        pkg_resources.resource_string("example", "data/secret.txt")
+        .decode("utf-8")
+        .strip()
+    )
+    print(f'Secret="{secret_message}"')
 
     # Stop logging and clean up
     logging.shutdown()
