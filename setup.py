@@ -64,6 +64,7 @@ setup(
     keywords="skeleton",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    package_data={"example": ["data/*.txt"]},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
     install_requires=["docopt"],
