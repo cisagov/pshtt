@@ -2,6 +2,7 @@
 """Tests for example."""
 
 import logging
+import os
 import sys
 from unittest.mock import patch
 
@@ -26,16 +27,30 @@ log_levels = (
     pytest.param("critical2", marks=pytest.mark.xfail),
 )
 
+# define sources of version strings
+TRAVIS_TAG = os.getenv("TRAVIS_TAG")
+PROJECT_VERSION = example.__version__
 
-def test_version(capsys):
-    """Verify that version string sent to stdout, and agrees with the module."""
+
+def test_stdout_version(capsys):
+    """Verify that version string sent to stdout agrees with the module version."""
     with pytest.raises(SystemExit):
         with patch.object(sys, "argv", ["bogus", "--version"]):
             example.example.main()
     captured = capsys.readouterr()
     assert (
-        captured.out == f"{example.__version__}\n"
+        captured.out == f"{PROJECT_VERSION}\n"
     ), "standard output by '--version' should agree with module.__version__"
+
+
+@pytest.mark.skipif(
+    TRAVIS_TAG in [None, ""], reason="this is not a release (TRAVIS_TAG not set)"
+)
+def test_release_version():
+    """Verify that release tag version agrees with the module version."""
+    assert (
+        TRAVIS_TAG == f"v{PROJECT_VERSION}"
+    ), "TRAVIS_TAG does not match the project version"
 
 
 @pytest.mark.parametrize("level", log_levels)
