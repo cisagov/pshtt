@@ -49,7 +49,7 @@ def test_stdout_version(capsys):
 def test_release_version():
     """Verify that release tag version agrees with the module version."""
     assert (
-        TRAVIS_TAG == PROJECT_VERSION or TRAVIS_TAG == f"v{PROJECT_VERSION}"
+        TRAVIS_TAG == f"v{PROJECT_VERSION}"
     ), "TRAVIS_TAG does not match the project version"
 
 
