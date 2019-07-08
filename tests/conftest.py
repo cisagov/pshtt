@@ -12,6 +12,11 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_configure(config):
+    """Register new markers."""
+    config.addinivalue_line("markers", "slow: mark test as slow")
+
+
 def pytest_collection_modifyitems(config, items):
     """Modify collected tests based on custom marks and commandline options."""
     if config.getoption("--runslow"):
