@@ -599,16 +599,24 @@ def https_check(endpoint):
         cert_plugin_result = scanner.run_scan_command(server_info, command)
     except Exception as err:
         try:
-            if("timed out" in str(err)):
-                logging.warning("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
+            if "timed out" in str(err):
+                logging.exception("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
                 cert_plugin_result = scanner.run_scan_command(server_info, command)
+            else:
+                logging.exception("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
+                utils.debug("{}: {}".format(endpoint.url, err))
+                endpoint.unknown_error = True
+                # We could make this False, but there was an error so
+                # we don't know
+                endpoint.https_valid = None
+                return
         except Exception:
-            pass
-        if(cert_plugin_result is None):
-            logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
+            logging.exception("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
             endpoint.unknown_error = True
-            endpoint.https_valid = None  # could make this False, but there was an error so we don't know
+            # We could make this False, but there was an error so we
+            # don't know
+            endpoint.https_valid = None
             return
 
     try:
