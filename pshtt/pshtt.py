@@ -393,7 +393,7 @@ def basic_check(endpoint):
                     utils.debug("{}: Endpoint IP is already {}, but requests IP is {}.".format(endpoint.url, endpoint.ip, ip))
     except Exception:
         # if the socket has already closed, it will throw an exception, but this is just best effort, so ignore it
-        pass
+        logging.exception("Error closing socket")
 
     # Endpoint is live, analyze the response.
     endpoint.headers = req.headers
@@ -747,12 +747,11 @@ def https_check(endpoint):
                             endpoint.https_public_trusted = public_trust
                             logging.warning("{}: Trusted by special public trust store with intermediate certificates.".format(endpoint.url))
                     except Exception:
-                        pass
+                        logging.exception("Error while rechecking public trust")
         else:
             endpoint.https_missing_intermediate_cert = False
     except Exception:
-        # Squash exceptions
-        pass
+        logging.exception("Error while determining length of certificate chain")
 
     # If anything is wrong then https is not valid
     if (
