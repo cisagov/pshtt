@@ -625,7 +625,7 @@ def https_check(endpoint):
         public_not_trusted_string = ""
         validation_results = cert_plugin_result.path_validation_result_list
         for result in validation_results:
-            if result.is_certificate_trusted:
+            if result.was_validation_successful:
                 # We're assuming that it is trusted to start with
                 pass
             else:
