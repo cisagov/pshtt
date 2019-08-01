@@ -625,7 +625,7 @@ def https_check(endpoint):
         public_not_trusted_string = ""
         validation_results = cert_plugin_result.path_validation_result_list
         for result in validation_results:
-            if result.was_validation_successful:
+            if result.is_certificate_trusted:
                 # We're assuming that it is trusted to start with
                 pass
             else:
@@ -732,17 +732,17 @@ def https_check(endpoint):
             endpoint.https_bad_hostname = True
 
     try:
-        endpoint.https_cert_chain_len = len(cert_plugin_result.received_certificate_chain)
+        endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_chain)
         if (
                 endpoint.https_self_signed_cert is False and (
-                    len(cert_plugin_result.received_certificate_chain) < 2
+                    len(cert_plugin_result.certificate_chain) < 2
                 )
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
-            if(cert_plugin_result.verified_certificate_chain is None):
+            if(cert_plugin_result.successful_trust_store is None):
                 logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
-                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.received_certificate_chain.__len__()))
+                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
             elif(custom_trust is True and public_trust is False):
                 # recheck public trust using custom public trust store with manually added intermediate certificates
                 if(PT_INT_CA_FILE is not None):
@@ -750,7 +750,7 @@ def https_check(endpoint):
                         cert_plugin_result = None
                         command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=PT_INT_CA_FILE)
                         cert_plugin_result = scanner.run_scan_command(server_info, command)
-                        if(cert_plugin_result.verified_certificate_chain is not None):
+                        if(cert_plugin_result.successful_trust_store is not None):
                             public_trust = True
                             endpoint.https_public_trusted = public_trust
                             logging.warning("{}: Trusted by special public trust store with intermediate certificates.".format(endpoint.url))
