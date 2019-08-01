@@ -732,17 +732,17 @@ def https_check(endpoint):
             endpoint.https_bad_hostname = True
 
     try:
-        endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_chain)
+        endpoint.https_cert_chain_len = len(cert_plugin_result.received_certificate_chain)
         if (
                 endpoint.https_self_signed_cert is False and (
-                    len(cert_plugin_result.certificate_chain) < 2
+                    len(cert_plugin_result.received_certificate_chain) < 2
                 )
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
             if(cert_plugin_result.successful_trust_store is None):
                 logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
-                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
+                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.received_certificate_chain.__len__()))
             elif(custom_trust is True and public_trust is False):
                 # recheck public trust using custom public trust store with manually added intermediate certificates
                 if(PT_INT_CA_FILE is not None):
