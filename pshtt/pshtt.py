@@ -283,7 +283,7 @@ def basic_check(endpoint):
                     )
                 )
         ):
-            logging.warning("{}: Error completing TLS handshake usually due to required client authentication.".format(endpoint.url))
+            logging.exception("{}: Error completing TLS handshake usually due to required client authentication.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
             endpoint.live = True
             if endpoint.protocol == "https":
@@ -293,7 +293,7 @@ def basic_check(endpoint):
                 endpoint.https_full_connection = False
 
         else:
-            logging.warning("{}: Error connecting over SSL/TLS or validating certificate.".format(endpoint.url))
+            logging.exception("{}: Error connecting over SSL/TLS or validating certificate.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
             # Retry with certificate validation disabled.
             try:
@@ -311,22 +311,22 @@ def basic_check(endpoint):
                     endpoint.https_full_connection = False
                     # HTTPS may still be valid, sslyze will double-check later
                     endpoint.https_valid = True
-                logging.warning("{}: Unexpected SSL protocol (or other) error during retry.".format(endpoint.url))
+                logging.exception("{}: Unexpected SSL protocol (or other) error during retry.".format(endpoint.url))
                 utils.debug("{}: {}".format(endpoint.url, err))
                 # continue on to SSLyze to check the connection
             except requests.exceptions.RequestException as err:
                 endpoint.live = False
-                logging.warning("{}: Unexpected requests exception during retry.".format(endpoint.url))
+                logging.exception("{}: Unexpected requests exception during retry.".format(endpoint.url))
                 utils.debug("{}: {}".format(endpoint.url, err))
                 return
             except OpenSSL.SSL.Error as err:
                 endpoint.live = False
-                logging.warning("{}: Unexpected OpenSSL exception during retry.".format(endpoint.url))
+                logging.exception("{}: Unexpected OpenSSL exception during retry.".format(endpoint.url))
                 utils.debug("{}: {}".format(endpoint.url, err))
                 return
             except Exception as err:
                 endpoint.unknown_error = True
-                logging.warning("{}: Unexpected other unknown exception during requests retry.".format(endpoint.url))
+                logging.exception("{}: Unexpected other unknown exception during requests retry.".format(endpoint.url))
                 utils.debug("{}: {}".format(endpoint.url, err))
                 return
 
@@ -343,7 +343,7 @@ def basic_check(endpoint):
             endpoint.https_valid = True
         else:
             endpoint.live = False
-        logging.warning("{}: Error connecting.".format(endpoint.url))
+        logging.exception("{}: Error connecting.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
 
     # And this is the parent of ConnectionError and other things.
@@ -351,13 +351,13 @@ def basic_check(endpoint):
     # See https://github.com/kennethreitz/requests/blob/master/requests/exceptions.py
     except requests.exceptions.RequestException as err:
         endpoint.live = False
-        logging.warning("{}: Unexpected other requests exception.".format(endpoint.url))
+        logging.exception("{}: Unexpected other requests exception.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
 
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warning("{}: Unexpected other unknown exception during initial request.".format(endpoint.url))
+        logging.exception("{}: Unexpected other unknown exception during initial request.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
 
@@ -393,7 +393,7 @@ def basic_check(endpoint):
                     utils.debug("{}: Endpoint IP is already {}, but requests IP is {}.".format(endpoint.url, endpoint.ip, ip))
     except Exception:
         # if the socket has already closed, it will throw an exception, but this is just best effort, so ignore it
-        pass
+        logging.exception("Error closing socket")
 
     # Endpoint is live, analyze the response.
     endpoint.headers = req.headers
@@ -424,21 +424,18 @@ def basic_check(endpoint):
             ultimate_req = None
         except Exception as err:
             endpoint.unknown_error = True
-            logging.warning("{}: Unexpected other unknown exception when handling Requests Header.".format(endpoint.url))
+            logging.exception("{}: Unexpected other unknown exception when handling Requests Header.".format(endpoint.url))
             utils.debug("{} {}".format(endpoint.url, err))
 
         try:
             with ping(endpoint.url, allow_redirects=True, verify=False) as ultimate_req:
                 pass
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, OpenSSL.SSL.Error):
             # Swallow connection errors, but we won't be saving redirect info.
-            pass
-        except OpenSSL.SSL.Error:
-            # Swallow connection errors, but we won't be saving redirect info.
-            pass
+            logging.exception("Connection error")
         except Exception as err:
             endpoint.unknown_error = True
-            logging.warning("{}: Unexpected other unknown exception when handling redirect.".format(endpoint.url))
+            logging.exception("{}: Unexpected other unknown exception when handling redirect.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
             return
 
@@ -511,7 +508,7 @@ def basic_check(endpoint):
                 endpoint.redirect_eventually_to_subdomain = endpoint.redirect_immediately_to_subdomain
         except Exception as err:
             endpoint.unknown_error = True
-            logging.warning("{}: Unexpected other unknown exception when establishing redirects.".format(endpoint.url))
+            logging.exception("{}: Unexpected other unknown exception when establishing redirects.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
 
 
@@ -610,7 +607,7 @@ def hsts_check(endpoint):
             endpoint.hsts_preload = True
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warning("{}: Unknown exception when handling HSTS check.".format(endpoint.url))
+        logging.exception("{}: Unknown exception when handling HSTS check.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
 
@@ -639,12 +636,12 @@ def https_check(endpoint):
     except ServerConnectivityError as err:
         endpoint.live = False
         endpoint.https_valid = False
-        logging.warning("{}: Error in sslyze server connectivity check when connecting to {}".format(endpoint.url, err.server_info.hostname))
+        logging.exception("{}: Error in sslyze server connectivity check when connecting to {}".format(endpoint.url, err.server_info.hostname))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warning("{}: Unknown exception in sslyze server connectivity check.".format(endpoint.url))
+        logging.exception("{}: Unknown exception in sslyze server connectivity check.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
 
@@ -655,16 +652,24 @@ def https_check(endpoint):
         cert_plugin_result = scanner.run_scan_command(server_info, command)
     except Exception as err:
         try:
-            if("timed out" in str(err)):
-                logging.warning("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
+            if "timed out" in str(err):
+                logging.exception("{}: Retrying sslyze scanner certificate plugin.".format(endpoint.url))
                 cert_plugin_result = scanner.run_scan_command(server_info, command)
+            else:
+                logging.exception("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
+                utils.debug("{}: {}".format(endpoint.url, err))
+                endpoint.unknown_error = True
+                # We could make this False, but there was an error so
+                # we don't know
+                endpoint.https_valid = None
+                return
         except Exception:
-            pass
-        if(cert_plugin_result is None):
-            logging.warning("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
+            logging.exception("{}: Unknown exception in sslyze scanner certificate plugin.".format(endpoint.url))
             utils.debug("{}: {}".format(endpoint.url, err))
             endpoint.unknown_error = True
-            endpoint.https_valid = None  # could make this False, but there was an error so we don't know
+            # We could make this False, but there was an error so we
+            # don't know
+            endpoint.https_valid = None
             return
 
     try:
@@ -673,7 +678,7 @@ def https_check(endpoint):
         public_not_trusted_string = ""
         validation_results = cert_plugin_result.path_validation_result_list
         for result in validation_results:
-            if result.is_certificate_trusted:
+            if result.was_validation_successful:
                 # We're assuming that it is trusted to start with
                 pass
             else:
@@ -699,16 +704,17 @@ def https_check(endpoint):
         endpoint.https_custom_trusted = custom_trust
     except Exception as err:
         # Ignore exception
+        logging.exception("{}: Unknown exception examining trust.".format(endpoint.url))
         utils.debug("{}: Unknown exception examining trust: {}".format(endpoint.url, err))
 
     try:
         cert_response = cert_plugin_result.as_text()
     except AttributeError:
-        logging.warning("{}: Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215".format(endpoint.url))
+        logging.exception("{}: Known error in sslyze 1.X with EC public keys. See https://github.com/nabla-c0d3/sslyze/issues/215".format(endpoint.url))
         return None
     except Exception as err:
         endpoint.unknown_error = True
-        logging.warning("{}: Unknown exception in cert plugin.".format(endpoint.url))
+        logging.exception("{}: Unknown exception in cert plugin.".format(endpoint.url))
         utils.debug("{}: {}".format(endpoint.url, err))
         return
 
@@ -779,17 +785,17 @@ def https_check(endpoint):
             endpoint.https_bad_hostname = True
 
     try:
-        endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_chain)
+        endpoint.https_cert_chain_len = len(cert_plugin_result.received_certificate_chain)
         if (
                 endpoint.https_self_signed_cert is False and (
-                    len(cert_plugin_result.certificate_chain) < 2
+                    len(cert_plugin_result.received_certificate_chain) < 2
                 )
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
-            if(cert_plugin_result.successful_trust_store is None):
+            if(cert_plugin_result.verified_certificate_chain is None):
                 logging.warning("{}: Untrusted certificate chain, probably due to missing intermediate certificate.".format(endpoint.url))
-                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.certificate_chain.__len__()))
+                utils.debug("{}: Only {} certificates in certificate chain received.".format(endpoint.url, cert_plugin_result.received_certificate_chain.__len__()))
             elif(custom_trust is True and public_trust is False):
                 # recheck public trust using custom public trust store with manually added intermediate certificates
                 if(PT_INT_CA_FILE is not None):
@@ -797,17 +803,16 @@ def https_check(endpoint):
                         cert_plugin_result = None
                         command = sslyze.plugins.certificate_info_plugin.CertificateInfoScanCommand(ca_file=PT_INT_CA_FILE)
                         cert_plugin_result = scanner.run_scan_command(server_info, command)
-                        if(cert_plugin_result.successful_trust_store is not None):
+                        if(cert_plugin_result.verified_certificate_chain is not None):
                             public_trust = True
                             endpoint.https_public_trusted = public_trust
                             logging.warning("{}: Trusted by special public trust store with intermediate certificates.".format(endpoint.url))
                     except Exception:
-                        pass
+                        logging.exception("Error while rechecking public trust")
         else:
             endpoint.https_missing_intermediate_cert = False
     except Exception:
-        # Squash exceptions
-        pass
+        logging.exception("Error while determining length of certificate chain")
 
     # If anything is wrong then https is not valid
     if (
@@ -1489,7 +1494,7 @@ def load_preload_pending():
     try:
         request = requests.get(pending_url)
     except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
-        logging.warning('Failed to fetch pending preload list: {}'.format(pending_url))
+        logging.exception('Failed to fetch pending preload list: {}'.format(pending_url))
         logging.debug('{}'.format(err))
         return []
 
@@ -1520,7 +1525,7 @@ def load_preload_list():
     try:
         request = requests.get(file_url)
     except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
-        logging.warning('Failed to fetch preload list: {}'.format(file_url))
+        logging.exception('Failed to fetch preload list: {}'.format(file_url))
         logging.debug('{}'.format(err))
         return []
 
@@ -1556,7 +1561,7 @@ def load_suffix_list():
     try:
         cache_file = fetch()
     except URLError as err:
-        logging.warning("Unable to download the Public Suffix List...")
+        logging.exception("Unable to download the Public Suffix List...")
         utils.debug("{}".format(err))
         return []
     content = cache_file.readlines()
