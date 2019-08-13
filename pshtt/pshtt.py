@@ -526,7 +526,6 @@ def hsts_check(endpoint):
             endpoint.hsts = False
             return
 
-        endpoint.hsts = True
         endpoint.hsts_header = header
 
         # handle multiple HSTS headers, requests comma-separates them
@@ -541,6 +540,13 @@ def hsts_check(endpoint):
         for directive in directive_list:
             components = directive.split("=")
             directives[components[0]] = "".join(components[1:]) or True
+
+        # max-age is a required directive for HSTS headers
+        if "max-age" not in directives:
+            endpoint.hsts = False
+            return
+
+        endpoint.hsts = True
 
         endpoint.hsts_max_age = int(directives["max-age"]) if "max-age" in directives else None
 
