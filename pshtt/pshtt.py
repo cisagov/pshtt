@@ -532,7 +532,7 @@ def hsts_check(endpoint):
         headers = [x.strip() for x in header.split(",")]
         # Multiple HSTS headers does not conform to RFCs 7230-3.2.2 and 6797-6.1
         if len(headers) > 1:
-            logging.warning("Host is using an invalid HSTS header format: {}".format(header))
+            logging.warning("Host is incorrectly returning multiple HSTS headers: {}".format(header))
 
         # Put all of the directives in the HSTS header into a dictionary
         directive_list = [x.strip() for x in headers[0].split(";")]
