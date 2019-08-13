@@ -530,7 +530,10 @@ def hsts_check(endpoint):
 
         # handle multiple HSTS headers, requests comma-separates them
         headers = [x.strip() for x in header.split(",")]
+
         # Multiple HSTS headers does not conform to RFCs 7230-3.2.2 and 6797-6.1
+        # See https://tools.ietf.org/html/rfc7230#section-3.2.2 and
+        # https://tools.ietf.org/html/rfc6797#section-6.1
         if len(headers) > 1:
             logging.warning("Host is incorrectly returning multiple HSTS headers: {}".format(header))
 
@@ -558,7 +561,7 @@ def hsts_check(endpoint):
         # the presence of HSTS protection.  See
         # https://tools.ietf.org/html/rfc6797#section-6.1.1 for more
         # details.
-        if endpoint.hsts_max_age is None or endpoint.hsts_max_age <= 0:
+        if endpoint.hsts_max_age is None or endpoint.hsts_max_age < 0:
             endpoint.hsts = False
             return
 
