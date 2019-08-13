@@ -538,21 +538,25 @@ def hsts_check(endpoint):
         directive_list = [x.strip() for x in headers[0].split(";")]
         directives = dict()
         for directive in directive_list:
-            components = directive.split("=")
-            directives[components[0]] = "".join(components[1:]) or True
+            if "=" in directive:
+                token, value = directive.split("=")
+                directives[token] = value
+            else:
+                directives[directive] = True
 
         # max-age is a required directive for HSTS headers
         if "max-age" not in directives:
             endpoint.hsts = False
             return
 
-        endpoint.hsts = True
-
         endpoint.hsts_max_age = int(directives["max-age"]) if "max-age" in directives else None
 
+        # max-age is a time in seconds from when the response is received
         if endpoint.hsts_max_age is None or endpoint.hsts_max_age <= 0:
             endpoint.hsts = False
             return
+
+        endpoint.hsts = True
 
         # check if hsts includes sub domains
         if "includesubdomains" in directives:
