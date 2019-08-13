@@ -554,11 +554,15 @@ def hsts_check(endpoint):
 
         endpoint.hsts_max_age = int(directives["max-age"]) if "max-age" in directives else None
 
-        # According to section 6.1.1 of the HSTS RFC, a non-negative
-        # integer value is required.  A zero value indicates that the
-        # user agent should cease considering the host a known HSTS
-        # host, and therefore only strictly positive values indicate
-        # the presence of HSTS protection.  See
+        # According to section 6.1.1 of the HSTS RFC
+        # (https://tools.ietf.org/html/rfc6797#section-6.1.1), a
+        # non-negative integer value is required.
+        #
+        # Note that a zero value indicates that the user agent should
+        # cease considering the host a known HSTS host, and therefore
+        # only strictly positive values really indicate the presence
+        # of HSTS protection.  Here, though, we're checking strictly
+        # for RFC compliance.  See
         # https://tools.ietf.org/html/rfc6797#section-6.1.1 for more
         # details.
         if endpoint.hsts_max_age is None or endpoint.hsts_max_age < 0:
