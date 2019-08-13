@@ -529,28 +529,31 @@ def hsts_check(endpoint):
         endpoint.hsts = True
         endpoint.hsts_header = header
 
-        # Set max age to the string after max-age
-        # TODO: make this more resilient to pathological HSTS headers.
-
         # handle multiple HSTS headers, requests comma-separates them
-        first_pass = re.split(r',\s?', header)[0]
-        second_pass = re.sub(r'\'', '', first_pass)
+        headers = [x.strip() for x in header.split(",")]
+        # Multiple HSTS headers does not conform to RFCs 7230-3.2.2 and 6797-6.1
+        if len(headers) > 1:
+            logging.warning("Host is using an invalid HSTS header format: {}".format(header))
 
-        temp = re.split(r';\s?', second_pass)
+        # Put all of the directives in the HSTS header into a dictionary
+        directive_list = [x.strip() for x in headers[0].split(";")]
+        directives = dict()
+        for directive in directive_list:
+            components = directive.split("=")
+            directives[components[0]] = "".join(components[1:]) or True
 
-        if "max-age" in header.lower():
-            endpoint.hsts_max_age = int(temp[0][len("max-age="):])
+        endpoint.hsts_max_age = int(directives["max-age"]) if "max-age" in directives else None
 
         if endpoint.hsts_max_age is None or endpoint.hsts_max_age <= 0:
             endpoint.hsts = False
             return
 
         # check if hsts includes sub domains
-        if 'includesubdomains' in header.lower():
+        if "includesubdomains" in directives:
             endpoint.hsts_all_subdomains = True
 
         # Check is hsts has the preload flag
-        if 'preload' in header.lower():
+        if "preload" in directives:
             endpoint.hsts_preload = True
     except Exception as err:
         endpoint.unknown_error = True
