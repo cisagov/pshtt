@@ -1204,7 +1204,7 @@ def is_hsts(domain):
     https, httpswww = domain.https, domain.httpswww
 
     if not https.live and not httpswww.live:
-        return False
+        return None
 
     hsts = True
     if https.live:
