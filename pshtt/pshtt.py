@@ -1199,16 +1199,20 @@ def is_missing_intermediate_cert(domain):
 
 def is_hsts(domain):
     """
-    Domain has HSTS if its canonical HTTPS endpoint has HSTS.
+    Domain has HSTS if both https and httpswww endpoints have HSTS when live.
     """
-    canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
+    https, httpswww = domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    if not https.live and not httpswww.live:
+        return False
 
-    return canonical_https.hsts
+    hsts = True
+    if https.live:
+        hsts &= https.hsts
+    if httpswww.live:
+        hsts &= httpswww.hsts
+
+    return hsts
 
 
 def hsts_header(domain):
