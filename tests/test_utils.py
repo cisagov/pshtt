@@ -1,9 +1,10 @@
+
 import os
 import sys
 import tempfile
 import unittest
 
-from pshtt.utils import smart_open
+from pshtt.utils import format_last_exception, json_for, smart_open
 
 
 class TestSmartOpen(unittest.TestCase):
@@ -37,3 +38,20 @@ class TestSmartOpen(unittest.TestCase):
                 fh.write(test_data)
 
             self.assertEqual(test_data, open(filename).read())
+
+    def test_json_for_in_order(self):
+        test_data = {"apple": 1, "orange": "two"}
+        test_result = ("{\n" "  \"apple\": 1,\n" "  \"orange\": \"two\"\n" "}")
+        self.assertTrue(test_result == json_for(test_data))
+
+    def test_json_for_out_of_order(self):
+        test_data = {"orange": "two", "apple": 1}
+        test_result = ("{\n" "  \"apple\": 1,\n" "  \"orange\": \"two\"\n" "}")
+        self.assertTrue(test_result == json_for(test_data))
+
+    def test_format_last_exception(self):
+        try:
+            raise Exception("Oh no!")
+        except:
+            self.assertTrue(format_last_exception().split("\n")[3].lstrip() == "raise Exception(\"Oh no!\")")
+            self.assertTrue(format_last_exception().split("\n")[5] == "Exception: Oh no!")
