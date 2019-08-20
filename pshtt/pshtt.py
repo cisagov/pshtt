@@ -1206,11 +1206,14 @@ def is_hsts(domain):
     if not https.live and not httpswww.live:
         return None
 
-    hsts = True
-    if https.live:
-        hsts &= https.hsts
-    if httpswww.live:
-        hsts &= httpswww.hsts
+    hsts = None
+    if https.live and (https.hsts is not None):
+        hsts = https.hsts
+    if httpswww.live and (httpswww.hsts is not None):
+        if hsts is None:
+            hsts = httpswww.hsts
+        else:
+            hsts &= httpswww.hsts
 
     return hsts
 
