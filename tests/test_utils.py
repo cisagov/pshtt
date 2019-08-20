@@ -1,10 +1,11 @@
 
+import datetime
 import os
 import sys
 import tempfile
 import unittest
 
-from pshtt.utils import format_last_exception, json_for, smart_open
+from pshtt.utils import format_datetime, format_last_exception, json_for, smart_open
 
 
 class TestSmartOpen(unittest.TestCase):
@@ -41,17 +42,34 @@ class TestSmartOpen(unittest.TestCase):
 
     def test_json_for_in_order(self):
         test_data = {"apple": 1, "orange": "two"}
-        test_result = ("{\n" "  \"apple\": 1,\n" "  \"orange\": \"two\"\n" "}")
+        test_result = (
+                        "{\n"
+                        "  \"apple\": 1,\n"
+                        "  \"orange\": \"two\"\n"
+                        "}"
+                        )
         self.assertTrue(test_result == json_for(test_data))
 
     def test_json_for_out_of_order(self):
         test_data = {"orange": "two", "apple": 1}
-        test_result = ("{\n" "  \"apple\": 1,\n" "  \"orange\": \"two\"\n" "}")
+        test_result = (
+                        "{\n"
+                        "  \"apple\": 1,\n"
+                        "  \"orange\": \"two\"\n"
+                        "}"
+                        )
         self.assertTrue(test_result == json_for(test_data))
 
     def test_format_last_exception(self):
         try:
             raise Exception("Oh no!")
         except:
-            self.assertTrue(format_last_exception().split("\n")[3].lstrip() == "raise Exception(\"Oh no!\")")
             self.assertTrue(format_last_exception().split("\n")[5] == "Exception: Oh no!")
+
+    def test_format_datetime_date(self):
+        test_data = datetime.date(2011, 10, 12)
+        self.assertTrue(format_datetime(test_data) == "2011-10-12")
+
+    def test_format_datetime_str(self):
+        test_data = "2011-10-12"
+        self.assertTrue(format_datetime(test_data) == test_data)
