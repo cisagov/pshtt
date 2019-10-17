@@ -74,7 +74,7 @@ setup(
             "pytest",
             "pytest-cov",
             "coveralls",
-            "virtualenv==16.3.0",
+            "virtualenv==16.3.0",  # see: https://github.com/ansible/ansible-lint/issues/590
         ]
     },
     # Conveniently allows one to run the CLI tool as `example`
