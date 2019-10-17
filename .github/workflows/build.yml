@@ -1,5 +1,5 @@
 ---
-name: Python application
+name: Build
 
 on: [push]
 
