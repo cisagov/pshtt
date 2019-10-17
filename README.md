@@ -1,6 +1,6 @@
 # skeleton-python-library #
 
-![GitHub Build Status](https://github.com/cisagov/skeleton-python-library/workflows/Build/badge.svg)
+[![GitHub Build Status](https://github.com/cisagov/skeleton-python-library/workflows/Build/badge.svg)](https://github.com/cisagov/skeleton-python-library/actions)
 [![Travis Build Status](https://travis-ci.com/cisagov/skeleton-python-library.svg?branch=develop)](https://travis-ci.com/cisagov/skeleton-python-library)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/skeleton-python-library/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/skeleton-python-library?branch=develop)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/skeleton-python-library.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/skeleton-python-library/alerts/)
