@@ -68,15 +68,7 @@ setup(
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
     install_requires=["docopt", "setuptools"],
-    extras_require={
-        "test": [
-            "pre-commit",
-            "pytest",
-            "pytest-cov",
-            "coveralls",
-            "virtualenv==16.3.0",  # see: https://github.com/ansible/ansible-lint/issues/590
-        ]
-    },
+    extras_require={"test": ["pre-commit", "pytest", "pytest-cov", "coveralls"]},
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["example = example.example:main"]},
 )
