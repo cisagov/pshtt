@@ -3,6 +3,10 @@ name: build
 
 on: [push]
 
+env:
+  PIP_CACHE_DIR: ~/.cache/pip
+  PRE_COMMIT_CACHE_DIR: ~/.cache/pre-commit
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -11,6 +15,21 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: 3.7
+      - name: Cache pip test requirements
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          key: "${{ runner.os }}-pip-test-\
+            ${{ hashFiles('**/requirements-test.txt') }}"
+          restore-keys: |
+            ${{ runner.os }}-pip-test-
+            ${{ runner.os }}-pip-
+      - name: Cache pre-commit hooks
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE_DIR }}
+          key: "${{ runner.os }}-pre-commit-\
+            ${{ hashFiles('**/.pre-commit-config.yaml') }}"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -24,6 +43,15 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: 3.7
+      - name: Cache pip test requirements
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          key: "${{ runner.os }}-pip-test-\
+            ${{ hashFiles('**/requirements-test.txt') }}"
+          restore-keys: |
+            ${{ runner.os }}-pip-test-
+            ${{ runner.os }}-pip-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -43,6 +71,15 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: 3.7
+      - name: Cache pip build requirements
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          key: "${{ runner.os }}-pip-build-\
+            ${{ hashFiles('**/requirements.txt') }}"
+          restore-keys: |
+            ${{ runner.os }}-pip-build-
+            ${{ runner.os }}-pip-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel
