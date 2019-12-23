@@ -13,10 +13,12 @@ Options:
                          "warning", "error", and "critical". [default: warning]
 """
 
+# Standard Python Libraries
 import logging
 import os
 import sys
 
+# Third-Party Libraries
 import docopt
 import pkg_resources
 
