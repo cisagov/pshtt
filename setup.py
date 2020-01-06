@@ -8,10 +8,12 @@ Based on:
 - https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure
 """
 
+# Standard Python Libraries
 from glob import glob
-from os.path import splitext, basename
+from os.path import basename, splitext
 
-from setuptools import setup, find_packages
+# Third-Party Libraries
+from setuptools import find_packages, setup
 
 
 def readme():
@@ -68,7 +70,18 @@ setup(
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
     install_requires=["docopt", "setuptools"],
-    extras_require={"test": ["pre-commit", "pytest", "pytest-cov", "coveralls"]},
+    extras_require={
+        "test": [
+            "pre-commit",
+            "coveralls",
+            # coveralls does not currently support coverage 5.0
+            # https://github.com/coveralls-clients/coveralls-python/issues/203
+            # is the issue for this on the coveralls project
+            "coverage < 5.0",
+            "pytest-cov",
+            "pytest",
+        ]
+    },
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["example = example.example:main"]},
 )
