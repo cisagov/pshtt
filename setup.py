@@ -80,7 +80,6 @@ setup(
             "coverage < 5.0",
             "pytest-cov",
             "pytest",
-            "semver",
         ]
     },
     # Conveniently allows one to run the CLI tool as `example`
