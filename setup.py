@@ -69,7 +69,7 @@ setup(
     package_data={"example": ["data/*.txt"]},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
-    install_requires=["docopt", "setuptools"],
+    install_requires=["docopt", "semver", "setuptools"],
     extras_require={
         "test": [
             "pre-commit",
