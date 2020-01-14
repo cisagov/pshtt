@@ -62,6 +62,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
+    python_requires=">=3.6",
     # What does your project relate to?
     keywords="skeleton",
     packages=find_packages(where="src"),
@@ -69,7 +70,7 @@ setup(
     package_data={"example": ["data/*.txt"]},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
-    install_requires=["docopt", "setuptools"],
+    install_requires=["docopt", "setuptools >= 24.2.0"],
     extras_require={
         "test": [
             "pre-commit",
