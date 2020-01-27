@@ -1,7 +1,10 @@
 ---
 name: build
 
-on: [push]
+on: [
+  push,
+  pull_request
+]
 
 env:
   PIP_CACHE_DIR: ~/.cache/pip
