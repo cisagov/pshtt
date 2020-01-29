@@ -2,15 +2,23 @@
 
 """example is an example Python library and tool.
 
+Divide one integer by another and log the result. Also log some information
+from an environment variable and a package resource.
+
+EXIT STATUS
+    This utility exits with one of the following values:
+    0   Calculation completed successfully.
+    >0  An error occurred.
+
 Usage:
-  example [--log-level=LEVEL]
+  example [--log-level=LEVEL] <dividend> <divisor>
   example (-h | --help)
 
 Options:
   -h --help              Show this message.
   --log-level=LEVEL      If specified, then the log level will be set to
                          the specified value.  Valid values are "debug", "info",
-                         "warning", "error", and "critical". [default: warning]
+                         "warning", "error", and "critical". [default: info]
 """
 
 # Standard Python Libraries
@@ -21,43 +29,68 @@ import sys
 # Third-Party Libraries
 import docopt
 import pkg_resources
+from schema import And, Schema, SchemaError, Use
 
 from ._version import __version__
 
 DEFAULT_ECHO_MESSAGE = "Hello World from the example default!"
 
 
-def example_div(x, y):
+def example_div(dividend, divisor):
     """Print some logging messages."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
     logging.warning("This is a warning message")
     logging.error("This is an error message")
     logging.critical("This is a critical message")
-    return x / y
+    return dividend / divisor
 
 
 def main():
     """Set up logging and call the example function."""
     args = docopt.docopt(__doc__, version=__version__)
-    # Set up logging
-    log_level = args["--log-level"]
+    # Validate and convert arguments as needed
+    schema = Schema(
+        {
+            "--log-level": And(
+                str,
+                Use(str.lower),
+                lambda n: n in ("debug", "info", "warning", "error", "critical"),
+                error="Possible values for --log-level are "
+                + "debug, info, warning, error, and critical.",
+            ),
+            "<dividend>": Use(int, error="<dividend> must be an integer."),
+            "<divisor>": And(
+                Use(int),
+                lambda n: n != 0,
+                error="<divisor> must be an integer that is not 0.",
+            ),
+            str: object,  # Don't care about other keys, if any
+        }
+    )
+
     try:
-        logging.basicConfig(
-            format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
-        )
-    except ValueError:
-        logging.critical(
-            f'"{log_level}" is not a valid logging level.  Possible values '
-            "are debug, info, warning, and error."
-        )
+        args = schema.validate(args)
+    except SchemaError as err:
+        # Exit because one or more of the arguments were invalid
+        print(err, file=sys.stderr)
         return 1
 
-    print(f"8 / 2 == {example_div(8, 2)}")
+    # Assign validated arguments to variables
+    dividend = args["<dividend>"]
+    divisor = args["<divisor>"]
+    log_level = args["--log-level"]
+
+    # Set up logging
+    logging.basicConfig(
+        format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
+    )
+
+    logging.info(f"{dividend} / {divisor} == {example_div(dividend, divisor)}")
 
     # Access some data from an environment variable
     message = os.getenv("ECHO_MESSAGE", DEFAULT_ECHO_MESSAGE)
-    print(f'ECHO_MESSAGE="{message}"')
+    logging.info(f'ECHO_MESSAGE="{message}"')
 
     # Access some data from our package data (see the setup.py)
     secret_message = (
@@ -65,7 +98,7 @@ def main():
         .decode("utf-8")
         .strip()
     )
-    print(f'Secret="{secret_message}"')
+    logging.info(f'Secret="{secret_message}"')
 
     # Stop logging and clean up
     logging.shutdown()
