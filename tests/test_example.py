@@ -59,7 +59,7 @@ def test_release_version():
 @pytest.mark.parametrize("level", log_levels)
 def test_log_levels(level):
     """Validate commandline log-level arguments."""
-    with patch.object(sys, "argv", ["bogus", f"--log-level={level}"]):
+    with patch.object(sys, "argv", ["bogus", f"--log-level={level}", "1", "1"]):
         with patch.object(logging.root, "handlers", []):
             assert (
                 logging.root.hasHandlers() is False
@@ -96,3 +96,10 @@ def test_zero_division():
     """Verify that division by zero throws the correct exception."""
     with pytest.raises(ZeroDivisionError):
         example.example_div(1, 0)
+
+
+def test_zero_divisor_argument():
+    """Verify that a divisor of zero is handled as expected."""
+    with patch.object(sys, "argv", ["bogus", "1", "0"]):
+        return_code = example.example.main()
+        assert return_code == 1, "main() should exit with error"
