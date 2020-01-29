@@ -70,7 +70,7 @@ setup(
     package_data={"example": ["data/*.txt"]},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
-    install_requires=["docopt", "setuptools >= 24.2.0"],
+    install_requires=["docopt", "setuptools >= 24.2.0", "schema"],
     extras_require={
         "test": [
             "pre-commit",
