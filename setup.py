@@ -61,6 +61,7 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     python_requires=">=3.6",
     # What does your project relate to?
@@ -70,7 +71,7 @@ setup(
     package_data={"example": ["data/*.txt"]},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     include_package_data=True,
-    install_requires=["docopt", "setuptools >= 24.2.0"],
+    install_requires=["docopt", "setuptools >= 24.2.0", "schema"],
     extras_require={
         "test": [
             "pre-commit",

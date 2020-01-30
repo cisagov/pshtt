@@ -18,7 +18,6 @@ div_params = [
     (2, 2, 1),
     (0, 1, 0),
     (8, 2, 4),
-    pytest.param(0, 0, 0, marks=pytest.mark.xfail(raises=ZeroDivisionError)),
 ]
 
 log_levels = (
@@ -27,7 +26,6 @@ log_levels = (
     "warning",
     "error",
     "critical",
-    pytest.param("critical2", marks=pytest.mark.xfail),
 )
 
 # define sources of version strings
@@ -59,7 +57,7 @@ def test_release_version():
 @pytest.mark.parametrize("level", log_levels)
 def test_log_levels(level):
     """Validate commandline log-level arguments."""
-    with patch.object(sys, "argv", ["bogus", f"--log-level={level}"]):
+    with patch.object(sys, "argv", ["bogus", f"--log-level={level}", "1", "1"]):
         with patch.object(logging.root, "handlers", []):
             assert (
                 logging.root.hasHandlers() is False
@@ -69,6 +67,13 @@ def test_log_levels(level):
                 logging.root.hasHandlers() is True
             ), "root logger should now have a handler"
             assert return_code == 0, "main() should return success (0)"
+
+
+def test_bad_log_level():
+    """Validate bad log-level argument returns error."""
+    with patch.object(sys, "argv", ["bogus", "--log-level=emergency", "1", "1"]):
+        return_code = example.example.main()
+        assert return_code == 1, "main() should return failure"
 
 
 @pytest.mark.parametrize("dividend, divisor, quotient", div_params)
@@ -96,3 +101,10 @@ def test_zero_division():
     """Verify that division by zero throws the correct exception."""
     with pytest.raises(ZeroDivisionError):
         example.example_div(1, 0)
+
+
+def test_zero_divisor_argument():
+    """Verify that a divisor of zero is handled as expected."""
+    with patch.object(sys, "argv", ["bogus", "1", "0"]):
+        return_code = example.example.main()
+        assert return_code == 1, "main() should exit with error"
