@@ -73,7 +73,7 @@ setup(
     include_package_data=True,
     install_requires=["docopt", "setuptools >= 24.2.0", "schema"],
     extras_require={
-        "test": ["pre-commit", "coveralls", "coverage", "pytest-cov", "pytest"]
+        "test": ["pre-commit", "coveralls < 1.11.0", "coverage", "pytest-cov", "pytest"]
     },
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["example = example.example:main"]},
