@@ -73,7 +73,19 @@ setup(
     include_package_data=True,
     install_requires=["docopt", "setuptools >= 24.2.0", "schema"],
     extras_require={
-        "test": ["pre-commit", "coveralls < 1.11.0", "coverage", "pytest-cov", "pytest"]
+        "test": [
+            "pre-commit",
+            # coveralls 1.11.0 added a service number for calls from
+            # GitHub Actions. When run this resulted in a 422 response from the
+            # coveralls API with the message:
+            # Unprocessable Entity for url: https://coveralls.io/api/v1/jobs
+            # Temporarily pinning coveralls to before this version until this
+            # issue is resolved.
+            "coveralls < 1.11.0",
+            "coverage",
+            "pytest-cov",
+            "pytest",
+        ]
     },
     # Conveniently allows one to run the CLI tool as `example`
     entry_points={"console_scripts": ["example = example.example:main"]},
