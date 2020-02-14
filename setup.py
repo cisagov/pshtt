@@ -81,7 +81,7 @@ setup(
             # Unprocessable Entity for url: https://coveralls.io/api/v1/jobs
             # Temporarily pinning coveralls to before this version until this
             # issue is resolved.
-            "coveralls < 1.11.0",
+            "coveralls @ git+https://github.com/coveralls-clients/coveralls-python.git@fix-github-actions",
             "coverage",
             "pytest-cov",
             "pytest",
