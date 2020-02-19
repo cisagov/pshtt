@@ -102,7 +102,7 @@ commands:
 cd skeleton-python-library
 pyenv virtualenv <python_version_to_use> skeleton-python-library
 pyenv local skeleton-python-library
-pip install -r requirements-dev.txt
+pip install --requirement requirements-dev.txt
 ```
 
 #### Installing the pre-commit hook ####
