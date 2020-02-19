@@ -75,11 +75,14 @@ setup(
     extras_require={
         "test": [
             "pre-commit",
-            "coveralls",
-            # coveralls does not currently support coverage 5.0
-            # https://github.com/coveralls-clients/coveralls-python/issues/203
-            # is the issue for this on the coveralls project
-            "coverage < 5.0",
+            # coveralls 1.11.0 added a service number for calls from
+            # GitHub Actions. This caused a regression which resulted in a 422
+            # response from the coveralls API with the message:
+            # Unprocessable Entity for url: https://coveralls.io/api/v1/jobs
+            # 1.11.1 fixed this issue, but to ensure expected behavior we'll pin
+            # to never grab the regression version.
+            "coveralls != 1.11.0",
+            "coverage",
             "pytest-cov",
             "pytest",
         ]
