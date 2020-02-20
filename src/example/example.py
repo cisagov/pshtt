@@ -25,6 +25,7 @@ Options:
 import logging
 import os
 import sys
+from typing import Any, Dict
 
 # Third-Party Libraries
 import docopt
@@ -33,10 +34,10 @@ from schema import And, Schema, SchemaError, Use
 
 from ._version import __version__
 
-DEFAULT_ECHO_MESSAGE = "Hello World from the example default!"
+DEFAULT_ECHO_MESSAGE: str = "Hello World from the example default!"
 
 
-def example_div(dividend, divisor):
+def example_div(dividend: float, divisor: float) -> float:
     """Print some logging messages."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
@@ -46,11 +47,11 @@ def example_div(dividend, divisor):
     return dividend / divisor
 
 
-def main():
+def main() -> int:
     """Set up logging and call the example function."""
-    args = docopt.docopt(__doc__, version=__version__)
+    args: Dict[str, str] = docopt.docopt(__doc__, version=__version__)
     # Validate and convert arguments as needed
-    schema = Schema(
+    schema: Schema = Schema(
         {
             "--log-level": And(
                 str,
@@ -70,16 +71,16 @@ def main():
     )
 
     try:
-        args = schema.validate(args)
+        validated_args: Dict[str, Any] = schema.validate(args)
     except SchemaError as err:
         # Exit because one or more of the arguments were invalid
         print(err, file=sys.stderr)
         return 1
 
     # Assign validated arguments to variables
-    dividend = args["<dividend>"]
-    divisor = args["<divisor>"]
-    log_level = args["--log-level"]
+    dividend: int = validated_args["<dividend>"]
+    divisor: int = validated_args["<divisor>"]
+    log_level: str = validated_args["--log-level"]
 
     # Set up logging
     logging.basicConfig(
@@ -89,11 +90,11 @@ def main():
     logging.info(f"{dividend} / {divisor} == {example_div(dividend, divisor)}")
 
     # Access some data from an environment variable
-    message = os.getenv("ECHO_MESSAGE", DEFAULT_ECHO_MESSAGE)
+    message: str = os.getenv("ECHO_MESSAGE", DEFAULT_ECHO_MESSAGE)
     logging.info(f'ECHO_MESSAGE="{message}"')
 
     # Access some data from our package data (see the setup.py)
-    secret_message = (
+    secret_message: str = (
         pkg_resources.resource_string("example", "data/secret.txt")
         .decode("utf-8")
         .strip()
