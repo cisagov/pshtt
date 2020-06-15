@@ -20,7 +20,7 @@ before_install:
   - sudo apt-get install -y shellcheck
 
 install:
-  - pip install flake8 pytest-cov pytest coveralls
+  - pip install --upgrade flake8 pytest-cov pytest coveralls
   - pip install -e .
 
 script:
