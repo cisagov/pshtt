@@ -1,1 +1,3 @@
+--requirement requirements.txt
 -e .[test]
+pre-commit
