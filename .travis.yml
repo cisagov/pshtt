@@ -18,6 +18,7 @@ matrix:
 
 before_install:
   - sudo apt-get install -y shellcheck
+  - pip install --upgrade pip setuptools wheel
 
 install:
   - pip install --upgrade flake8 pytest-cov pytest coveralls
