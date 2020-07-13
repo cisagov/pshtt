@@ -90,6 +90,7 @@ def test_slow_division():
     This test will only be run if --runslow is passed to pytest.
     Look in conftest.py to see how this is implemented.
     """
+    # Standard Python Libraries
     import time
 
     result = example.example_div(256, 16)
