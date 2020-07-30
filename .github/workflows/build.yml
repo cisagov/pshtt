@@ -50,19 +50,18 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache pip test requirements
-        uses: actions/cache@v1
+      - name: Cache testing environments
+        uses: actions/cache@v2
         with:
           path: ${{ env.PIP_CACHE_DIR }}
-          key: "${{ runner.os }}-pip-test-py${{ matrix.python-version }}-\
+          key: "test-${{ runner.os }}-py${{ matrix.python-version }}-\
             ${{ hashFiles('**/requirements-test.txt') }}"
           restore-keys: |
-            ${{ runner.os }}-pip-test-py${{ matrix.python-version }}-
-            ${{ runner.os }}-pip-test-
-            ${{ runner.os }}-pip-
+            test-${{ runner.os }}-py${{ matrix.python-version }}-
+            test-${{ runner.os }}-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -84,19 +83,18 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache pip build requirements
-        uses: actions/cache@v1
+      - name: Cache building environments
+        uses: actions/cache@v2
         with:
           path: ${{ env.PIP_CACHE_DIR }}
-          key: "${{ runner.os }}-pip-build-py${{ matrix.python-version }}-\
+          key: "build-${{ runner.os }}-py${{ matrix.python-version }}-\
             ${{ hashFiles('**/requirements.txt') }}"
           restore-keys: |
-            ${{ runner.os }}-pip-build-py${{ matrix.python-version }}-
-            ${{ runner.os }}-pip-build-
-            ${{ runner.os }}-pip-
+            build-${{ runner.os }}-py${{ matrix.python-version }}-
+            build-${{ runner.os }}-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel
