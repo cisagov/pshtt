@@ -59,7 +59,8 @@ jobs:
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "test-${{ runner.os }}-py${{ matrix.python-version }}-\
-            ${{ hashFiles('**/requirements-test.txt') }}"
+            ${{ hashFiles('**/requirements-test.txt') }}-\
+            ${{ hashFiles('**/requirements.txt') }}"
           restore-keys: |
             test-${{ runner.os }}-py${{ matrix.python-version }}-
             test-${{ runner.os }}-
