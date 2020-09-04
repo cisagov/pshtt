@@ -102,7 +102,7 @@ jobs:
       - name: Build artifacts
         run: python3 setup.py sdist bdist_wheel
       - name: Upload artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: dist-${{ matrix.python-version }}
           path: dist
