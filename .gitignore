@@ -1,6 +1,6 @@
-*.egg-info
+__pycache__
 .coverage
 .mypy_cache
 .pytest_cache
 .python-version
-__pycache__
+*.egg-info
