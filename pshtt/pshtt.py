@@ -526,31 +526,57 @@ def hsts_check(endpoint):
             endpoint.hsts = False
             return
 
-        endpoint.hsts = True
         endpoint.hsts_header = header
 
-        # Set max age to the string after max-age
-        # TODO: make this more resilient to pathological HSTS headers.
-
         # handle multiple HSTS headers, requests comma-separates them
-        first_pass = re.split(r',\s?', header)[0]
-        second_pass = re.sub(r'\'', '', first_pass)
+        headers = [x.strip() for x in header.split(",")]
 
-        temp = re.split(r';\s?', second_pass)
+        # Multiple HSTS headers does not conform to RFCs 7230-3.2.2 and 6797-6.1
+        # See https://tools.ietf.org/html/rfc7230#section-3.2.2 and
+        # https://tools.ietf.org/html/rfc6797#section-6.1
+        if len(headers) > 1:
+            logging.warning("Host is incorrectly returning multiple HSTS headers: {}".format(header))
 
-        if "max-age" in header.lower():
-            endpoint.hsts_max_age = int(temp[0][len("max-age="):])
+        # Put all of the directives in the HSTS header into a dictionary
+        directive_list = [x.strip() for x in headers[0].split(";")]
+        directives = dict()
+        for directive in directive_list:
+            if "=" in directive:
+                token, value = directive.split("=")
+                directives[token] = value
+            else:
+                directives[directive] = True
 
-        if endpoint.hsts_max_age is None or endpoint.hsts_max_age <= 0:
+        # max-age is a required directive for HSTS headers
+        if "max-age" not in directives:
             endpoint.hsts = False
             return
 
+        endpoint.hsts_max_age = int(directives["max-age"]) if "max-age" in directives else None
+
+        # According to section 6.1.1 of the HSTS RFC
+        # (https://tools.ietf.org/html/rfc6797#section-6.1.1), a
+        # non-negative integer value is required.
+        #
+        # Note that a zero value indicates that the user agent should
+        # cease considering the host a known HSTS host, and therefore
+        # only strictly positive values really indicate the presence
+        # of HSTS protection.  Here, though, we're checking strictly
+        # for RFC compliance.  See
+        # https://tools.ietf.org/html/rfc6797#section-6.1.1 for more
+        # details.
+        if endpoint.hsts_max_age is None or endpoint.hsts_max_age < 0:
+            endpoint.hsts = False
+            return
+
+        endpoint.hsts = True
+
         # check if hsts includes sub domains
-        if 'includesubdomains' in header.lower():
+        if "includesubdomains" in directives:
             endpoint.hsts_all_subdomains = True
 
         # Check is hsts has the preload flag
-        if 'preload' in header.lower():
+        if "preload" in directives:
             endpoint.hsts_preload = True
     except Exception as err:
         endpoint.unknown_error = True
