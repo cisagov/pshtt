@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """example is an example Python library and tool.
 
 Divide one integer by another and log the result. Also log some information
