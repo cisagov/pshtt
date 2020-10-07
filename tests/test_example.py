@@ -44,6 +44,18 @@ def test_stdout_version(capsys):
     ), "standard output by '--version' should agree with module.__version__"
 
 
+def test___main__(capsys):
+    """Verify that the __main__.py file loads correctly."""
+    with pytest.raises(SystemExit):
+        with patch.object(sys, "argv", ["bogus", "--version"]):
+            # cisagov Libraries
+            import example.__main__  # noqa: F401
+    captured = capsys.readouterr()
+    assert (
+        captured.out == f"{PROJECT_VERSION}\n"
+    ), "standard output by '--version' should agree with module.__version__"
+
+
 @pytest.mark.skipif(
     RELEASE_TAG in [None, ""], reason="this is not a release (RELEASE_TAG not set)"
 )
