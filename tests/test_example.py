@@ -44,7 +44,7 @@ def test_stdout_version(capsys):
     ), "standard output by '--version' should agree with module.__version__"
 
 
-def test___main__(capsys):
+def test_running_as_module(capsys):
     """Verify that the __main__.py file loads correctly."""
     with pytest.raises(SystemExit):
         with patch.object(sys, "argv", ["bogus", "--version"]):
