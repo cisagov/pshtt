@@ -48,6 +48,11 @@ def test___main__(capsys):
     """Verify that the __main__.py file loads correctly."""
     with pytest.raises(SystemExit):
         with patch.object(sys, "argv", ["bogus", "--version"]):
+            # F401 is a "Module imported but unused" warning. This import
+            # emulates how this project would be run as a module. The only thing
+            # being done by __main__ is importing the main entrypoint of the
+            # package and running it, so there is nothing to use from this
+            # import. As a result, we can safely ignore this warning.
             # cisagov Libraries
             import example.__main__  # noqa: F401
     captured = capsys.readouterr()
