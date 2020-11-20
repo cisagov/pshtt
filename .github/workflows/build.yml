@@ -51,7 +51,8 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache testing environments
@@ -59,12 +60,12 @@ jobs:
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "test-${{ runner.os }}-\
-            py${{ matrix.python-version }}-\
+            py${{ steps.setup-python.outputs.python-version }}-\
             ${{ hashFiles('**/requirements-test.txt') }}-\
             ${{ hashFiles('**/requirements.txt') }}"
           restore-keys: |
             test-${{ runner.os }}-\
-            py${{ matrix.python-version }}-
+            py${{ steps.setup-python.outputs.python-version }}-
             test-${{ runner.os }}-
       - name: Install dependencies
         run: |
@@ -87,7 +88,8 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache building environments
@@ -95,11 +97,11 @@ jobs:
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "build-${{ runner.os }}-\
-            py${{ matrix.python-version }}-\
+            py${{ steps.setup-python.outputs.python-version }}-\
             ${{ hashFiles('**/requirements.txt') }}"
           restore-keys: |
             build-${{ runner.os }}-\
-            py${{ matrix.python-version }}-
+            py${{ steps.setup-python.outputs.python-version }}-
             build-${{ runner.os }}-
       - name: Install dependencies
         run: |
