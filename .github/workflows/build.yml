@@ -49,13 +49,14 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v2
         env:
           BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
-            py${{ matrix.python-version }}-"
+            py${{ steps.setup-python.outputs.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "${{ env.BASE_CACHE_KEY }}\
@@ -84,13 +85,14 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v2
         env:
           BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
-            py${{ matrix.python-version }}-"
+            py${{ steps.setup-python.outputs.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "${{ env.BASE_CACHE_KEY }}\
