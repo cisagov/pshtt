@@ -52,18 +52,17 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache testing environments
-        uses: actions/cache@v2
+      - uses: actions/cache@v2
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ matrix.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
-          key: "test-${{ runner.os }}-\
-            py${{ matrix.python-version }}-\
+          key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
             ${{ hashFiles('**/requirements.txt') }}"
           restore-keys: |
-            test-${{ runner.os }}-\
-            py${{ matrix.python-version }}-
-            test-${{ runner.os }}-
+            ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -88,17 +87,16 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache building environments
-        uses: actions/cache@v2
+      - uses: actions/cache@v2
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ matrix.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
-          key: "build-${{ runner.os }}-\
-            py${{ matrix.python-version }}-\
+          key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements.txt') }}"
           restore-keys: |
-            build-${{ runner.os }}-\
-            py${{ matrix.python-version }}-
-            build-${{ runner.os }}-
+            ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel
