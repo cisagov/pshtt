@@ -8,8 +8,8 @@ name: "CodeQL"
 
 on:
   push:
-    # Push on all branches
-    # branches: [develop]
+  # Push on all branches
+  # branches: [develop]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [develop]
@@ -68,7 +68,7 @@ jobs:
       # three lines and modify them (or add more) to build your code if your
       # project uses a compiled language
 
-      #- run: |
+      # - run: |
       #   make bootstrap
       #   make release
 
