@@ -801,7 +801,7 @@ def https_check(endpoint):
     # Check certificate chain
     # NOTE: If this is the only flag that's set, it's probably
     # an incomplete chain
-    # If this isnt the only flag that is set, it's might be
+    # If this isn't the only flag that is set, it might be
     # because there is another error. More debugging would
     # need to be done at this point, but not through sslyze
     # because sslyze doesn't have enough granularity
