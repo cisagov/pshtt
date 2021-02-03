@@ -693,7 +693,7 @@ def https_check(endpoint):
         command = ScanCommand.CERTIFICATE_INFO
         if CA_FILE is not None:
             command_extra_args = {
-                ScanCommand.CERTIFICATE_INFO: CertificateInfoExtraArguments(custom_ca_file=Path(CA_FILE))
+                command: CertificateInfoExtraArguments(custom_ca_file=Path(CA_FILE))
             }
             scan_request = ServerScanRequest(
                 server_info=server_info,
@@ -716,7 +716,7 @@ def https_check(endpoint):
                     "%s: Retrying sslyze scanner certificate plugin.", endpoint.url
                 )
                 scanner.queue_scan(scan_request)
-                # Retrieve results from generator object
+                # Consume the generator object and retrieve the first result
                 scan_result = [x for x in scanner.get_results()][0]
                 cert_plugin_result = scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
             else:
@@ -795,7 +795,7 @@ def https_check(endpoint):
         endpoint.https_expired_cert = True
 
     # Check to see if the cert is self-signed
-    if leaf_cert.issuer is leaf_cert.subject:
+    if leaf_cert.issuer == leaf_cert.subject:
         endpoint.https_self_signed_cert = True
 
     # Check certificate chain
@@ -811,7 +811,7 @@ def https_check(endpoint):
             endpoint.https_bad_chain = True
 
         # Check to see if the cert is self-signed
-        if cert.issuer is (cert.subject or None):
+        if cert.issuer == (cert.subject or None):
             endpoint.https_bad_chain = True
 
     # If leaf certificate subject does NOT match hostname, bad hostname
@@ -825,7 +825,7 @@ def https_check(endpoint):
         endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_deployments[0].received_certificate_chain)
         if (
                 endpoint.https_self_signed_cert is False and (
-                    len(cert_plugin_result.certificate_deployments[0].received_certificate_chain) < 2
+                    endpoint.https_cert_chain_len < 2
                 )
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
@@ -848,7 +848,7 @@ def https_check(endpoint):
                         scanner = Scanner()
                         command = ScanCommand.CERTIFICATE_INFO
                         command_extra_args = {
-                            ScanCommand.CERTIFICATE_INFO: CertificateInfoExtraArguments(
+                            command: CertificateInfoExtraArguments(
                                     custom_ca_file=Path(PT_INT_CA_FILE)
                                 )
                         }
@@ -858,7 +858,7 @@ def https_check(endpoint):
                             scan_commands=[command]
                         )
                         scanner.queue_scan(scan_request)
-                        # Retrieve results from generator object
+                        # Consume the generator object and retrieve the first result
                         scan_result = [x for x in scanner.get_results()][0]
                         cert_plugin_result = scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
                         if cert_plugin_result.certificate_deployments[0].verified_certificate_chain is not None:
