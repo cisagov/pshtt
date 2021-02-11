@@ -45,7 +45,7 @@ setup(
     name="example",
     # Versions should comply with PEP440
     version=get_version("src/example/_version.py"),
-    description="Example python library",
+    description="Example Python library",
     long_description=readme(),
     long_description_content_type="text/markdown",
     # Landing page for CISA's cybersecurity mission
