@@ -48,8 +48,8 @@ setup(
     description="Example python library",
     long_description=readme(),
     long_description_content_type="text/markdown",
-    # NCATS "homepage"
-    url="https://www.us-cert.gov/resources/ncats",
+    # Landing page for CISA's cybersecurity mission
+    url="https://www.cisa.gov/cybersecurity",
     # The project's main homepage
     download_url="https://github.com/cisagov/skeleton-python-library",
     # Author details
