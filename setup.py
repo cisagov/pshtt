@@ -50,8 +50,12 @@ setup(
     long_description_content_type="text/markdown",
     # Landing page for CISA's cybersecurity mission
     url="https://www.cisa.gov/cybersecurity",
-    # The project's main homepage
-    download_url="https://github.com/cisagov/skeleton-python-library",
+    # Additional URLs for this project per
+    # https://packaging.python.org/guides/distributing-packages-using-setuptools/#project-urls
+    project_urls={
+        "Source": "https://github.com/cisagov/skeleton-python-library",
+        "Tracker": "https://github.com/cisagov/skeleton-python-library/issues",
+    },
     # Author details
     author="Cyber and Infrastructure Security Agency",
     author_email="github@cisa.dhs.gov",
