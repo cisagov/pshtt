@@ -54,7 +54,7 @@ setup(
     download_url="https://github.com/cisagov/skeleton-python-library",
     # Author details
     author="Cyber and Infrastructure Security Agency",
-    author_email="ncats@hq.dhs.gov",
+    author_email="github@cisa.dhs.gov",
     license="License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
