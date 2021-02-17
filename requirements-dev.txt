@@ -1,3 +1,4 @@
 --requirement requirements-test.txt
 ipython
+mypy
 semver
