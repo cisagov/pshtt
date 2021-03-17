@@ -675,7 +675,7 @@ def https_check(endpoint):
         logging.exception(
             "%s: Error in sslyze server connectivity check when connecting to %s",
             endpoint.url,
-            err.server_info.hostname,
+            err.server_location.hostname,
         )
         utils.debug("%s: %s", endpoint.url, err)
         return
@@ -835,7 +835,9 @@ def https_check(endpoint):
         )
 
     try:
-        endpoint.https_cert_chain_len = len(cert_plugin_result.certificate_deployments[0].received_certificate_chain)
+        endpoint.https_cert_chain_len = 0
+        for certificate_deployment in cert_plugin_result.certificate_deployments:
+            endpoint.https_cert_chain_len += len(certificate_deployment.received_certificate_chain)
         if (
                 endpoint.https_self_signed_cert is False and (
                     endpoint.https_cert_chain_len < 2
@@ -843,15 +845,19 @@ def https_check(endpoint):
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
-            if cert_plugin_result.verified_certificate_chain is None:
+            has_verfied_cert_chain = True
+            for certificate_deployment in cert_plugin_result.certificate_deployments:
+                if certificate_deployment.verified_certificate_chain is None:
+                    has_verfied_cert_chain = False
+            if not has_verfied_cert_chain:
                 logging.warning(
                     "%s: Untrusted certificate chain, probably due to missing intermediate certificate.",
                     endpoint.url
                 )
                 utils.debug(
-                    "%s: Only {} certificates in certificate chain received.",
+                    "%s: Only %s certificates in certificate chain received.",
                     endpoint.url,
-                    cert_plugin_result.received_certificate_chain.__len__()
+                    endpoint.https_cert_chain_len
                 )
             elif custom_trust is True and public_trust is False:
                 # recheck public trust using custom public trust store with manually added intermediate certificates
@@ -874,7 +880,11 @@ def https_check(endpoint):
                         # Consume the generator object and retrieve the first result
                         scan_result = [x for x in scanner.get_results()][0]
                         cert_plugin_result = scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
-                        if cert_plugin_result.certificate_deployments[0].verified_certificate_chain is not None:
+                        has_verfied_cert_chain = True
+                        for certificate_deployment in cert_plugin_result.certificate_deployments:
+                            if certificate_deployment.verified_certificate_chain is None:
+                                has_verfied_cert_chain = False
+                        if has_verfied_cert_chain:
                             public_trust = True
                             endpoint.https_public_trusted = public_trust
                             logging.warning(
