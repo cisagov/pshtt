@@ -1,2 +1,3 @@
+# Note: Add any additional requirements to setup.py's install_requires field
 --editable .
 wheel
