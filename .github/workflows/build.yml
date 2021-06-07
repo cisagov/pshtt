@@ -31,7 +31,8 @@ jobs:
           key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
             ${{ hashFiles('**/requirements.txt') }}-\
-            ${{ hashFiles('**/.pre-commit-config.yaml') }}"
+            ${{ hashFiles('**/.pre-commit-config.yaml') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
@@ -61,7 +62,8 @@ jobs:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
-            ${{ hashFiles('**/requirements.txt') }}"
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
@@ -97,7 +99,8 @@ jobs:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
-            ${{ hashFiles('**/requirements.txt') }}"
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
@@ -127,7 +130,8 @@ jobs:
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           key: "${{ env.BASE_CACHE_KEY }}\
-            ${{ hashFiles('**/requirements.txt') }}"
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
