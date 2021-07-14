@@ -85,11 +85,11 @@ def main() -> None:
         format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
     )
 
-    logging.info(f"{dividend} / {divisor} == {example_div(dividend, divisor)}")
+    logging.info("%d / %d == %f", dividend, divisor, example_div(dividend, divisor))
 
     # Access some data from an environment variable
     message: str = os.getenv("ECHO_MESSAGE", DEFAULT_ECHO_MESSAGE)
-    logging.info(f'ECHO_MESSAGE="{message}"')
+    logging.info('ECHO_MESSAGE="%s"', message)
 
     # Access some data from our package data (see the setup.py)
     secret_message: str = (
@@ -97,7 +97,7 @@ def main() -> None:
         .decode("utf-8")
         .strip()
     )
-    logging.info(f'Secret="{secret_message}"')
+    logging.info('Secret="%s"', secret_message)
 
     # Stop logging and clean up
     logging.shutdown()
