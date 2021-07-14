@@ -45,7 +45,7 @@ def example_div(dividend: float, divisor: float) -> float:
     return dividend / divisor
 
 
-def main() -> int:
+def main() -> None:
     """Set up logging and call the example function."""
     args: Dict[str, str] = docopt.docopt(__doc__, version=__version__)
     # Validate and convert arguments as needed
@@ -73,7 +73,7 @@ def main() -> int:
     except SchemaError as err:
         # Exit because one or more of the arguments were invalid
         print(err, file=sys.stderr)
-        return 1
+        sys.exit(1)
 
     # Assign validated arguments to variables
     dividend: int = validated_args["<dividend>"]
@@ -101,4 +101,3 @@ def main() -> int:
 
     # Stop logging and clean up
     logging.shutdown()
-    return 0
