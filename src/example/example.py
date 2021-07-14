@@ -102,7 +102,3 @@ def main() -> int:
     # Stop logging and clean up
     logging.shutdown()
     return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
