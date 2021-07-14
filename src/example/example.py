@@ -35,7 +35,7 @@ from ._version import __version__
 DEFAULT_ECHO_MESSAGE: str = "Hello World from the example default!"
 
 
-def example_div(dividend: float, divisor: float) -> float:
+def example_div(dividend: int, divisor: int) -> float:
     """Print some logging messages."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
