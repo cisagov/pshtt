@@ -12,7 +12,7 @@ It does the following:
   - Verifies pyenv and pyenv-virtualenv are installed.
   - Creates a Python virtual environment.
   - Configures the activation of the virtual enviroment for the repo directory.
-  - Installs the requirements needed for development.
+  - Installs the requirements needed for development (including mypy type stubs).
   - Installs git pre-commit hooks.
   - Configures git upstream remote "lineage" repositories.
 
@@ -153,6 +153,9 @@ for req_file in "requirements-dev.txt" "requirements-test.txt" "requirements.txt
     break
   fi
 done
+
+# Install all necessary mypy type stubs
+mypy --install-types src/
 
 # Install git pre-commit hooks now or later.
 pre-commit install ${INSTALL_HOOKS:+"--install-hooks"}
