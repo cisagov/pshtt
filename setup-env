@@ -4,14 +4,15 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-USAGE=$(cat << 'END_OF_LINE'
+USAGE=$(
+  cat << 'END_OF_LINE'
 Configure a developement environment for this repository.
 
 It does the following:
   - Verifies pyenv and pyenv-virtualenv are installed.
   - Creates a Python virtual environment.
   - Configures the activation of the virtual enviroment for the repo directory.
-  - Installs the requirements needed for development.
+  - Installs the requirements needed for development (including mypy type stubs).
   - Installs git pre-commit hooks.
   - Configures git upstream remote "lineage" repositories.
 
@@ -35,17 +36,17 @@ FORCE=0
 PARAMS=""
 
 # Parse command line arguments
-while (( "$#" )); do
+while (("$#")); do
   case "$1" in
-    -f|--force)
+    -f | --force)
       FORCE=1
       shift
       ;;
-    -h|--help)
+    -h | --help)
       echo "${USAGE}"
       exit 0
       ;;
-    -i|--install-hooks)
+    -i | --install-hooks)
       INSTALL_HOOKS=1
       shift
       ;;
@@ -153,6 +154,9 @@ for req_file in "requirements-dev.txt" "requirements-test.txt" "requirements.txt
   fi
 done
 
+# Install all necessary mypy type stubs
+mypy --install-types src/
+
 # Install git pre-commit hooks now or later.
 pre-commit install ${INSTALL_HOOKS:+"--install-hooks"}
 
@@ -160,7 +164,8 @@ pre-commit install ${INSTALL_HOOKS:+"--install-hooks"}
 # This could fail if the remotes are already setup, but that is ok.
 set +o errexit
 
-eval "$(python3 << 'END_OF_LINE'
+eval "$(
+  python3 << 'END_OF_LINE'
 from pathlib import Path
 import yaml
 import sys
