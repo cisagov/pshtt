@@ -56,10 +56,14 @@ jobs:
             ${{ env.PRE_COMMIT_CACHE_DIR }}
             ${{ env.CURL_CACHE_DIR }}
             ${{ steps.go-cache.outputs.dir }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
           key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
             ${{ hashFiles('**/requirements.txt') }}-\
-            ${{ hashFiles('**/.pre-commit-config.yaml') }}"
+            ${{ hashFiles('**/.pre-commit-config.yaml') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Setup curl cache
@@ -127,9 +131,13 @@ jobs:
             py${{ steps.setup-python.outputs.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
           key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
-            ${{ hashFiles('**/requirements.txt') }}"
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
@@ -166,9 +174,13 @@ jobs:
             py${{ steps.setup-python.outputs.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
           key: "${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
-            ${{ hashFiles('**/requirements.txt') }}"
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
@@ -200,8 +212,12 @@ jobs:
             py${{ steps.setup-python.outputs.python-version }}-"
         with:
           path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
           key: "${{ env.BASE_CACHE_KEY }}\
-            ${{ hashFiles('**/requirements.txt') }}"
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
