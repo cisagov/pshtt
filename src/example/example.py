@@ -35,7 +35,7 @@ from ._version import __version__
 DEFAULT_ECHO_MESSAGE: str = "Hello World from the example default!"
 
 
-def example_div(dividend: float, divisor: float) -> float:
+def example_div(dividend: int, divisor: int) -> float:
     """Print some logging messages."""
     logging.debug("This is a debug message")
     logging.info("This is an info message")
@@ -45,7 +45,7 @@ def example_div(dividend: float, divisor: float) -> float:
     return dividend / divisor
 
 
-def main() -> int:
+def main() -> None:
     """Set up logging and call the example function."""
     args: Dict[str, str] = docopt.docopt(__doc__, version=__version__)
     # Validate and convert arguments as needed
@@ -73,7 +73,7 @@ def main() -> int:
     except SchemaError as err:
         # Exit because one or more of the arguments were invalid
         print(err, file=sys.stderr)
-        return 1
+        sys.exit(1)
 
     # Assign validated arguments to variables
     dividend: int = validated_args["<dividend>"]
@@ -85,11 +85,11 @@ def main() -> int:
         format="%(asctime)-15s %(levelname)s %(message)s", level=log_level.upper()
     )
 
-    logging.info(f"{dividend} / {divisor} == {example_div(dividend, divisor)}")
+    logging.info("%d / %d == %f", dividend, divisor, example_div(dividend, divisor))
 
     # Access some data from an environment variable
     message: str = os.getenv("ECHO_MESSAGE", DEFAULT_ECHO_MESSAGE)
-    logging.info(f'ECHO_MESSAGE="{message}"')
+    logging.info('ECHO_MESSAGE="%s"', message)
 
     # Access some data from our package data (see the setup.py)
     secret_message: str = (
@@ -97,12 +97,7 @@ def main() -> int:
         .decode("utf-8")
         .strip()
     )
-    logging.info(f'Secret="{secret_message}"')
+    logging.info('Secret="%s"', secret_message)
 
     # Stop logging and clean up
     logging.shutdown()
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
