@@ -21,7 +21,7 @@ jobs:
         uses: cisagov/setup-env-github-action@develop
       - uses: actions/checkout@v3
       - id: setup-python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           # A lower version is used because of a dependency issue in Python
           # versions 3.8-3.10
