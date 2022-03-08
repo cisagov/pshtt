@@ -1,0 +1,240 @@
+---
+name: build
+
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+    types: [apb]
+
+env:
+  CURL_CACHE_DIR: ~/.cache/curl
+  PIP_CACHE_DIR: ~/.cache/pip
+  PRE_COMMIT_CACHE_DIR: ~/.cache/pre-commit
+  RUN_TMATE: ${{ secrets.RUN_TMATE }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - id: setup-env
+        uses: cisagov/setup-env-github-action@develop
+      - uses: actions/checkout@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      # We need the Go version and Go cache location for the actions/cache step,
+      # so the Go installation must happen before that.
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Store installed Go version
+        id: go-version
+        run: |
+          echo "::set-output name=version::"\
+          "$(go version | sed 's/^go version go\([0-9.]\+\) .*/\1/')"
+      - name: Lookup Go cache directory
+        id: go-cache
+        run: |
+          echo "::set-output name=dir::$(go env GOCACHE)"
+      - uses: actions/cache@v2
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-\
+            go${{ steps.go-version.outputs.version }}-\
+            packer${{ steps.setup-env.outputs.packer-version }}-\
+            tf${{ steps.setup-env.outputs.terraform-version }}-"
+        with:
+          # Note that the .terraform directory IS NOT included in the
+          # cache because if we were caching, then we would need to use
+          # the `-upgrade=true` option. This option blindly pulls down the
+          # latest modules and providers instead of checking to see if an
+          # update is required. That behavior defeats the benefits of caching.
+          # so there is no point in doing it for the .terraform directory.
+          path: |
+            ${{ env.PIP_CACHE_DIR }}
+            ${{ env.PRE_COMMIT_CACHE_DIR }}
+            ${{ env.CURL_CACHE_DIR }}
+            ${{ steps.go-cache.outputs.dir }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
+          key: "${{ env.BASE_CACHE_KEY }}\
+            ${{ hashFiles('**/requirements-test.txt') }}-\
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('**/.pre-commit-config.yaml') }}-\
+            ${{ hashFiles('setup.py') }}"
+          restore-keys: |
+            ${{ env.BASE_CACHE_KEY }}
+      - name: Setup curl cache
+        run: mkdir -p ${{ env.CURL_CACHE_DIR }}
+      - name: Install Packer
+        env:
+          PACKER_VERSION: ${{ steps.setup-env.outputs.packer-version }}
+        run: |
+          PACKER_ZIP="packer_${PACKER_VERSION}_linux_amd64.zip"
+          curl --output ${{ env.CURL_CACHE_DIR }}/"${PACKER_ZIP}" \
+            --time-cond ${{ env.CURL_CACHE_DIR }}/"${PACKER_ZIP}" \
+            --location \
+            "https://releases.hashicorp.com/packer/${PACKER_VERSION}/${PACKER_ZIP}"
+          sudo unzip -d /opt/packer \
+            ${{ env.CURL_CACHE_DIR }}/"${PACKER_ZIP}"
+          sudo mv /usr/local/bin/packer /usr/local/bin/packer-default
+          sudo ln -s /opt/packer/packer /usr/local/bin/packer
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ steps.setup-env.outputs.terraform-version }}
+      - name: Install shfmt
+        env:
+          PACKAGE_URL: mvdan.cc/sh/v3/cmd/shfmt
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.shfmt-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install Terraform-docs
+        env:
+          PACKAGE_URL: github.com/terraform-docs/terraform-docs
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.terraform-docs-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade --requirement requirements-test.txt
+      - name: Set up pre-commit hook environments
+        run: pre-commit install-hooks
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: env.RUN_TMATE
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+    steps:
+      - uses: actions/checkout@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-"
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
+          key: "${{ env.BASE_CACHE_KEY }}\
+            ${{ hashFiles('**/requirements-test.txt') }}-\
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
+          restore-keys: |
+            ${{ env.BASE_CACHE_KEY }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade --requirement requirements-test.txt
+      - name: Run tests
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: pytest
+      - name: Upload coverage report
+        run: coveralls
+        env:
+          COVERALLS_FLAG_NAME: "py${{ matrix.python-version }}"
+          COVERALLS_PARALLEL: true
+          COVERALLS_SERVICE_NAME: github
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: success()
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: env.RUN_TMATE
+  coveralls-finish:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - uses: actions/cache@v2
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-"
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
+          key: "${{ env.BASE_CACHE_KEY }}\
+            ${{ hashFiles('**/requirements-test.txt') }}-\
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
+          restore-keys: |
+            ${{ env.BASE_CACHE_KEY }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade --requirement requirements-test.txt
+      - name: Finished coveralls reports
+        run: coveralls --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: env.RUN_TMATE
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+    steps:
+      - uses: actions/checkout@v2
+      - id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-"
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
+          key: "${{ env.BASE_CACHE_KEY }}\
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
+          restore-keys: |
+            ${{ env.BASE_CACHE_KEY }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel
+          pip install --upgrade --requirement requirements.txt
+      - name: Build artifacts
+        run: python3 setup.py sdist bdist_wheel
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist-${{ matrix.python-version }}
+          path: dist
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: env.RUN_TMATE

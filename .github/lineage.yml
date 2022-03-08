@@ -1,0 +1,5 @@
+---
+lineage:
+  skeleton:
+    remote-url: https://github.com/cisagov/skeleton-python-library.git
+version: '1'

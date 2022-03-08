@@ -1,10 +1,11 @@
 # Pushing HTTPS :lock: #
 
 [![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.org/project/pshtt/)
-[![Build Status](https://travis-ci.com/cisagov/pshtt.svg?branch=develop)](https://travis-ci.com/cisagov/pshtt)
-[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg)](https://coveralls.io/github/cisagov/pshtt)
+[![GitHub Build Status](https://github.com/cisagov/pshtt/workflows/build/badge.svg)](https://github.com/cisagov/pshtt/actions)
+[![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/pshtt?branch=develop)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/cisagov/pshtt.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/pshtt/alerts/)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/cisagov/pshtt.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cisagov/pshtt/context:python)
+[![Known Vulnerabilities](https://snyk.io/test/github/cisagov/pshtt/develop/badge.svg)](https://snyk.io/test/github/cisagov/pshtt)
 
 `pshtt` (_"pushed"_) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.
@@ -301,9 +302,14 @@ Balter](https://github.com/benbalter)'s
 [site-inspector](https://github.com/benbalter/site-inspector), with
 significant guidance from [Eric Mill](https://github.com/konklone).
 
-## Public domain ##
+## Contributing ##
 
-This project is in the worldwide [public domain](LICENSE.md).
+We welcome contributions!  Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+details.
+
+## License ##
+
+This project is in the worldwide [public domain](LICENSE).
 
 This project is in the public domain within the United States, and
 copyright and related rights in the work worldwide are waived through

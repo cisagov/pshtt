@@ -26,7 +26,7 @@ Notes:
 
 from . import pshtt
 from . import utils
-from . import __version__
+from ._version import __version__
 from .utils import smart_open
 
 import csv
