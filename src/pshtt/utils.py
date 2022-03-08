@@ -31,8 +31,7 @@ def mkdir_p(path):
 
 
 def json_for(object):
-    return json.dumps(object, sort_keys=True,
-                      indent=2, default=format_datetime)
+    return json.dumps(object, sort_keys=True, indent=2, default=format_datetime)
 
 
 def write(content, destination, binary=False):
@@ -41,9 +40,9 @@ def write(content, destination, binary=False):
         mkdir_p(parent)
 
     if binary:
-        f = open(destination, 'bw')
+        f = open(destination, "bw")
     else:
-        f = open(destination, 'w')  # no utf-8 in python 2
+        f = open(destination, "w")  # no utf-8 in python 2
     f.write(content)
     f.close()
 
@@ -82,7 +81,7 @@ def configure_logging(debug=False):
     else:
         log_level = logging.WARNING
 
-    logging.basicConfig(format='%(message)s', level=log_level)
+    logging.basicConfig(format="%(message)s", level=log_level)
 
 
 def format_domains(domains):
@@ -113,7 +112,7 @@ def smart_open(filename=None):
     if filename is None:
         fh = sys.stdout
     else:
-        fh = open(filename, 'w')
+        fh = open(filename, "w")
 
     try:
         yield fh

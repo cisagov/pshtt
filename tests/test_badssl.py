@@ -29,32 +29,32 @@ def inspect(base_domain):
     return domain
 
 
-@unittest.skip('Disable live tests against badssl for now')
+@unittest.skip("Disable live tests against badssl for now")
 class TestCertificate(unittest.TestCase):
     def test_https_expired(self):
-        domain = inspect('expired.badssl.com')
+        domain = inspect("expired.badssl.com")
         basic_check(domain.https)
 
         self.assertTrue(domain.https.https_expired_cert)
 
     def test_https_bad_hostname(self):
-        domain = inspect('wrong.host.badssl.com')
+        domain = inspect("wrong.host.badssl.com")
         basic_check(domain.https)
 
         self.assertTrue(domain.https.https_bad_hostname)
 
     def test_https_bad_chain(self):
-        domain = inspect('untrusted-root.badssl.com')
+        domain = inspect("untrusted-root.badssl.com")
         basic_check(domain.https)
 
         self.assertTrue(domain.https.https_bad_chain)
 
     def test_https_self_signed_cert(self):
-        domain = inspect('self-signed.badssl.com')
+        domain = inspect("self-signed.badssl.com")
         basic_check(domain.https)
 
         self.assertTrue(domain.https.https_self_signed_cert)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

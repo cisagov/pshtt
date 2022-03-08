@@ -6,7 +6,7 @@ from pshtt import pshtt as api
 
 class TestUsesHTTPS(unittest.TestCase):
     def setUp(self):
-        base_domain = 'example.com'
+        base_domain = "example.com"
         self.domain = Domain(base_domain)
 
         self.domain.http = Endpoint("http", "root", base_domain)
@@ -14,7 +14,7 @@ class TestUsesHTTPS(unittest.TestCase):
         self.domain.https = Endpoint("https", "root", base_domain)
         self.domain.httpswww = Endpoint("https", "www", base_domain)
 
-    @unittest.skip('Still working on definition')
+    @unittest.skip("Still working on definition")
     def test_definition(self):
         self.domain.https.live = True
         self.domain.https.https_valid = True
@@ -25,7 +25,7 @@ class TestUsesHTTPS(unittest.TestCase):
 
 class TestBadChain(unittest.TestCase):
     def setUp(self):
-        base_domain = 'example.com'
+        base_domain = "example.com"
         self.domain = Domain(base_domain)
 
         self.domain.http = Endpoint("http", "root", base_domain)
@@ -58,7 +58,7 @@ class TestBadChain(unittest.TestCase):
 
 class TestBadHostname(unittest.TestCase):
     def setUp(self):
-        base_domain = 'example.com'
+        base_domain = "example.com"
         self.domain = Domain(base_domain)
 
         self.domain.http = Endpoint("http", "root", base_domain)

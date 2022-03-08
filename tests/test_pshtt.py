@@ -6,7 +6,7 @@ from pshtt.pshtt import is_live
 
 class TestLiveliness(unittest.TestCase):
     def setUp(self):
-        base_domain = 'example.com'
+        base_domain = "example.com"
         self.domain = Domain(base_domain)
 
         self.domain.http = Endpoint("http", "root", base_domain)
@@ -70,5 +70,5 @@ class TestLiveliness(unittest.TestCase):
         self.assertTrue(is_live(self.domain))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
