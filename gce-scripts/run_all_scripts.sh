@@ -18,7 +18,6 @@
 # If any of the scripts fails, this hard fails and tells the user what script
 # went wrong.
 
-
 input_file=$1
 number_of_shards=${2-10}
 output_file_name=${3-shard_}
