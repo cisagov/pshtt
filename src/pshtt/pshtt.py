@@ -17,18 +17,19 @@ import requests
 from . import utils
 from .models import Domain, Endpoint
 
-try:
-    # Standard Python Libraries
-    from urllib import parse as urlparse  # Python 3
-except ImportError:
+if sys.version_info.major == 2:
     # Third-Party Libraries
-    import urlparse  # Python 2
+    import urlparse
+elif sys.version_info.major == 3:
+    # Standard Python Libraries
+    from urllib import parse as urlparse
 
-try:
+if sys.version_info.major == 2:
+    # Third-Party Libraries
+    from urllib2 import URLError
+elif sys.version_info.major == 3:
     # Standard Python Libraries
     from urllib.error import URLError
-except ImportError:
-    from urllib2 import URLError
 
 # Third-Party Libraries
 import sslyze

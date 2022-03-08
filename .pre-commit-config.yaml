@@ -108,6 +108,9 @@ repos:
     rev: v0.931
     hooks:
       - id: mypy
+        additional_dependencies:
+          - types-pyOpenSSL
+          - types-requests
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.31.0
     hooks:
