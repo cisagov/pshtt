@@ -32,5 +32,5 @@ for z in $list_of_files; do
   ((i = i + 1))
 done
 
-cd data_results
+cd data_results || exit
 python combine_shards.py to_combine.txt > final_results.json

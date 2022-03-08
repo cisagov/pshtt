@@ -14,7 +14,7 @@ for z in $list_of_files; do
   # Check if screen exists.
   echo 'Kicking off '"${machine}"' number '$i
   ssh -i ~/.ssh/gce_pshtt_key ubuntu@"${machine}" screen -list | grep -q "pshtt_screen"
-  answer=$(echo $?)
+  answer=$?
   # If screen does not exist, then create it.
   if [[ "${answer}" -eq 1 ]]; then
     echo 'Creating screen'

@@ -19,13 +19,11 @@
 # List of IPs, separated by line
 hosts_file='hosts.txt'
 # number of files that we need to cycle through
-num_files=$(ls -1q input_files/ | wc -l)
+num_files=$(find input_files/ -mindepth 1 -maxdepth 1 | wc -l)
 # list of files; we do this deterministically
 # because then we can run this command across
 # other scripts and expect the same order of files.
-list_of_files=$(ls -1q input_files)
-# counter to keep track of which machine we're on (for logging purposes).
-i=1
+list_of_files=$(find input_files/ -mindepth 1 -maxdepth 1)
 # We flip this bit if we find an error with any of the machines. This tells us
 # to stop the process so that the user can go by hand and fix the machine.
 error_with_packages=1
@@ -33,14 +31,14 @@ error_with_packages=1
 # Upload script and install packages on all machines.
 # parallelized.
 ################################################################
-for x in $list_of_files; do
+for i in seq 1 $num_files; do
   # Grab the ip from hosts.txt that corresponds to the file number we are
   # uploading.
   # If we are uploading file #3 in the list, go to line 3 in the hosts file
   # and upload to that ip.
 
   machine=$(sed "${i}q;d" $hosts_file)
-  echo 'Now on '"${machine}"' number '$i
+  echo "Now on ${machine} number ${i}"
   # Do not do strict host key checking so that you dont have to type "yes" for
   # each machine.
   echo 'Uploading packages_to_install.sh'
@@ -53,7 +51,7 @@ for x in $list_of_files; do
   echo $?
   # Check to see if this screen exists already.
   ssh -i ~/.ssh/gce_pshtt_key ubuntu@"${machine}" screen -list | grep -q "package_screen"
-  answer=$(echo $?)
+  answer=$?
   # If the screen exists, then we won't create another one. Otherwise, create.
   if [[ "${answer}" -eq 1 ]]; then
     echo 'Creating screen'
@@ -63,7 +61,6 @@ for x in $list_of_files; do
   # Run packages_to_install and pipe to packages_log_file.txt on each machine.
   ssh -i ~/.ssh/gce_pshtt_key -t ubuntu@"${machine}" "screen -S package_screen -X -p 0 stuff $'sudo ./packages_to_install.sh > package_log_file.txt\n'"
   echo $?
-  ((i = i + 1))
 done
 
 # Check that all machines have finished installing packages.
@@ -77,30 +74,27 @@ while true; do
   # Wait 10 seconds before checking the file again.
   sleep 10
   ssh -i ~/.ssh/gce_pshtt_key ubuntu@"${machine}" tail package_log_file.txt | grep -q 'FINISHED INSTALLING PACKAGES'
-  finished=$(echo $?)
+  finished=$?
   if [[ "${finished}" -eq 0 ]]; then
     break
   fi
 done
 
-# Since the last machine is finished, go check the other machines.
-i=1
-for z in $list_of_files; do
+for i in seq 1 $num_files; do
   machine=$(sed "${i}q;d" $hosts_file)
-  echo 'Now on '"${machine}"' number '$i
+  echo "Now on ${machine} number ${i}"
   echo 'Checking packages finished installing'
   ssh -i ~/.ssh/gce_pshtt_key ubuntu@"${machine}" tail package_log_file.txt | grep -q 'FINISHED INSTALLING PACKAGES'
-  finished=$(echo $?)
+  finished=$?
   if [[ "${finished}" -eq 0 ]]; then
     # Check if any of the machines had a problem installing packages.
     ssh -i ~/.ssh/gce_pshtt_key ubuntu@"${machine}" cat package_log_file.txt | grep -q '1 ERROR CODE'
-    error=$(echo $?)
+    error=$?
     if [[ "${error}" -eq 0 ]]; then
       echo 'ERROR WITH '"${machine}"
       error_with_packages=0
     fi
   fi
-  ((i = i + 1))
 done
 
 # If any of the machines had an error with a package, stop the entire process,
@@ -115,12 +109,12 @@ fi
 i=1
 for y in $list_of_files; do
   machine=$(sed "${i}q;d" $hosts_file)
-  echo 'Now on '"${machine}"' number '$i
+  echo "Now on ${machine} number ${i}"
   echo 'Cloning github repo file'
   ssh -i ~/.ssh/gce_pshtt_key -t ubuntu@"${machine}" git clone https://github.com/dhs-ncats/pshtt.git
   echo $?
   echo 'copying data file to pshtt directory'
-  scp -i ~/.ssh/gce_pshtt_key input_files/"${y}" ubuntu@"${machine}":~/pshtt/
+  scp -i ~/.ssh/gce_pshtt_key "${y}" ubuntu@"${machine}":~/pshtt/
   echo $?
   echo 'Copying roots.pem into pshtt directory'
   scp -i ~/.ssh/gce_pshtt_key "roots.pem" ubuntu@"${machine}":~/pshtt/
