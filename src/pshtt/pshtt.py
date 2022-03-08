@@ -1,34 +1,40 @@
 #!/usr/bin/env python
 
+# Standard Python Libraries
+import base64
+import codecs
+import json
+import logging
+import os
+import re
+import sys
+
+# Third-Party Libraries
+import OpenSSL
+from publicsuffix import PublicSuffixList, fetch
+import requests
+
 from . import utils
 from .models import Domain, Endpoint
-from publicsuffix import PublicSuffixList
-from publicsuffix import fetch
-
-import requests
-import re
-import base64
-import json
-import os
-import logging
-import sys
-import codecs
-import OpenSSL
 
 try:
+    # Standard Python Libraries
     from urllib import parse as urlparse  # Python 3
 except ImportError:
+    # Third-Party Libraries
     import urlparse  # Python 2
 
 try:
+    # Standard Python Libraries
     from urllib.error import URLError
 except ImportError:
     from urllib2 import URLError
 
+# Third-Party Libraries
 import sslyze
 from sslyze.server_connectivity_tester import (
-    ServerConnectivityTester,
     ServerConnectivityError,
+    ServerConnectivityTester,
 )
 import sslyze.synchronous_scanner
 

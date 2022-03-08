@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
+# Standard Python Libraries
 import contextlib
-import os
-import json
-import errno
 import csv
-import logging
 import datetime
+import errno
+import json
+import logging
+import os
+import re
 import sys
 import traceback
-import re
 
 
 # Display exception without re-throwing it.

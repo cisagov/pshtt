@@ -1,7 +1,9 @@
+# Standard Python Libraries
 import unittest
 
-from pshtt.models import Domain, Endpoint
+# cisagov Libraries
 from pshtt import pshtt as api
+from pshtt.models import Domain, Endpoint
 
 
 class TestUsesHTTPS(unittest.TestCase):

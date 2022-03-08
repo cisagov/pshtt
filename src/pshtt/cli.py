@@ -24,17 +24,18 @@ Notes:
   CSV output will always be written to disk, defaulting to results.csv.
 """
 
-from . import pshtt
-from . import utils
-from ._version import __version__
-from .utils import smart_open
-
+# Standard Python Libraries
 import csv
-import docopt
 import logging
 import sys
 
+# Third-Party Libraries
+import docopt
 import pytablewriter
+
+from . import pshtt, utils
+from ._version import __version__
+from .utils import smart_open
 
 
 def to_csv(results, out_filename):

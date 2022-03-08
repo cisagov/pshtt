@@ -1,11 +1,13 @@
+# Standard Python Libraries
 import os
 import sys
 import tempfile
 import unittest
 
-from pshtt.models import Domain, Endpoint
+# cisagov Libraries
 from pshtt import pshtt as _pshtt
 from pshtt.cli import to_csv
+from pshtt.models import Domain, Endpoint
 
 
 class FakeSuffixList(object):
