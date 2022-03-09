@@ -47,7 +47,7 @@ def write(content, destination, binary=False):
     if binary:
         f = open(destination, "bw")
     else:
-        f = open(destination, "w")  # no utf-8 in python 2
+        f = open(destination, "w", encoding="utf-8")
     f.write(content)
     f.close()
 

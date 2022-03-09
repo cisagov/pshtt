@@ -18,7 +18,6 @@ class TestSmartOpen(unittest.TestCase):
         with smart_open() as fh:
             self.assertIs(fh, sys.stdout)
 
-    @unittest.skipIf(sys.version_info[0] < 3, "Python 3 version of test")
     def test_with_empty_filename(self):
         """Test when an empty string is provided as a filename.
 
@@ -28,17 +27,6 @@ class TestSmartOpen(unittest.TestCase):
             with smart_open(""):
                 pass
 
-    @unittest.skipIf(sys.version_info[0] >= 3, "Python 2 version of test")
-    def test_with_empty_filename_python2(self):
-        """Test when an empty string is provided as a filename.
-
-        Should raise a `FileNotFoundError`
-        """
-        with self.assertRaises(IOError):
-            with smart_open(""):
-                pass
-
-    @unittest.skipIf(sys.version_info[0] < 3, "Python 3 version of test")
     def test_with_real_filename(self):
         """Test when a valid string is provided as a filename."""
         test_data = "This is the test data"

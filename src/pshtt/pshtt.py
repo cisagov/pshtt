@@ -8,43 +8,28 @@ import logging
 import os
 import re
 import sys
+from urllib import parse as urlparse
+from urllib.error import URLError
 
 # Third-Party Libraries
 import OpenSSL
 from publicsuffix import PublicSuffixList, fetch
 import requests
-
-from . import utils
-from .models import Domain, Endpoint
-
-if sys.version_info.major == 2:
-    # Third-Party Libraries
-    import urlparse
-elif sys.version_info.major == 3:
-    # Standard Python Libraries
-    from urllib import parse as urlparse
-
-if sys.version_info.major == 2:
-    # Third-Party Libraries
-    from urllib2 import URLError
-elif sys.version_info.major == 3:
-    # Standard Python Libraries
-    from urllib.error import URLError
-
-# Third-Party Libraries
 import sslyze
 from sslyze.server_connectivity_tester import (
     ServerConnectivityError,
     ServerConnectivityTester,
 )
 import sslyze.synchronous_scanner
+import urllib3
+
+from . import utils
+from .models import Domain, Endpoint
 
 # We're going to be making requests with certificate validation
 # disabled.  Commented next line due to pylint warning that urllib3 is
 # not in requests.packages
 # requests.packages.urllib3.disable_warnings()
-import urllib3
-
 urllib3.disable_warnings()
 
 # Default, overrideable via --user-agent
