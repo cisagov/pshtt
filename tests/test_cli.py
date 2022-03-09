@@ -22,9 +22,9 @@ class FakeSuffixList(object):
 
 # Artificially setup the the preload and suffix lists
 # This should be irrelevant after #126 is decided upon / merged
-_pshtt.suffix_list = FakeSuffixList()
-_pshtt.preload_list = []
-_pshtt.preload_pending = []
+_pshtt.SUFFIX_LIST = FakeSuffixList()
+_pshtt.PRELOAD_LIST = []
+_pshtt.PRELOAD_PENDING = []
 
 
 class TestToCSV(unittest.TestCase):

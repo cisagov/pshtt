@@ -81,16 +81,16 @@ HEADERS = [
 ]
 
 # Used for caching the HSTS preload list from Chromium's source.
-cache_preload_list_default = "preloaded.json"
-preload_list = None
+CACHE_PRELOAD_LIST_DEFAULT = "preloaded.json"
+PRELOAD_LIST = None
 
 # Used for caching the HSTS pending preload list from hstspreload.org.
-cache_preload_pending_default = "preload-pending.json"
-preload_pending = None
+CACHE_PRELOAD_PENDING_DEFAULT = "preload-pending.json"
+PRELOAD_PENDING = None
 
 # Used for determining base domain via Mozilla's public suffix list.
-cache_suffix_list_default = "public-suffix-list.txt"
-suffix_list = None
+CACHE_SUFFIX_LIST_DEFAULT = "public-suffix-list.txt"
+SUFFIX_LIST = None
 
 # Directory to cache all third party responses, if set by user.
 THIRD_PARTIES_CACHE = None
@@ -789,7 +789,7 @@ def https_check(endpoint):
                 endpoint.url
             )
         )
-        return None
+        return
     except Exception as err:
         endpoint.unknown_error = True
         logging.exception("{}: Unknown exception in cert plugin.".format(endpoint.url))
@@ -1019,11 +1019,11 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 
     if is_www and is_https:
         return httpswww
-    elif is_www and (not is_https):
+    if is_www and (not is_https):
         return httpwww
-    elif (not is_www) and is_https:
+    if (not is_www) and is_https:
         return https
-    elif (not is_www) and (not is_https):
+    if (not is_www) and (not is_https):
         return http
 
 
@@ -1147,8 +1147,7 @@ def redirects_to(domain):
 
     if is_redirect_domain(domain):
         return canonical.redirect_eventually_to
-    else:
-        return None
+    return None
 
 
 def is_valid_https(domain):
@@ -1160,10 +1159,7 @@ def is_valid_https(domain):
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     # Evaluate the HTTPS version of the canonical hostname
-    if canonical.host == "root":
-        evaluate = https
-    else:
-        evaluate = httpswww
+    evaluate = https if canonical.host == "root" else httpswww
 
     return evaluate.live and evaluate.https_valid
 
@@ -1192,10 +1188,7 @@ def is_downgrades_https(domain):
         httpswww.live and (not httpswww.https_bad_hostname)
     )
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     # Explicitly convert to bool to avoid unintentionally returning None,
     # which may happen if the site doesn't redirect.
@@ -1246,10 +1239,7 @@ def is_publicly_trusted(domain):
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     # Evaluate the HTTPS version of the canonical hostname
-    if canonical.host == "root":
-        evaluate = https
-    else:
-        evaluate = httpswww
+    evaluate = https if canonical.host == "root" else httpswww
 
     return evaluate.live and evaluate.https_public_trusted
 
@@ -1264,10 +1254,7 @@ def is_custom_trusted(domain):
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     # Evaluate the HTTPS version of the canonical hostname
-    if canonical.host == "root":
-        evaluate = https
-    else:
-        evaluate = httpswww
+    evaluate = https if canonical.host == "root" else httpswww
 
     return evaluate.live and evaluate.https_custom_trusted
 
@@ -1280,10 +1267,7 @@ def is_bad_chain(domain):
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.https_bad_chain
 
@@ -1296,10 +1280,7 @@ def is_bad_hostname(domain):
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.https_bad_hostname
 
@@ -1308,10 +1289,7 @@ def is_expired_cert(domain):
     """Check if a domain's canonical endpoint has an expired certificate."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.https_expired_cert
 
@@ -1320,10 +1298,7 @@ def is_self_signed_cert(domain):
     """Check if the domain's canonical endpoint has a self-signed certificate."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.https_self_signed_cert
 
@@ -1332,10 +1307,7 @@ def cert_chain_length(domain):
     """Get the certificate chain length for a domain's canonical HTTPS endpoint."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.https_cert_chain_len
 
@@ -1348,10 +1320,7 @@ def is_missing_intermediate_cert(domain):
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.https_missing_intermediate_cert
 
@@ -1363,10 +1332,7 @@ def is_hsts(domain):
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.hsts
 
@@ -1375,10 +1341,7 @@ def hsts_header(domain):
     """Get a domain's canonical endpoint's HSTS header."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.hsts_header
 
@@ -1387,10 +1350,7 @@ def hsts_max_age(domain):
     """Get a domain's canonical endpoint's HSTS max-age."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
-    if canonical.host == "www":
-        canonical_https = httpswww
-    else:
-        canonical_https = https
+    canonical_https = httpswww if canonical.host == "www" else https
 
     return canonical_https.hsts_max_age
 
@@ -1417,32 +1377,32 @@ def is_hsts_preload_ready(domain):
 def is_hsts_preload_pending(domain):
     """Check if a domain is pending inclusion in Chrome's HSTS preload list.
 
-    If preload_pending is None, the caches have not been initialized, so do
+    If PRELOAD_PENDING is None, the caches have not been initialized, so do
     that.
     """
-    if preload_pending is None:
-        logging.error("`preload_pending` has not yet been initialized!")
+    if PRELOAD_PENDING is None:
+        logging.error("`PRELOAD_PENDING` has not yet been initialized!")
         raise RuntimeError(
             "`initialize_external_data()` must be called explicitly before "
             "using this function"
         )
 
-    return domain.domain in preload_pending
+    return domain.domain in PRELOAD_PENDING
 
 
 def is_hsts_preloaded(domain):
     """Check if a domain is contained in Chrome's HSTS preload list.
 
-    If preload_list is None, the caches have not been initialized, so do that.
+    If PRELOAD_LIST is None, the caches have not been initialized, so do that.
     """
-    if preload_list is None:
-        logging.error("`preload_list` has not yet been initialized!")
+    if PRELOAD_LIST is None:
+        logging.error("`PRELOAD_LIST` has not yet been initialized!")
         raise RuntimeError(
             "`initialize_external_data()` must be called explicitly before "
             "using this function"
         )
 
-    return domain.domain in preload_list
+    return domain.domain in PRELOAD_LIST
 
 
 def is_parent_hsts_preloaded(domain):
@@ -1455,16 +1415,16 @@ def parent_domain_for(hostname):
 
     For "x.y.domain.gov", return "domain.gov".
 
-    If suffix_list is None, the caches have not been initialized, so do that.
+    If SUFFIX_LIST is None, the caches have not been initialized, so do that.
     """
-    if suffix_list is None:
-        logging.error("`suffix_list` has not yet been initialized!")
+    if SUFFIX_LIST is None:
+        logging.error("`SUFFIX_LIST` has not yet been initialized!")
         raise RuntimeError(
             "`initialize_external_data()` must be called explicitly before "
             "using this function"
         )
 
-    return suffix_list.get_public_suffix(hostname)
+    return SUFFIX_LIST.get_public_suffix(hostname)
 
 
 def is_domain_supports_https(domain):
@@ -1502,8 +1462,7 @@ def is_domain_strong_hsts(domain):
     """Check if a domain is using strong HSTS."""
     if is_hsts(domain) and hsts_max_age(domain):
         return is_hsts(domain) and hsts_max_age(domain) >= 31536000
-    else:
-        return None
+    return None
 
 
 def get_domain_ip(domain):
@@ -1707,70 +1666,72 @@ def initialize_external_data(
     then no cached third party data will be created or used, and pshtt will
     download the latest data from those third party sources.
     """
-    global preload_list, preload_pending, suffix_list
+    global PRELOAD_LIST, PRELOAD_PENDING, SUFFIX_LIST
 
     # The preload list should be sent in as a list of domains.
     if init_preload_list is not None:
-        preload_list = init_preload_list
+        PRELOAD_LIST = init_preload_list
 
-    # The preload_pending list should be sent in as a list of domains.
+    # The PRELOAD_PENDING list should be sent in as a list of domains.
     if init_preload_pending is not None:
-        preload_pending = init_preload_pending
+        PRELOAD_PENDING = init_preload_pending
 
     # The public suffix list should be sent in as a list of file lines.
     if init_suffix_list is not None:
-        suffix_list = PublicSuffixList(init_suffix_list)
+        SUFFIX_LIST = PublicSuffixList(init_suffix_list)
 
     # If there's a specified cache dir, prepare paths.
     # Only used when no data has been set yet for a source.
     if THIRD_PARTIES_CACHE:
         cache_preload_list = os.path.join(
-            THIRD_PARTIES_CACHE, cache_preload_list_default
+            THIRD_PARTIES_CACHE, CACHE_PRELOAD_LIST_DEFAULT
         )
         cache_preload_pending = os.path.join(
-            THIRD_PARTIES_CACHE, cache_preload_pending_default
+            THIRD_PARTIES_CACHE, CACHE_PRELOAD_PENDING_DEFAULT
         )
-        cache_suffix_list = os.path.join(THIRD_PARTIES_CACHE, cache_suffix_list_default)
+        cache_suffix_list = os.path.join(THIRD_PARTIES_CACHE, CACHE_SUFFIX_LIST_DEFAULT)
     else:
         cache_preload_list, cache_preload_pending, cache_suffix_list = None, None, None
 
     # Load Chrome's latest versioned HSTS preload list.
-    if preload_list is None:
+    if PRELOAD_LIST is None:
         if cache_preload_list and os.path.exists(cache_preload_list):
             utils.debug("Using cached Chrome preload list.", divider=True)
-            preload_list = json.loads(open(cache_preload_list).read())
+            with open(cache_preload_list, encoding="utf-8") as cache_file:
+                PRELOAD_LIST = json.loads(cache_file.read())
         else:
-            preload_list = load_preload_list()
+            PRELOAD_LIST = load_preload_list()
 
             if cache_preload_list:
                 utils.debug(
                     "Caching preload list at %s" % cache_preload_list, divider=True
                 )
-                utils.write(utils.json_for(preload_list), cache_preload_list)
+                utils.write(utils.json_for(PRELOAD_LIST), cache_preload_list)
 
     # Load Chrome's current HSTS pending preload list.
-    if preload_pending is None:
+    if PRELOAD_PENDING is None:
         if cache_preload_pending and os.path.exists(cache_preload_pending):
             utils.debug("Using cached hstspreload.org pending list.", divider=True)
-            preload_pending = json.loads(open(cache_preload_pending).read())
+            with open(cache_preload_pending, encoding="utf-8") as cache_file:
+                PRELOAD_PENDING = json.loads(cache_file.read())
         else:
-            preload_pending = load_preload_pending()
+            PRELOAD_PENDING = load_preload_pending()
 
             if cache_preload_pending:
                 utils.debug(
                     "Caching preload pending list at %s" % cache_preload_pending,
                     divider=True,
                 )
-                utils.write(utils.json_for(preload_pending), cache_preload_pending)
+                utils.write(utils.json_for(PRELOAD_PENDING), cache_preload_pending)
 
     # Load Mozilla's current Public Suffix list.
-    if suffix_list is None:
+    if SUFFIX_LIST is None:
         if cache_suffix_list and os.path.exists(cache_suffix_list):
             utils.debug("Using cached suffix list.", divider=True)
-            cache_file = codecs.open(cache_suffix_list, encoding="utf-8")
-            suffix_list = PublicSuffixList(cache_file)
+            with codecs.open(cache_suffix_list, encoding="utf-8") as cache_file:
+                SUFFIX_LIST = PublicSuffixList(cache_file)
         else:
-            suffix_list, raw_content = load_suffix_list()
+            SUFFIX_LIST, raw_content = load_suffix_list()
 
             if cache_suffix_list:
                 utils.debug(
