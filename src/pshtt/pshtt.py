@@ -293,7 +293,7 @@ def basic_check(endpoint):
 
     * Validate certificates. (Will figure out error if necessary.)
     """
-    utils.debug("Pinging %s..." % endpoint.url, divider=True)
+    utils.debug("Pinging %s...", endpoint.url, divider=True)
 
     req = None
 
@@ -314,7 +314,7 @@ def basic_check(endpoint):
                     endpoint.url
                 )
             )
-            utils.debug("{}: {}".format(endpoint.url, err))
+            utils.debug("%s: %s", endpoint.url, err)
             endpoint.live = True
             if endpoint.protocol == "https":
                 # The https can still be valid with a handshake error,
@@ -328,7 +328,7 @@ def basic_check(endpoint):
                     endpoint.url
                 )
             )
-            utils.debug("{}: {}".format(endpoint.url, err))
+            utils.debug("%s: %s", endpoint.url, err)
             # Retry with certificate validation disabled.
             try:
                 with ping(endpoint.url, verify=False) as req:
@@ -350,7 +350,7 @@ def basic_check(endpoint):
                         endpoint.url
                     )
                 )
-                utils.debug("{}: {}".format(endpoint.url, err))
+                utils.debug("%s: %s", endpoint.url, err)
                 # continue on to SSLyze to check the connection
             except requests.exceptions.RequestException as err:
                 endpoint.live = False
@@ -359,7 +359,7 @@ def basic_check(endpoint):
                         endpoint.url
                     )
                 )
-                utils.debug("{}: {}".format(endpoint.url, err))
+                utils.debug("%s: %s", endpoint.url, err)
                 return
             except OpenSSL.SSL.Error as err:
                 endpoint.live = False
@@ -368,7 +368,7 @@ def basic_check(endpoint):
                         endpoint.url
                     )
                 )
-                utils.debug("{}: {}".format(endpoint.url, err))
+                utils.debug("%s: %s", endpoint.url, err)
                 return
             except Exception as err:
                 endpoint.unknown_error = True
@@ -377,7 +377,7 @@ def basic_check(endpoint):
                         endpoint.url
                     )
                 )
-                utils.debug("{}: {}".format(endpoint.url, err))
+                utils.debug("%s: %s", endpoint.url, err)
                 return
 
         # If it was a certificate error of any kind, it's live,
@@ -394,7 +394,7 @@ def basic_check(endpoint):
         else:
             endpoint.live = False
         logging.exception("{}: Error connecting.".format(endpoint.url))
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
 
     # And this is the parent of ConnectionError and other things.
     # For example, "too many redirects".
@@ -404,7 +404,7 @@ def basic_check(endpoint):
         logging.exception(
             "{}: Unexpected other requests exception.".format(endpoint.url)
         )
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
         return
 
     except Exception as err:
@@ -414,7 +414,7 @@ def basic_check(endpoint):
                 endpoint.url
             )
         )
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
         return
 
     # Run SSLyze to see if there are any errors
@@ -451,9 +451,10 @@ def basic_check(endpoint):
             else:
                 if endpoint.ip != ip:
                     utils.debug(
-                        "{}: Endpoint IP is already {}, but requests IP is {}.".format(
-                            endpoint.url, endpoint.ip, ip
-                        )
+                        "%s: Endpoint IP is already %s, but requests IP is %s.",
+                        endpoint.url,
+                        endpoint.ip,
+                        ip,
                     )
     except Exception:
         # if the socket has already closed, it will throw an exception, but this is just best effort, so ignore it
@@ -497,7 +498,7 @@ def basic_check(endpoint):
                     endpoint.url
                 )
             )
-            utils.debug("{} {}".format(endpoint.url, err))
+            utils.debug("%s %s", endpoint.url, err)
 
         try:
             with ping(endpoint.url, allow_redirects=True, verify=False) as ultimate_req:
@@ -512,7 +513,7 @@ def basic_check(endpoint):
                     endpoint.url
                 )
             )
-            utils.debug("{}: {}".format(endpoint.url, err))
+            utils.debug("%s: %s", endpoint.url, err)
             return
 
         try:
@@ -593,7 +594,7 @@ def basic_check(endpoint):
                     endpoint.url
                 )
             )
-            utils.debug("{}: {}".format(endpoint.url, err))
+            utils.debug("%s: %s", endpoint.url, err)
 
 
 def hsts_check(endpoint):
@@ -646,13 +647,13 @@ def hsts_check(endpoint):
         logging.exception(
             "{}: Unknown exception when handling HSTS check.".format(endpoint.url)
         )
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
         return
 
 
 def https_check(endpoint):
     """Use sslyze to figure out the reason an endpoint failed to verify."""
-    utils.debug("sslyzing {}...".format(endpoint.url))
+    utils.debug("sslyzing %s...", endpoint.url)
 
     # remove the https:// from prefix for sslyze
     try:
@@ -666,9 +667,10 @@ def https_check(endpoint):
         else:
             if endpoint.ip != ip:
                 utils.debug(
-                    "{}: Endpoint IP is already {}, but requests IP is {}.".format(
-                        endpoint.url, endpoint.ip, ip
-                    )
+                    "%s: Endpoint IP is already %s, but requests IP is %s.",
+                    endpoint.url,
+                    endpoint.ip,
+                    ip,
                 )
         if server_info.client_auth_requirement.name == "REQUIRED":
             endpoint.https_client_auth_required = True
@@ -681,7 +683,7 @@ def https_check(endpoint):
                 endpoint.url, err.server_info.hostname
             )
         )
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
         return
     except Exception as err:
         endpoint.unknown_error = True
@@ -690,7 +692,7 @@ def https_check(endpoint):
                 endpoint.url
             )
         )
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
         return
 
     try:
@@ -715,7 +717,7 @@ def https_check(endpoint):
                         endpoint.url
                     )
                 )
-                utils.debug("{}: {}".format(endpoint.url, err))
+                utils.debug("%s: %s", endpoint.url, err)
                 endpoint.unknown_error = True
                 # We could make this False, but there was an error so
                 # we don't know
@@ -727,7 +729,7 @@ def https_check(endpoint):
                     endpoint.url
                 )
             )
-            utils.debug("{}: {}".format(endpoint.url, err))
+            utils.debug("%s: %s", endpoint.url, err)
             endpoint.unknown_error = True
             # We could make this False, but there was an error so we
             # don't know
@@ -777,9 +779,7 @@ def https_check(endpoint):
     except Exception as err:
         # Ignore exception
         logging.exception("{}: Unknown exception examining trust.".format(endpoint.url))
-        utils.debug(
-            "{}: Unknown exception examining trust: {}".format(endpoint.url, err)
-        )
+        utils.debug("%s: Unknown exception examining trust: %s", endpoint.url, err)
 
     try:
         cert_response = cert_plugin_result.as_text()
@@ -793,7 +793,7 @@ def https_check(endpoint):
     except Exception as err:
         endpoint.unknown_error = True
         logging.exception("{}: Unknown exception in cert plugin.".format(endpoint.url))
-        utils.debug("{}: {}".format(endpoint.url, err))
+        utils.debug("%s: %s", endpoint.url, err)
         return
 
     # Debugging
@@ -875,10 +875,9 @@ def https_check(endpoint):
                     )
                 )
                 utils.debug(
-                    "{}: Only {} certificates in certificate chain received.".format(
-                        endpoint.url,
-                        cert_plugin_result.received_certificate_chain.__len__(),
-                    )
+                    "%s: Only %d certificates in certificate chain received.",
+                    endpoint.url,
+                    cert_plugin_result.received_certificate_chain.__len__(),
                 )
             elif custom_trust is True and public_trust is False:
                 # recheck public trust using custom public trust store with manually added intermediate certificates
@@ -1635,7 +1634,7 @@ def load_suffix_list():
         cache_file = fetch()
     except URLError as err:
         logging.exception("Unable to download the Public Suffix List...")
-        utils.debug("{}".format(err))
+        utils.debug(err)
         return []
     content = cache_file.readlines()
     suffixes = PublicSuffixList(content)
@@ -1704,7 +1703,7 @@ def initialize_external_data(
 
             if cache_preload_list:
                 utils.debug(
-                    "Caching preload list at %s" % cache_preload_list, divider=True
+                    "Caching preload list at %s", cache_preload_list, divider=True
                 )
                 utils.write(utils.json_for(PRELOAD_LIST), cache_preload_list)
 
@@ -1719,7 +1718,8 @@ def initialize_external_data(
 
             if cache_preload_pending:
                 utils.debug(
-                    "Caching preload pending list at %s" % cache_preload_pending,
+                    "Caching preload pending list at %s",
+                    cache_preload_pending,
                     divider=True,
                 )
                 utils.write(utils.json_for(PRELOAD_PENDING), cache_preload_pending)
@@ -1735,7 +1735,7 @@ def initialize_external_data(
 
             if cache_suffix_list:
                 utils.debug(
-                    "Caching suffix list at %s" % cache_suffix_list, divider=True
+                    "Caching suffix list at %s", cache_suffix_list, divider=True
                 )
                 utils.write("".join(raw_content), cache_suffix_list)
 

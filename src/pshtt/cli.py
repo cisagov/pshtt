@@ -38,7 +38,7 @@ from .utils import smart_open
 
 def to_csv(results, out_filename):
     """Output the provided results in CSV format to the provided filename."""
-    utils.debug("Opening CSV file: {}".format(out_filename))
+    utils.debug("Opening CSV file: %s", out_filename)
     with smart_open(out_filename) as out_file:
         writer = csv.writer(out_file)
 

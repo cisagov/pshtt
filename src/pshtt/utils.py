@@ -96,13 +96,13 @@ def format_domains(domains):
     return formatted_domains
 
 
-def debug(message, divider=False):
+def debug(*args, divider=False):
     """Output a debugging message."""
     if divider:
         logging.debug("\n-------------------------\n")
 
-    if message:
-        logging.debug("%s\n" % message)
+    if args:
+        logging.debug(*args)
 
 
 @contextlib.contextmanager
