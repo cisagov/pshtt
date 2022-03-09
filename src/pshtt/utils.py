@@ -33,9 +33,9 @@ def mkdir_p(path):
             raise
 
 
-def json_for(object):
-    """Pretty format an object to JSON."""
-    return json.dumps(object, sort_keys=True, indent=2, default=format_datetime)
+def json_for(data):
+    """Pretty format the given object to JSON."""
+    return json.dumps(data, sort_keys=True, indent=2, default=format_datetime)
 
 
 def write(content, destination, binary=False):
@@ -44,29 +44,26 @@ def write(content, destination, binary=False):
     if parent != "":
         mkdir_p(parent)
 
-    if binary:
-        f = open(destination, "bw")
-    else:
-        f = open(destination, "w", encoding="utf-8")
-    f.write(content)
-    f.close()
+    with open(destination, "bw") if binary else open(
+        destination, "w", encoding="utf-8"
+    ) as f:
+        f.write(content)
 
 
 def format_datetime(obj):
     """Provide a formatted datetime."""
     if isinstance(obj, datetime.date):
         return obj.isoformat()
-    elif isinstance(obj, str):
+    if isinstance(obj, str):
         return obj
-    else:
-        return None
+    return None
 
 
 # Load domains from a CSV, skip a header row
 def load_domains(domain_csv):
     """Load a list of domains from a CSV file."""
     domains = []
-    with open(domain_csv) as csvfile:
+    with open(domain_csv, encoding="utf-8") as csvfile:
         for row in csv.reader(csvfile):
             # Skip empty rows.
             if (not row) or (not row[0].strip()):
@@ -82,13 +79,9 @@ def load_domains(domain_csv):
 
 
 # Configure logging level, so logging.debug can hinge on --debug.
-def configure_logging(debug=False):
+def configure_logging(debug_logging=False):
     """Configure the logging library."""
-    if debug:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.WARNING
-
+    log_level = logging.DEBUG if debug_logging else logging.WARNING
     logging.basicConfig(format="%(message)s", level=log_level)
 
 
@@ -118,13 +111,10 @@ def smart_open(filename=None):
 
     Adapted from: https://stackoverflow.com/a/17603000
     """
-    if filename is None:
-        fh = sys.stdout
-    else:
-        fh = open(filename, "w")
+    handle = sys.stdout if filename is None else open(filename, "w", encoding="utf-8")
 
     try:
-        yield fh
+        yield handle
     finally:
-        if fh is not sys.stdout:
-            fh.close()
+        if handle is not sys.stdout:
+            handle.close()
