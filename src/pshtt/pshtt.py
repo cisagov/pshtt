@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""Provide the core functionality of the pshtt library."""
+
 # Standard Python Libraries
 import base64
 import codecs
@@ -117,6 +119,7 @@ PT_INT_CA_FILE = None
 
 
 def inspect(base_domain):
+    """Inpsect the provided domain."""
     domain = Domain(base_domain)
     domain.http = Endpoint("http", "root", base_domain)
     domain.httpwww = Endpoint("http", "www", base_domain)
@@ -137,7 +140,7 @@ def inspect(base_domain):
 
 
 def result_for(domain):
-
+    """Get the results for the provided domain."""
     # print(utils.json_for(domain.to_object()))
 
     # Because it will inform many other judgments, first identify
@@ -249,7 +252,8 @@ def result_for(domain):
 
 
 def ping(url, allow_redirects=False, verify=True):
-    """
+    """Attempt to reach the given URL.
+
     If there is a custom CA file and we want to verify
     use that instead when pinging with requests
 
@@ -296,9 +300,9 @@ def ping(url, allow_redirects=False, verify=True):
 
 
 def basic_check(endpoint):
-    """
-    Test the endpoint. At first:
+    """Test the endpoint.
 
+    At first:
     * Don't follow redirects. (Will only follow if necessary.)
       If it's a 3XX, we'll ping again to follow redirects. This is
       necessary to reliably scope any errors (e.g. TLS errors) to
@@ -306,7 +310,6 @@ def basic_check(endpoint):
 
     * Validate certificates. (Will figure out error if necessary.)
     """
-
     utils.debug("Pinging %s..." % endpoint.url, divider=True)
 
     req = None
@@ -611,7 +614,8 @@ def basic_check(endpoint):
 
 
 def hsts_check(endpoint):
-    """
+    """Perform an HSTS check of the given endpoint.
+
     Given an endpoint and its detected headers, extract and parse
     any present HSTS header, decide what HSTS properties are there.
 
@@ -664,9 +668,7 @@ def hsts_check(endpoint):
 
 
 def https_check(endpoint):
-    """
-    Uses sslyze to figure out the reason the endpoint wouldn't verify.
-    """
+    """Use sslyze to figure out the reason an endpoint failed to verify."""
     utils.debug("sslyzing {}...".format(endpoint.url))
 
     # remove the https:// from prefix for sslyze
@@ -932,8 +934,9 @@ def https_check(endpoint):
 
 
 def canonical_endpoint(http, httpwww, https, httpswww):
-    """
-    Given behavior for the 4 endpoints, make a best guess
+    """Make a best guess for the "canonical" endpoint of a domain.
+
+    Given behavior for the four endpoints, make a best guess
     as to which is the "canonical" site for the domain.
 
     Most of the domain-level decisions rely on this guess in some way.
@@ -953,7 +956,6 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     or like:
       https:// -> 200, http:// -> http://www
     """
-
     at_least_one_www_used = httpswww.live or httpwww.live
 
     def root_unused(endpoint):
@@ -1048,9 +1050,7 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 
 
 def is_live(domain):
-    """
-    Domain is "live" if *any* endpoint is live.
-    """
+    """Check if a domain has any live endpoints."""
     http, httpwww, https, httpswww = (
         domain.http,
         domain.httpwww,
@@ -1062,17 +1062,16 @@ def is_live(domain):
 
 
 def is_https_live(domain):
-    """
-    Domain is https live if any https endpoint is live.
-    """
+    """Check if a domain has any live HTTPS endpoints."""
     https, httpswww = domain.https, domain.httpswww
 
     return https.live or httpswww.live
 
 
 def is_full_connection(domain):
-    """
-    Domain is "fully connected" if any https endpoint is fully connected.
+    """Check if a domain is fully connected.
+
+    Domain is "fully connected" if any HTTPS endpoint is fully connected.
     """
     https, httpswww = domain.https, domain.httpswww
 
@@ -1080,8 +1079,10 @@ def is_full_connection(domain):
 
 
 def is_client_auth_required(domain):
-    """
-    Domain requires client authentication if *any* HTTPS endpoint requires it for full TLS connection.
+    """Check if a domain requires client authentication.
+
+    Domain requires client authentication if *any* HTTPS endpoint requires it for full
+    TLS connection.
     """
     https, httpswww = domain.https, domain.httpswww
 
@@ -1089,9 +1090,11 @@ def is_client_auth_required(domain):
 
 
 def is_redirect_or_down(endpoint):
-    """
-    Endpoint is a redirect or down if it is a redirect to an external site or it is down in any of 3 ways:
-    it is not live, it is HTTPS and has a bad hostname in the cert, or it responds with a 4xx error code
+    """Check if an endpoint redirects to an external site or is down.
+
+    Endpoint is a redirect or down if it is a redirect to an external site or it is
+    down in any of 3 ways: it is not live, it is HTTPS and has a bad hostname in the
+    cert, or it responds with a 4xx error code
     """
     return (
         endpoint.redirect_eventually_to_external
@@ -1102,14 +1105,13 @@ def is_redirect_or_down(endpoint):
 
 
 def is_redirect(endpoint):
-    """
-    Endpoint is a redirect if it is a redirect to an external site
-    """
+    """Check if an endpoint is a redirect to an external site."""
     return endpoint.redirect_eventually_to_external
 
 
 def is_redirect_domain(domain):
-    """
+    """Check if a domain redirects HTTP or HTTPS traffic.
+
     Domain is "a redirect domain" if at least one endpoint is
     a redirect, and all endpoints are either redirects or down.
     """
@@ -1135,8 +1137,9 @@ def is_redirect_domain(domain):
 
 
 def is_http_redirect_domain(domain):
-    """
-    Domain is "an http redirect domain" if at least one http endpoint
+    """Check if a domain redirects HTTP traffic.
+
+    Domain is "an http redirect domain" if at least one HTTP endpoint
     is a redirect, and all other http endpoints are either redirects
     or down.
     """
@@ -1153,7 +1156,8 @@ def is_http_redirect_domain(domain):
 
 
 def redirects_to(domain):
-    """
+    """Check where a domain redirects to (if it redirects).
+
     If a domain is a "redirect domain", where does it redirect to?
     """
     canonical = domain.canonical
@@ -1165,7 +1169,8 @@ def redirects_to(domain):
 
 
 def is_valid_https(domain):
-    """
+    """Check if a domain has a valid HTTPS server.
+
     A domain has "valid HTTPS" if it responds on port 443 at its canonical
     hostname with an unexpired valid certificate for the hostname.
     """
@@ -1181,7 +1186,8 @@ def is_valid_https(domain):
 
 
 def is_defaults_to_https(domain):
-    """
+    """Check if a domain defaults to HTTPS.
+
     A domain "defaults to HTTPS" if its canonical endpoint uses HTTPS.
     """
     canonical = domain.canonical
@@ -1190,7 +1196,8 @@ def is_defaults_to_https(domain):
 
 
 def is_downgrades_https(domain):
-    """
+    """Check if a domain allows downgrading HTTPS.
+
     Domain downgrades if HTTPS is supported in some way, but
     its canonical HTTPS endpoint immediately redirects internally to HTTP.
     """
@@ -1217,7 +1224,8 @@ def is_downgrades_https(domain):
 
 
 def is_strictly_forces_https(domain):
-    """
+    """Check if a domain strictly forces HTTPS.
+
     A domain "Strictly Forces HTTPS" if one of the HTTPS endpoints is
     "live", and if both *HTTP* endpoints are either:
 
@@ -1247,7 +1255,8 @@ def is_strictly_forces_https(domain):
 
 
 def is_publicly_trusted(domain):
-    """
+    """Check if a domain has a publicly trusted certificate.
+
     A domain has a "Publicly Trusted" certificate if its canonical
     endpoint has a publicly trusted certificate.
     """
@@ -1263,7 +1272,8 @@ def is_publicly_trusted(domain):
 
 
 def is_custom_trusted(domain):
-    """
+    """Check if a domain has a custom trusted certificate.
+
     A domain has a "Custom Trusted" certificate if its canonical
     endpoint has a certificate that is trusted by the custom
     truststore.
@@ -1280,9 +1290,10 @@ def is_custom_trusted(domain):
 
 
 def is_bad_chain(domain):
-    """
-    Domain has a bad chain if its canonical https endpoint has a bad
-    chain
+    """Check if a domain has a bad certificate chain.
+
+    Domain has a bad chain if its canonical HTTPS endpoint has a bad
+    chain.
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1295,9 +1306,10 @@ def is_bad_chain(domain):
 
 
 def is_bad_hostname(domain):
-    """
-    Domain has a bad hostname if its canonical https endpoint fails
-    hostname validation
+    """Check if a domain has a bad hostname.
+
+    Domain has a bad hostname if its canonical HTTPS endpoint fails
+    hostname validation.
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1310,9 +1322,7 @@ def is_bad_hostname(domain):
 
 
 def is_expired_cert(domain):
-    """
-    Returns if its canonical https endpoint has an expired cert
-    """
+    """Check if a domain's canonical endpoint has an expired certificate."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     if canonical.host == "www":
@@ -1324,9 +1334,7 @@ def is_expired_cert(domain):
 
 
 def is_self_signed_cert(domain):
-    """
-    Returns if its canonical https endpoint has a self-signed cert cert
-    """
+    """Check if the domain's canonical endpoint has a self-signed certificate."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     if canonical.host == "www":
@@ -1338,9 +1346,7 @@ def is_self_signed_cert(domain):
 
 
 def cert_chain_length(domain):
-    """
-    Returns the cert chain length for the canonical HTTPS endpoint
-    """
+    """Get the certificate chain length for a domain's canonical HTTPS endpoint."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     if canonical.host == "www":
@@ -1352,9 +1358,10 @@ def cert_chain_length(domain):
 
 
 def is_missing_intermediate_cert(domain):
-    """
+    """Check if a domain's certificate chain is missing an intermediate certificate.
+
     Returns whether the served cert chain is probably missing the
-    needed intermediate certificate for the canonical HTTPS endpoint
+    needed intermediate certificate for the canonical HTTPS endpoint.
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
@@ -1367,7 +1374,8 @@ def is_missing_intermediate_cert(domain):
 
 
 def is_hsts(domain):
-    """
+    """Check if a domain's canonical endpoint has HSTS.
+
     Domain has HSTS if its canonical HTTPS endpoint has HSTS.
     """
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
@@ -1381,9 +1389,7 @@ def is_hsts(domain):
 
 
 def hsts_header(domain):
-    """
-    Domain's HSTS header is its canonical endpoint's header.
-    """
+    """Get a domain's canonical endpoint's HSTS header."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     if canonical.host == "www":
@@ -1395,9 +1401,7 @@ def hsts_header(domain):
 
 
 def hsts_max_age(domain):
-    """
-    Domain's HSTS max-age is its canonical endpoint's max-age.
-    """
+    """Get a domain's canonical endpoint's HSTS max-age."""
     canonical, https, httpswww = domain.canonical, domain.https, domain.httpswww
 
     if canonical.host == "www":
@@ -1409,18 +1413,14 @@ def hsts_max_age(domain):
 
 
 def is_hsts_entire_domain(domain):
-    """
-    Whether a domain's ROOT endpoint includes all subdomains.
-    """
+    """Check if a domain's ROOT endpoint HSTS configuration includes all subdomains."""
     https = domain.https
 
     return https.hsts_all_subdomains
 
 
 def is_hsts_preload_ready(domain):
-    """
-    Whether a domain's ROOT endpoint is preload-ready.
-    """
+    """Check if a domain's ROOT endpoint is HSTS preload-ready."""
     https = domain.https
 
     eighteen_weeks = (https.hsts_max_age is not None) and (
@@ -1432,9 +1432,7 @@ def is_hsts_preload_ready(domain):
 
 
 def is_hsts_preload_pending(domain):
-    """
-    Whether a domain is formally pending inclusion in Chrome's HSTS preload
-    list.
+    """Check if a domain is pending inclusion in Chrome's HSTS preload list.
 
     If preload_pending is None, the caches have not been initialized, so do
     that.
@@ -1450,8 +1448,7 @@ def is_hsts_preload_pending(domain):
 
 
 def is_hsts_preloaded(domain):
-    """
-    Whether a domain is contained in Chrome's HSTS preload list.
+    """Check if a domain is contained in Chrome's HSTS preload list.
 
     If preload_list is None, the caches have not been initialized, so do that.
     """
@@ -1466,14 +1463,13 @@ def is_hsts_preloaded(domain):
 
 
 def is_parent_hsts_preloaded(domain):
-    """
-    Whether a domain's parent domain is in Chrome's HSTS preload list.
-    """
+    """Check if a domain's parent domain is in Chrome's HSTS preload list."""
     return is_hsts_preloaded(Domain(parent_domain_for(domain.domain)))
 
 
 def parent_domain_for(hostname):
-    """
+    """Get the parent domain for a given domain name.
+
     For "x.y.domain.gov", return "domain.gov".
 
     If suffix_list is None, the caches have not been initialized, so do that.
@@ -1489,7 +1485,8 @@ def parent_domain_for(hostname):
 
 
 def is_domain_supports_https(domain):
-    """
+    """Check if a domain supports HTTPS.
+
     A domain 'Supports HTTPS' when it doesn't downgrade and has valid HTTPS,
     or when it doesn't downgrade and has a bad chain but not a bad hostname.
     Domains with a bad chain "support" HTTPS but user-side errors should be expected.
@@ -1502,7 +1499,9 @@ def is_domain_supports_https(domain):
 
 
 def is_domain_enforces_https(domain):
-    """A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to
+    """Check if a domain enforces HTTPS.
+
+    A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to
     HTTPS.  For websites (where Redirect is false) they are allowed to
     eventually redirect to an https:// URI. For "redirect domains"
     (domains where the Redirect value is true) they must immediately
@@ -1517,6 +1516,7 @@ def is_domain_enforces_https(domain):
 
 
 def is_domain_strong_hsts(domain):
+    """Check if a domain is using strong HSTS."""
     if is_hsts(domain) and hsts_max_age(domain):
         return is_hsts(domain) and hsts_max_age(domain) >= 31536000
     else:
@@ -1524,8 +1524,10 @@ def is_domain_strong_hsts(domain):
 
 
 def get_domain_ip(domain):
-    """
-    Get the IP for the domain.  Any IP that responded is good enough.
+    """Get the IP for the domain.
+
+    This returns the first that is not None in the following priority:
+    Canonical -> HTTPS -> www HTTPS -> www HTTP -> HTTP
     """
     if domain.canonical.ip is not None:
         return domain.canonical.ip
@@ -1541,8 +1543,10 @@ def get_domain_ip(domain):
 
 
 def get_domain_server_header(domain):
-    """
-    Get the Server header from the response for the domain.
+    """Get the Server header from the response for the domain.
+
+    This returns the first that is not None in the following priority:
+    Canonical -> HTTPS -> www HTTPS -> www HTTP -> HTTP
     """
     if domain.canonical.server_header is not None:
         return domain.canonical.server_header.replace(",", ";")
@@ -1558,8 +1562,11 @@ def get_domain_server_header(domain):
 
 
 def get_domain_server_version(domain):
-    """
-    Get the Server version based on the Server header for the web server.
+    """Get the server version for the remote web server.
+
+    This returns the first that is not None in the following priority:
+    Canonical -> HTTPS -> www HTTPS -> www HTTP -> HTTP
+    The server version is based on the returned Server header.
     """
     if domain.canonical.server_version is not None:
         return domain.canonical.server_version
@@ -1575,9 +1582,7 @@ def get_domain_server_version(domain):
 
 
 def get_domain_notes(domain):
-    """
-    Combine all domain notes if there are any.
-    """
+    """Combine any notes for a domain."""
     all_notes = (
         domain.http.notes
         + domain.httpwww.notes
@@ -1589,9 +1594,9 @@ def get_domain_notes(domain):
 
 
 def did_domain_error(domain):
-    """
-    Checks if the domain had an Unknown error somewhere
-    The main purpos of this is to flag any odd websites for
+    """Check a domain for any unknown errors.
+
+    The main purpose of this is to flag any odd websites for
     further debugging with other tools.
     """
     http, httpwww, https, httpswww = (
@@ -1610,10 +1615,7 @@ def did_domain_error(domain):
 
 
 def load_preload_pending():
-    """
-    Fetch the Chrome preload pending list.
-    """
-
+    """Fetch the Chrome preload pending list."""
     utils.debug("Fetching hstspreload.org pending list...", divider=True)
     pending_url = "https://hstspreload.org/api/v2/pending"
 
@@ -1643,6 +1645,7 @@ def load_preload_pending():
 
 
 def load_preload_list():
+    """Download and load the Chromium preload list."""
     preload_json = None
 
     utils.debug("Fetching Chrome preload list from source...", divider=True)
@@ -1683,6 +1686,7 @@ def load_preload_list():
 # Returns an instantiated PublicSuffixList object, and the
 # list of lines read from the file.
 def load_suffix_list():
+    """Download and load the public suffix list."""
     # File does not exist, download current list and cache it at given location.
     utils.debug("Downloading the Public Suffix List...", divider=True)
     try:
@@ -1699,8 +1703,7 @@ def load_suffix_list():
 def initialize_external_data(
     init_preload_list=None, init_preload_pending=None, init_suffix_list=None
 ):
-    """
-    This function serves to load all of third party external data.
+    """Load any third party external data.
 
     This can be called explicitly by a library, as part of the setup needed
     before calling other library functions, or called as part of running
@@ -1794,6 +1797,7 @@ def initialize_external_data(
 
 
 def inspect_domains(domains, options):
+    """Run inspect() against each of the given domains with the given options."""
     # Override timeout, user agent, preload cache, default CA bundle
     global TIMEOUT, USER_AGENT, THIRD_PARTIES_CACHE, CA_FILE, PT_INT_CA_FILE, STORE
 

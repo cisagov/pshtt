@@ -1,3 +1,5 @@
+"""Test the command line interface functionality of the library."""
+
 # Standard Python Libraries
 import os
 import sys
@@ -11,7 +13,10 @@ from pshtt.models import Domain, Endpoint
 
 
 class FakeSuffixList(object):
+    """Test against a fake suffix list."""
+
     def get_public_suffix(self, hostname, *args, **kwargs):
+        """Return the public suffix of a hostname."""
         return hostname
 
 
@@ -23,8 +28,11 @@ _pshtt.preload_pending = []
 
 
 class TestToCSV(unittest.TestCase):
+    """Test the CSV output of the command line interface."""
+
     @classmethod
     def setUpClass(cls):
+        """Perform initial setup."""
         base_domain = "example.com"
 
         domain = Domain(base_domain)
@@ -38,6 +46,7 @@ class TestToCSV(unittest.TestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "Python 3 test only")
     def test_no_results(self):
+        """Test when there are no results."""
         to_csv([], self.temp_filename)
 
         with open(self.temp_filename) as fh:
@@ -49,6 +58,7 @@ class TestToCSV(unittest.TestCase):
 
     @unittest.skipIf(sys.version_info[0] < 3, "Python 3 test only")
     def test_single_result(self):
+        """Test a single domain result."""
         to_csv([self.results], self.temp_filename)
 
         with open(self.temp_filename) as fh:

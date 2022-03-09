@@ -14,6 +14,9 @@ max-line-length = 80
 # * The B950 flake8-bugbear opinionated warning -
 #   https://github.com/PyCQA/flake8-bugbear#opinionated-warnings
 select = C,D,E,F,W,B,B950
+# Ignore flake8's default warning about "whitespace before ':'" as it is not
+# PEP 8 compliant and conflicts with black's styling.
+#
 # Ignore flake8's default warning about maximum line length, which has
 # a hard stop at the configured value.  Instead we use
 # flake8-bugbear's B950, which allows up to 10% overage.
@@ -22,4 +25,4 @@ select = C,D,E,F,W,B,B950
 # operators.  It no longer agrees with PEP8.  See, for example, here:
 # https://github.com/ambv/black/issues/21. Guido agrees here:
 # https://github.com/python/peps/commit/c59c4376ad233a62ca4b3a6060c81368bd21e85b.
-ignore = E501,W503
+ignore = E203,E501,W503

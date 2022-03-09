@@ -1,5 +1,11 @@
+"""Define the models used in this library."""
+
+
 class Domain(object):
+    """Define the domain model."""
+
     def __init__(self, domain):
+        """Initialize the model."""
         self.domain = domain
 
         # 4 endpoints for each domain.
@@ -13,6 +19,7 @@ class Domain(object):
         self.canonical = None
 
     def to_object(self):
+        """Convert the model to a dictionary."""
         return {
             "https": self.https.to_object(),
             "httpswww": self.httpswww.to_object(),
@@ -22,7 +29,10 @@ class Domain(object):
 
 
 class Endpoint(object):
+    """Define the endpoint model."""
+
     def __init__(self, protocol, host, base_domain):
+        """Initialize the model."""
         # Basic endpoint description
         self.protocol = protocol
         self.host = host  # "www" or "root"
@@ -77,6 +87,7 @@ class Endpoint(object):
         self.hsts_preloaded = None
 
     def url_for(self, protocol, host, base_domain):
+        """Return an appropriately formatted URL for the base domain."""
         if host == "root":
             prefix = ""
         elif host == "www":
@@ -86,6 +97,7 @@ class Endpoint(object):
 
     # The fields we want to serialize to JSON.
     def to_object(self):
+        """Convert the model to a dictionary."""
         obj = {
             "url": self.url,
             "headers": dict(self.headers),

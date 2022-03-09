@@ -39,6 +39,7 @@ from .utils import smart_open
 
 
 def to_csv(results, out_filename):
+    """Output the provided results in CSV format to the provided filename."""
     utils.debug("Opening CSV file: {}".format(out_filename))
     with smart_open(out_filename) as out_file:
         writer = csv.writer(out_file)
@@ -55,6 +56,7 @@ def to_csv(results, out_filename):
 
 
 def to_json(results, out_filename):
+    """Output the provided results in JSON format to the provided filename."""
     # Generate (yield) all the results before exporting to JSON
     results = list(results)
 
@@ -68,6 +70,7 @@ def to_json(results, out_filename):
 
 
 def to_markdown(results, out_filename):
+    """Output the provided results in Markdown format to the provided filename."""
     # Generate (yield) all the results before exporting to Markdown
     table = [[" %s" % result[header] for header in pshtt.HEADERS] for result in results]
 
@@ -83,6 +86,7 @@ def to_markdown(results, out_filename):
 
 
 def main():
+    """Provide a command line interface to the pshtt library."""
     args = docopt.docopt(__doc__, version=__version__)
     utils.configure_logging(args["--debug"])
 

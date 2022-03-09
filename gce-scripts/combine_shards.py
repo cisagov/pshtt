@@ -5,6 +5,7 @@ import sys
 
 
 def main():
+    """Read a file with a list of shard filenames and combine them."""
     if (len(sys.argv)) < 2:
         print("you need a filename!")
         exit(1)
