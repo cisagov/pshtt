@@ -40,13 +40,13 @@ repository.
 
 `pshtt` can be installed directly via pip:
 
-```bash
+```console
 pip install pshtt
 ```
 
 It can then be run directly:
 
-```bash
+```console
 pshtt example.com [options]
 ```
 
@@ -55,19 +55,19 @@ pshtt example.com [options]
 To run the tool locally from the repository, without installing, first
 install the requirements:
 
-```bash
+```console
 pip install -r requirements.txt
 ```
 
 Then run it as a module via `python -m`:
 
-```bash
+```console
 python -m pshtt.cli example.com [options]
 ```
 
 ### Usage and examples ###
 
-```bash
+```console
 pshtt [options] DOMAIN...
 pshtt [options] INPUT
 
@@ -82,7 +82,7 @@ column of the CSV. CSV output will always be written to disk (unless
 
 #### Options ####
 
-```bash
+```console
   -h --help                     Show this message.
   -s --sorted                   Sort output by domain, A-Z.
   -o --output=OUTFILE           Name output file. (Defaults to "results".)
@@ -103,13 +103,13 @@ store](https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw
 If you work behind a corporate proxy or have your own certificates that
 aren't publicly trusted, you can specify your own CA bundle:
 
-```bash
+```console
 pshtt --ca-file=/etc/ssl/ca.pem server.internal-location.gov
 ```
 
 ##### Using Docker (optional) #####
 
-```bash
+```console
 ./run [opts]
 ```
 
