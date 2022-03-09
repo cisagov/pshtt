@@ -93,7 +93,7 @@ class Endpoint:
         elif self.host == "www":
             prefix = "www."
 
-        return "{}://{}{}".format(self.protocol, prefix, self.base_domain)
+        return f"{self.protocol}://{prefix}{self.base_domain}"
 
     # The fields we want to serialize to JSON.
     def to_object(self):

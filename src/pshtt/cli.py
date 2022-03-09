@@ -70,7 +70,7 @@ def to_json(results, out_filename):
 def to_markdown(results, out_filename):
     """Output the provided results in Markdown format to the provided filename."""
     # Generate (yield) all the results before exporting to Markdown
-    table = [[" %s" % result[header] for header in pshtt.HEADERS] for result in results]
+    table = [[f" {result[header]}" for header in pshtt.HEADERS] for result in results]
 
     utils.debug("Printing Markdown...", divider=True)
     with smart_open(out_filename) as out_file:
