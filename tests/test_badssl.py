@@ -62,7 +62,3 @@ class TestCertificate(unittest.TestCase):
         basic_check(domain.https)
 
         self.assertTrue(domain.https.https_self_signed_cert)
-
-
-if __name__ == "__main__":
-    unittest.main()

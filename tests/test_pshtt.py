@@ -85,7 +85,3 @@ class TestLiveliness(unittest.TestCase):
         self.domain.httpswww.live = True
 
         self.assertTrue(is_live(self.domain))
-
-
-if __name__ == "__main__":
-    unittest.main()

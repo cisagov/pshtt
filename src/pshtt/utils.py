@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Define utility functions for the pshtt library."""
 
 # Standard Python Libraries

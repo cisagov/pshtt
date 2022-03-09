@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Provide the core functionality of the pshtt library."""
 
 # Standard Python Libraries

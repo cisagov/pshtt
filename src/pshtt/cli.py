@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """pshtt ("pushed") is a tool to test domains for HTTPS best practices.
 
 Usage:
@@ -130,7 +128,3 @@ def main():
             out_filename = "results.csv"
 
         to_csv(results, out_filename)
-
-
-if __name__ == "__main__":
-    main()
