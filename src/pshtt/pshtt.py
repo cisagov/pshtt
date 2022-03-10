@@ -306,8 +306,7 @@ def basic_check(endpoint):
 
     except requests.exceptions.SSLError as err:
         if "bad handshake" in str(err) and (
-            "sslv3 alert handshake failure" in str(err)
-            or ("Unexpected EOF" in str(err))
+            "sslv3 alert handshake failure" in str(err) or "Unexpected EOF" in str(err)
         ):
             logging.exception(
                 "%s: Error completing TLS handshake usually due to required client authentication.",
@@ -912,18 +911,18 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     def root_unused(endpoint):
         return (
             endpoint.redirect
-            or (not endpoint.live)
+            or not endpoint.live
             or endpoint.https_bad_hostname
-            or (not str(endpoint.status).startswith("2"))  # harmless for http endpoints
+            or not str(endpoint.status).startswith("2")  # harmless for http endpoints
         )
 
     def root_down(endpoint):
         return (
-            (not endpoint.live)
+            not endpoint.live
             or endpoint.https_bad_hostname
             or (
-                (not str(endpoint.status).startswith("2"))
-                and (not str(endpoint.status).startswith("3"))
+                not str(endpoint.status).startswith("2")
+                and not str(endpoint.status).startswith("3")
             )
         )
 
@@ -960,13 +959,13 @@ def canonical_endpoint(http, httpwww, https, httpswww):
     # a valid hostname but invalid chain issues.
 
     def https_used(endpoint):
-        return endpoint.live and (not endpoint.https_bad_hostname)
+        return endpoint.live and not endpoint.https_bad_hostname
 
     def http_unused(endpoint):
         return (
             endpoint.redirect
-            or (not endpoint.live)
-            or (not str(endpoint.status).startswith("2"))
+            or not endpoint.live
+            or not str(endpoint.status).startswith("2")
         )
 
     def http_upgrades(endpoint):
@@ -976,7 +975,7 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 
     at_least_one_https_endpoint = https_used(https) or https_used(httpswww)
     all_http_unused = http_unused(http) and http_unused(httpwww)
-    both_http_down = (not http.live) and (not httpwww.live)
+    both_http_down = not http.live and not httpwww.live
     at_least_one_http_upgrades = http_upgrades(http) or http_upgrades(httpwww)
 
     is_https = (
@@ -987,11 +986,11 @@ def canonical_endpoint(http, httpwww, https, httpswww):
 
     if is_www and is_https:
         return httpswww
-    if is_www and (not is_https):
+    if is_www and not is_https:
         return httpwww
-    if (not is_www) and is_https:
+    if not is_www and is_https:
         return https
-    if (not is_www) and (not is_https):
+    if not is_www and not is_https:
         return http
 
 
@@ -1049,7 +1048,7 @@ def is_redirect_or_down(endpoint):
     """
     return (
         endpoint.redirect_eventually_to_external
-        or (not endpoint.live)
+        or not endpoint.live
         or (endpoint.protocol == "https" and endpoint.https_bad_hostname)
         or (endpoint.status is not None and endpoint.status >= 400)
     )
@@ -1152,8 +1151,8 @@ def is_downgrades_https(domain):
 
     # The domain "supports" HTTPS if any HTTPS endpoint responds with
     # a certificate valid for its hostname.
-    supports_https = (https.live and (not https.https_bad_hostname)) or (
-        httpswww.live and (not httpswww.https_bad_hostname)
+    supports_https = (https.live and not https.https_bad_hostname) or (
+        httpswww.live and not httpswww.https_bad_hostname
     )
 
     canonical_https = httpswww if canonical.host == "www" else https
@@ -1163,7 +1162,7 @@ def is_downgrades_https(domain):
     return bool(
         supports_https
         and canonical_https.redirect_immediately_to_http
-        and (not canonical_https.redirect_immediately_to_external)
+        and not canonical_https.redirect_immediately_to_external
     )
 
 
@@ -1190,7 +1189,7 @@ def is_strictly_forces_https(domain):
     )
 
     def down_or_redirects(endpoint):
-        return (not endpoint.live) or endpoint.redirect_immediately_to_https
+        return not endpoint.live or endpoint.redirect_immediately_to_https
 
     https_somewhere = https.live or httpswww.live
     all_http_unused = down_or_redirects(http) and down_or_redirects(httpwww)
@@ -1402,10 +1401,10 @@ def is_domain_supports_https(domain):
     or when it doesn't downgrade and has a bad chain but not a bad hostname.
     Domains with a bad chain "support" HTTPS but user-side errors should be expected.
     """
-    return ((not is_downgrades_https(domain)) and is_valid_https(domain)) or (
-        (not is_downgrades_https(domain))
+    return (not is_downgrades_https(domain) and is_valid_https(domain)) or (
+        not is_downgrades_https(domain)
         and is_bad_chain(domain)
-        and (not is_bad_hostname(domain))
+        and not is_bad_hostname(domain)
     )
 
 
