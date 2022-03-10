@@ -80,7 +80,7 @@ setup(
         # "Programming Language :: Python :: 3.9",
         # "Programming Language :: Python :: 3.10",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.6, <3.8",
     # What does your project relate to?
     keywords="https best practices",
     packages=find_packages(where="src"),
