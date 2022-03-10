@@ -717,7 +717,7 @@ def https_check(endpoint):
     try:
         public_trust = True
         custom_trust = True
-        public_not_trusted_string = ""
+        public_not_trusted_names = []
         validation_results = cert_plugin_result.path_validation_result_list
         for result in validation_results:
             if result.was_validation_successful:
@@ -728,9 +728,7 @@ def https_check(endpoint):
                     custom_trust = False
                 else:
                     public_trust = False
-                    if len(public_not_trusted_string) > 0:
-                        public_not_trusted_string += ", "
-                    public_not_trusted_string += result.trust_store.name
+                    public_not_trusted_names.append(result.trust_store.name)
         if public_trust:
             logging.warning(
                 "%s: Publicly trusted by common trust stores.", endpoint.url
@@ -739,7 +737,7 @@ def https_check(endpoint):
             logging.warning(
                 "%s: Not publicly trusted - not trusted by %s.",
                 endpoint.url,
-                public_not_trusted_string,
+                ", ".join(public_not_trusted_names),
             )
         if CA_FILE is not None:
             if custom_trust:
