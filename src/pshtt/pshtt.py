@@ -835,7 +835,7 @@ def https_check(endpoint):
             cert_plugin_result.received_certificate_chain
         )
         if endpoint.https_self_signed_cert is False and (
-            len(cert_plugin_result.received_certificate_chain) < 2
+            endpoint.https_cert_chain_len < 2
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
