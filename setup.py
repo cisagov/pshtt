@@ -97,6 +97,8 @@ setup(
         "pyopenssl>=17.5.0",
         "python-dateutil>=2.7.3",
         "pytz>=2018.5",
+        # This is necessary to support the python_requires kwarg
+        "setuptools >= 24.2.0",
     ],
     extras_require={
         "test": [
