@@ -109,6 +109,8 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
+          - pytest
+          - pytablewriter
           - types-docopt
           - types-pyOpenSSL
           - types-requests
