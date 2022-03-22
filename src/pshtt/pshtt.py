@@ -916,8 +916,8 @@ def canonical_endpoint(http, httpwww, https, httpswww):
         return (
             endpoint.redirect
             or not endpoint.live
-            or endpoint.https_bad_hostname
-            or not str(endpoint.status).startswith("2")  # harmless for http endpoints
+            or endpoint.https_bad_hostname  # harmless for http endpoints
+            or not str(endpoint.status).startswith("2")
         )
 
     def root_down(endpoint):
