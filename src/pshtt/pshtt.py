@@ -13,14 +13,18 @@ from urllib.error import URLError
 
 # Third-Party Libraries
 import OpenSSL
-from publicsuffix import PublicSuffixList, fetch
+
+# Unable to find type stubs for the publicsuffix package.
+from publicsuffix import PublicSuffixList, fetch  # type: ignore
 import requests
-import sslyze
-from sslyze.server_connectivity_tester import (
+
+# Unable to find type stubs for the sslyze package.
+import sslyze  # type: ignore
+from sslyze.server_connectivity_tester import (  # type: ignore
     ServerConnectivityError,
     ServerConnectivityTester,
 )
-import sslyze.synchronous_scanner
+import sslyze.synchronous_scanner  # type: ignore
 import urllib3
 
 from . import utils

@@ -113,6 +113,11 @@ setup(
             "pre-commit",
             "pytest-cov",
             "pytest",
+            "types-docopt",
+            "types-pyOpenSSL",
+            "types-requests",
+            "types-setuptools",
+            "types-urllib3",
         ]
     },
     # Conveniently allows one to run the CLI tool as `pshtt`
