@@ -79,7 +79,7 @@ The following is a set of commands to run to make your running directory.
 
 1. Download the gcloud command line tool.
 
-    - follow the [download
+    - Follow the [download
       link](https://cloud.google.com/sdk/docs/#install_the_latest_cloud_tools_version_cloudsdk_current_version)
       and install the correct sdk for your OS.
     - If this is your first time installing the gcloud command line tool,
@@ -93,7 +93,7 @@ The following is a set of commands to run to make your running directory.
       - Click the appopriate number corresponding to your google project
       - If it complains that the API is not enabled, hit enabled and retry.
       - Do not set default zone or region
-      - at this point, your default project should be this google project.
+      - At this point, your default project should be this google project.
         You can switch to any of your previous projects by running `gcloud
         config set project PROJECTNAME`
 
@@ -114,7 +114,7 @@ The following is a set of commands to run to make your running directory.
     - `touch domains.csv`
       - Your domain list, one domain per line, with the input list ending in
         `.csv`.
-      - domains must have the schema stripped of them and no trailing '/',
+      - Domains must have the schema stripped of them and no trailing '/',
         such as:
         - domain.tld
         - subdomain.domain.tld
@@ -136,7 +136,7 @@ The following is a set of commands to run to make your running directory.
     - If you did not name your ***new*** ssh key gce_pshtt_key, then you will
       need to go through and rename the gce_pshtt_key in all the .sh files to
       whatever you named your key.
-    - in vim, this is `:%s/gce_pshtt_key/yourkeynamehere/g <enter>`.
+    - In vim, this is `:%s/gce_pshtt_key/yourkeynamehere/g <enter>`.
 
 ### How to run ###
 
@@ -144,27 +144,27 @@ The following is a set of commands to run to make your running directory.
 1. `cd ~/pshtt_run/`
 1. `./run_all_scripts <input_file_name> <number_of_shards> <shard_name> >
     log.out`
-    - number of shards == number of hosts
-    - each machine will contain a shard of the data to run.
+    - Number of shards == number of hosts
+    - Each machine will contain a shard of the data to run.
     - This is the script that sets up all machines and puts all datafiles on
       the machines for running.
     - `./run_all_scripts top-1m.nocommas.8.31.2017 100 alexa`
-    - will produce 100 shards all starting with "alexa" in the input_files
+    - Will produce 100 shards all starting with "alexa" in the input_files
       dir.
       - ex. alexa000.csv
     - NOTE: you can ONLY create 999 shards. If you need more than 999 shards,
       you will need to change the split_up_dataset.sh file.
-1. exit screen `cntr+a+d`
+1. Exit screen `cntr+a+d`
 
 ### During the run ###
 
 - `./check_instances.sh`
-  - will print the ip of each host, as well as FINISHED or NOT FINISHED.
+  - Will print the ip of each host, as well as FINISHED or NOT FINISHED.
 
 ### After the run ###
 
 - `./grab_and_combine_data.sh`
-  - will grab all log and result data files, combine data files into one
+  - Will grab all log and result data files, combine data files into one
     large result file, and put these into data_results/.
 - Delete your instance group. If you want to run data analysis, jump down to
   the data analysis portion.
@@ -179,7 +179,7 @@ The following is a set of commands to run to make your running directory.
     pshtt.
     - Follow directions under Updating data files above on how to get a
       roots.pem.
-    - domains must have the schema stripped of them and no trailing '/', such
+    - Domains must have the schema stripped of them and no trailing '/', such
       as:
       - domain.tld
       - subdomain.domain.tld
