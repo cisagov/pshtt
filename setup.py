@@ -87,18 +87,18 @@ setup(
     package_dir={"": "src"},
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     install_requires=[
-        "requests>=2.18.4",
-        "sslyze>=2.1.3,<3.0.0",
-        "wget>=3.2",
         "docopt>=0.6.2",
-        "pytablereader>=0.15.0",
-        "pytablewriter>=0.27.2",
         "publicsuffix>=1.1.0",
         "pyopenssl>=17.5.0",
+        "pytablereader>=0.15.0",
+        "pytablewriter>=0.27.2",
         "python-dateutil>=2.7.3",
         "pytz>=2018.5",
+        "requests>=2.18.4",
         # This is necessary to support the python_requires kwarg
         "setuptools >= 24.2.0",
+        "sslyze>=2.1.3,<3.0.0",
+        "wget>=3.2",
     ],
     extras_require={
         "test": [
