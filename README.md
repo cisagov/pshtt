@@ -31,7 +31,7 @@ organizations](https://github.com/cisagov/pshtt/graphs/contributors).
 
 ## Getting started ##
 
-`pshtt` requires **Python 3.6 or 3.7+**. Python 2 is not supported.
+`pshtt` requires **Python 3.6 or 3.7**. Python 2 is not supported.
 
 `pshtt` can be installed as a module, or run directly from the
 repository.
