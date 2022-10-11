@@ -113,16 +113,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The versions of nassl pinned by our sslyze version constraint only
+        # have bdists available for Python 3.6 and 3.7, so we can only support
+        # those versions of Python. The error seen when trying to install on
+        # Python 3.8+ is:
+        # ERROR: Cannot install pshtt because these package versions have
+        # conflicting dependencies.
+        # The conflict is caused by:
+        #   sslyze 2.1.4 depends on nassl<2.3.0 and >=2.2.0
+        #   sslyze 2.1.3 depends on nassl<2.3.0 and >=2.2.0
         python-version:
           - "3.6"
           - "3.7"
-          # Disabled due to an unresolvable dependency issue between sslyze and
-          # nassl:
-          # ERROR: Cannot install pshtt because these package versions have
-          # conflicting dependencies.
-          # The conflict is caused by:
-          #   sslyze 2.1.4 depends on nassl<2.3.0 and >=2.2.0
-          #   sslyze 2.1.3 depends on nassl<2.3.0 and >=2.2.0
           # - "3.8"
           # - "3.9"
           # - "3.10"
