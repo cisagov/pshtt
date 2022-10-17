@@ -18,14 +18,13 @@
 # If any of the scripts fails, this hard fails and tells the user what script
 # went wrong.
 
-
 input_file=$1
 number_of_shards=${2-10}
 output_file_name=${3-shard_}
 
 echo 'Splitting dataset'
-./split_up_dataset.sh "${1}" "${2}" "${3}"
-error=$(echo $?)
+./split_up_dataset.sh "${input_file}" "${number_of_shards}" "${output_file_name}"
+error=$?
 
 if [[ "${error}" -eq 1 ]]; then
   echo 'ERROR WITH SPLIT DATASET SCRIPT'
@@ -33,8 +32,8 @@ if [[ "${error}" -eq 1 ]]; then
 fi
 
 echo 'Scp and setup'
-./scp_and_setup.sh "${3}"
-error=$(echo $?)
+./scp_and_setup.sh "${output_file_name}"
+error=$?
 if [[ "${error}" -eq 1 ]]; then
   echo 'ERROR WITH SCP AND SETUP SCRIPT'
   exit 1
@@ -42,7 +41,7 @@ fi
 
 echo 'Running instances'
 ./run_instances.sh
-error=$(echo $?)
+error=$?
 if [[ "${error}" -eq 1 ]]; then
   echo 'ERROR WITH RUNNING INSTANCES SCRIPT'
   exit 1
