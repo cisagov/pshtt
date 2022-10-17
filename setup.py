@@ -102,7 +102,7 @@ setup(
         "requests>=2.18.4",
         # This is necessary to support the python_requires kwarg
         "setuptools >= 24.2.0",
-        "sslyze>=2.1.3,<3.0.0",
+        "sslyze>=2.1.3,<6.0.0",
         "wget>=3.2",
     ],
     extras_require={
