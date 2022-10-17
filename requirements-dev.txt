@@ -1,4 +1,6 @@
 --requirement requirements-test.txt
+build
 ipython
 mypy
 semver
+twine
