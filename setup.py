@@ -77,16 +77,13 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        # "Programming Language :: Python :: 3.8",
-        # "Programming Language :: Python :: 3.9",
-        # "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         # "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
-    # The versions of nassl pinned by our sslyze version constraint only have
-    # bdists available for cp36 and cp37 on PyPI so we can only support Python
-    # 3.6 and 3.7 at this time.
-    python_requires=">=3.6, <3.8",
+    python_requires=">=3.7",
     # What does your project relate to?
     keywords="https best practices",
     packages=find_packages(where="src"),
@@ -103,7 +100,7 @@ setup(
         "requests>=2.18.4",
         # This is necessary to support the python_requires kwarg
         "setuptools >= 24.2.0",
-        "sslyze>=3.0.0",
+        "sslyze>=3.0.0,<5.0.0",
         "wget>=3.2",
     ],
     extras_require={
