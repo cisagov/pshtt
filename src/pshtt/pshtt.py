@@ -7,6 +7,7 @@ import datetime
 import json
 import logging
 import os
+from pathlib import Path  # Python3
 import re
 import sys
 from urllib import parse as urlparse
@@ -18,8 +19,6 @@ import OpenSSL
 # Unable to find type stubs for the publicsuffix package.
 from publicsuffix import PublicSuffixList, fetch  # type: ignore
 import requests
-
-from pathlib import Path  # Python3
 from sslyze import (  # type: ignore
     Scanner,
     ServerConnectivityTester,
@@ -27,13 +26,14 @@ from sslyze import (  # type: ignore
     ServerScanRequest,
 )
 from sslyze.errors import ConnectionToServerFailed  # type: ignore
+from sslyze.plugins.certificate_info.implementation import (  # type: ignore
+    CertificateInfoExtraArguments,
+)
 from sslyze.plugins.scan_commands import ScanCommand  # type: ignore
-from sslyze.plugins.certificate_info.implementation import CertificateInfoExtraArguments  # type: ignore
 import urllib3
 
 from . import utils
 from .models import Domain, Endpoint
-
 
 # We're going to be making requests with certificate validation
 # disabled.  Commented next line due to pylint warning that urllib3 is
@@ -650,8 +650,10 @@ def https_check(endpoint):
     # remove the https:// from prefix for sslyze
     try:
         hostname = endpoint.url[8:]
-        server_location = ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-            hostname=hostname, port=443
+        server_location = (
+            ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
+                hostname=hostname, port=443
+            )
         )
         server_tester = ServerConnectivityTester()
         server_info = server_tester.perform(server_location)
@@ -661,12 +663,13 @@ def https_check(endpoint):
             endpoint.ip = ip
         else:
             if endpoint.ip != ip:
-                utils.debug("%s: Endpoint IP is already %s, but requests IP is %s.",
+                utils.debug(
+                    "%s: Endpoint IP is already %s, but requests IP is %s.",
                     endpoint.url,
                     endpoint.ip,
-                    ip
+                    ip,
                 )
-        if server_info.tls_probing_result.client_auth_requirement.name == 'REQUIRED':
+        if server_info.tls_probing_result.client_auth_requirement.name == "REQUIRED":
             endpoint.https_client_auth_required = True
             logging.warning("%s: Client Authentication REQUIRED", endpoint.url)
     except ConnectionToServerFailed as err:
@@ -698,17 +701,18 @@ def https_check(endpoint):
             scan_request = ServerScanRequest(
                 server_info=server_info,
                 scan_commands_extra_arguments=command_extra_args,
-                scan_commands=[command]
+                scan_commands=[command],
             )
         else:
             scan_request = ServerScanRequest(
-                server_info=server_info,
-                scan_commands=[command]
+                server_info=server_info, scan_commands=[command]
             )
         scanner.queue_scan(scan_request)
         # Retrieve results from generator object
         scan_result = [x for x in scanner.get_results()][0]
-        cert_plugin_result = scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+        cert_plugin_result = scan_result.scan_commands_results[
+            ScanCommand.CERTIFICATE_INFO
+        ]
     except Exception as err:
         try:
             if "timed out" in str(err):
@@ -718,7 +722,9 @@ def https_check(endpoint):
                 scanner.queue_scan(scan_request)
                 # Consume the generator object and retrieve the first result
                 scan_result = [x for x in scanner.get_results()][0]
-                cert_plugin_result = scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+                cert_plugin_result = scan_result.scan_commands_results[
+                    ScanCommand.CERTIFICATE_INFO
+                ]
             else:
                 logging.exception(
                     "%s: Unknown exception in sslyze scanner certificate plugin.",
@@ -760,7 +766,7 @@ def https_check(endpoint):
                     # We're assuming that it is trusted to start with
                     pass
                 else:
-                    if 'Custom' in result.trust_store.name:
+                    if "Custom" in result.trust_store.name:
                         custom_trust = False
                     else:
                         public_trust = False
@@ -800,7 +806,9 @@ def https_check(endpoint):
                     # NOTE: Since sslyze 3.0.0, ever since JSON output for certinfo,
                     # SAN(s) are checked as part of _certificate_matches_hostname which
                     # called as part of leaf_certificate_subject_matches_hostname
-                    if not certificate_deployment.leaf_certificate_subject_matches_hostname:
+                    if (
+                        not certificate_deployment.leaf_certificate_subject_matches_hostname
+                    ):
                         endpoint.https_bad_hostname = True
 
         if public_trust:
@@ -825,23 +833,22 @@ def https_check(endpoint):
     except Exception as err:
         # Ignore exception
         logging.exception(
-            "%s: Unknown exception examining certificate deployment.",
-            endpoint.url
+            "%s: Unknown exception examining certificate deployment.", endpoint.url
         )
         utils.debug(
             "%s: Unknown exception examining certificate deployment: %s",
             endpoint.url,
-            err
+            err,
         )
 
     try:
         endpoint.https_cert_chain_len = 0
         for certificate_deployment in cert_plugin_result.certificate_deployments:
-            endpoint.https_cert_chain_len += len(certificate_deployment.received_certificate_chain)
-        if (
-                endpoint.https_self_signed_cert is False and (
-                    endpoint.https_cert_chain_len < 2
-                )
+            endpoint.https_cert_chain_len += len(
+                certificate_deployment.received_certificate_chain
+            )
+        if endpoint.https_self_signed_cert is False and (
+            endpoint.https_cert_chain_len < 2
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
@@ -852,12 +859,12 @@ def https_check(endpoint):
             if not has_verfied_cert_chain:
                 logging.warning(
                     "%s: Untrusted certificate chain, probably due to missing intermediate certificate.",
-                    endpoint.url
+                    endpoint.url,
                 )
                 utils.debug(
                     "%s: Only %s certificates in certificate chain received.",
                     endpoint.url,
-                    endpoint.https_cert_chain_len
+                    endpoint.https_cert_chain_len,
                 )
             elif custom_trust is True and public_trust is False:
                 # recheck public trust using custom public trust store with manually added intermediate certificates
@@ -868,21 +875,28 @@ def https_check(endpoint):
                         command = ScanCommand.CERTIFICATE_INFO
                         command_extra_args = {
                             command: CertificateInfoExtraArguments(
-                                    custom_ca_file=Path(PT_INT_CA_FILE)
-                                )
+                                custom_ca_file=Path(PT_INT_CA_FILE)
+                            )
                         }
                         scan_request = ServerScanRequest(
                             server_info=server_info,
                             scan_commands_extra_arguments=command_extra_args,
-                            scan_commands=[command]
+                            scan_commands=[command],
                         )
                         scanner.queue_scan(scan_request)
                         # Consume the generator object and retrieve the first result
                         scan_result = [x for x in scanner.get_results()][0]
-                        cert_plugin_result = scan_result.scan_commands_results[ScanCommand.CERTIFICATE_INFO]
+                        cert_plugin_result = scan_result.scan_commands_results[
+                            ScanCommand.CERTIFICATE_INFO
+                        ]
                         has_verfied_cert_chain = True
-                        for certificate_deployment in cert_plugin_result.certificate_deployments:
-                            if certificate_deployment.verified_certificate_chain is None:
+                        for (
+                            certificate_deployment
+                        ) in cert_plugin_result.certificate_deployments:
+                            if (
+                                certificate_deployment.verified_certificate_chain
+                                is None
+                            ):
                                 has_verfied_cert_chain = False
                         if has_verfied_cert_chain:
                             public_trust = True
