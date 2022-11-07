@@ -25,7 +25,7 @@ jobs:
         with:
           # A lower version is used because of a dependency issue in Python
           # versions 3.8-3.10
-          python-version: "3.7"
+          python-version: "3.10"
       # We need the Go version and Go cache location for the actions/cache step,
       # so the Go installation must happen before that.
       - uses: actions/setup-go@v2
@@ -123,11 +123,11 @@ jobs:
         #   sslyze 2.1.4 depends on nassl<2.3.0 and >=2.2.0
         #   sslyze 2.1.3 depends on nassl<2.3.0 and >=2.2.0
         python-version:
-          - "3.6"
+          # - "3.6"
           - "3.7"
-          # - "3.8"
-          # - "3.9"
-          # - "3.10"
+          - "3.8"
+          - "3.9"
+          - "3.10"
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
@@ -178,7 +178,7 @@ jobs:
         with:
           # A lower version is used because of a dependency issue in Python
           # versions 3.8-3.10
-          python-version: "3.7"
+          python-version: "3.10"
       - uses: actions/cache@v3
         env:
           BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
@@ -212,7 +212,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - "3.6"
+          # - "3.6"
           - "3.7"
           # Disabled due to an unresolvable dependency issue between sslyze and
           # nassl:
@@ -221,9 +221,9 @@ jobs:
           # The conflict is caused by:
           #   sslyze 2.1.4 depends on nassl<2.3.0 and >=2.2.0
           #   sslyze 2.1.3 depends on nassl<2.3.0 and >=2.2.0
-          # - "3.8"
-          # - "3.9"
-          # - "3.10"
+          - "3.8"
+          - "3.9"
+          - "3.10"
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
