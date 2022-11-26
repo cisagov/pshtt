@@ -107,16 +107,20 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
         python-version:
-          - "3.6"
           - "3.7"
           - "3.8"
           - "3.9"
           - "3.10"
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.6"
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
@@ -193,17 +197,21 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   build:
-    runs-on: ubuntu-latest
-    needs: [lint, test]
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
         python-version:
-          - "3.6"
           - "3.7"
           - "3.8"
           - "3.9"
           - "3.10"
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.6"
+    needs: [lint, test]
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
