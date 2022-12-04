@@ -1562,7 +1562,7 @@ def load_preload_list():
     utils.debug("Fetching Chrome preload list from source...", divider=True)
 
     # Downloads the chromium preloaded domain list and sets it to a global set
-    file_url = "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT"
+    file_url = "https://chromium.googlesource.com/chromium/src/net/+/main/http/transport_security_state_static.json?format=TEXT"
 
     try:
         request = requests.get(file_url)
