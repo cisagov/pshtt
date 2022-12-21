@@ -39,8 +39,8 @@ urllib3.disable_warnings()
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
 
-# Defaults to 5 second, overrideable via --timeout
-TIMEOUT = 5
+# Defaults to 7 seconds, overrideable via --timeout
+TIMEOUT = 7
 
 # The fields we're collecting, will be keys in JSON and
 # column headers in CSV.
