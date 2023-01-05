@@ -242,3 +242,56 @@ jobs:
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
+  test-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        python-version:
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.6"
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v3
+      - id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-"
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
+          key: "${{ env.BASE_CACHE_KEY }}\
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
+          restore-keys: |
+            ${{ env.BASE_CACHE_KEY }}
+      - name: Retrieve the built wheel
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-${{ matrix.python-version }}
+      - name: Install testing dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pytest pytest-cov
+      - name: Install the built wheel (there should only be one)
+        run: python -m pip install *.whl
+      - name: Run tests
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: pytest
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: env.RUN_TMATE
