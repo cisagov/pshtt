@@ -240,7 +240,7 @@ jobs:
       - name: Build artifacts
         run: python -m build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dist-${{ matrix.python-version }}
           path: dist
