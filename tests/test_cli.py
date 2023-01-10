@@ -12,7 +12,7 @@ from pshtt.cli import to_csv
 from pshtt.models import Domain, Endpoint
 
 
-class FakeSuffixList(object):
+class FakeSuffixList:
     """Test against a fake suffix list."""
 
     def get_public_suffix(self, hostname, *args, **kwargs):
