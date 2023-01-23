@@ -21,30 +21,26 @@ jobs:
         uses: cisagov/setup-env-github-action@develop
       - uses: actions/checkout@v3
       - id: setup-python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           # A lower version is used because of a dependency issue in Python
-          # versions 3.8-3.10
+          # versions 3.8-3.11
           python-version: "3.7"
       # We need the Go version and Go cache location for the actions/cache step,
       # so the Go installation must happen before that.
-      - uses: actions/setup-go@v2
+      - id: setup-go
+        uses: actions/setup-go@v3
         with:
-          go-version: "1.16"
-      - name: Store installed Go version
-        id: go-version
-        run: |
-          echo "::set-output name=version::"\
-          "$(go version | sed 's/^go version go\([0-9.]\+\) .*/\1/')"
+          go-version: "1.19"
       - name: Lookup Go cache directory
         id: go-cache
         run: |
-          echo "::set-output name=dir::$(go env GOCACHE)"
+          echo "dir=$(go env GOCACHE)" >> $GITHUB_OUTPUT
       - uses: actions/cache@v3
         env:
           BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
             py${{ steps.setup-python.outputs.python-version }}-\
-            go${{ steps.go-version.outputs.version }}-\
+            go${{ steps.setup-go.outputs.go-version }}-\
             packer${{ steps.setup-env.outputs.packer-version }}-\
             tf${{ steps.setup-env.outputs.terraform-version }}-"
         with:
@@ -84,7 +80,7 @@ jobs:
             ${{ env.CURL_CACHE_DIR }}/"${PACKER_ZIP}"
           sudo mv /usr/local/bin/packer /usr/local/bin/packer-default
           sudo ln -s /opt/packer/packer /usr/local/bin/packer
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ steps.setup-env.outputs.terraform-version }}
       - name: Install shfmt
@@ -109,10 +105,12 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
         # The versions of nassl pinned by our sslyze version constraint only
         # have bdists available for Python 3.6 and 3.7, so we can only support
         # those versions of Python. The error seen when trying to install on
@@ -123,15 +121,18 @@ jobs:
         #   sslyze 2.1.4 depends on nassl<2.3.0 and >=2.2.0
         #   sslyze 2.1.3 depends on nassl<2.3.0 and >=2.2.0
         python-version:
-          - "3.6"
           - "3.7"
           # - "3.8"
           # - "3.9"
           # - "3.10"
+          # - "3.11"
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.6"
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
@@ -170,14 +171,15 @@ jobs:
         if: env.RUN_TMATE
   coveralls-finish:
     runs-on: ubuntu-latest
-    needs: test
+    needs:
+      - test
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           # A lower version is used because of a dependency issue in Python
-          # versions 3.8-3.10
+          # versions 3.8-3.11
           python-version: "3.7"
       - uses: actions/cache@v3
         env:
@@ -206,13 +208,16 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   build:
-    runs-on: ubuntu-latest
-    needs: [lint, test]
+    runs-on: ${{ matrix.os }}
+    needs:
+      - lint
+      - test
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-latest
         python-version:
-          - "3.6"
           - "3.7"
           # Disabled due to an unresolvable dependency issue between sslyze and
           # nassl:
@@ -224,10 +229,14 @@ jobs:
           # - "3.8"
           # - "3.9"
           # - "3.10"
+          # - "3.11"
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.6"
     steps:
       - uses: actions/checkout@v3
       - id: setup-python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v3
@@ -251,10 +260,72 @@ jobs:
       - name: Build artifacts
         run: python -m build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dist-${{ matrix.python-version }}
           path: dist
+      - name: Setup tmate debug session
+        uses: mxschmitt/action-tmate@v3
+        if: env.RUN_TMATE
+  test-build:
+    runs-on: ${{ matrix.os }}
+    needs:
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        python-version:
+          - "3.7"
+          # Disabled due to an unresolvable dependency issue between sslyze and
+          # nassl:
+          # ERROR: Cannot install pshtt because these package versions have
+          # conflicting dependencies.
+          # The conflict is caused by:
+          #   sslyze 2.1.4 depends on nassl<2.3.0 and >=2.2.0
+          #   sslyze 2.1.3 depends on nassl<2.3.0 and >=2.2.0
+          # - "3.8"
+          # - "3.9"
+          # - "3.10"
+          # - "3.11"
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.6"
+    steps:
+      - uses: actions/checkout@v3
+      - id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        env:
+          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-"
+        with:
+          path: ${{ env.PIP_CACHE_DIR }}
+          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
+          # file in the root of the repository is used. This is in case a Python
+          # package were to have a 'setup.py' as part of its internal codebase.
+          key: "${{ env.BASE_CACHE_KEY }}\
+            ${{ hashFiles('**/requirements.txt') }}-\
+            ${{ hashFiles('setup.py') }}"
+          restore-keys: |
+            ${{ env.BASE_CACHE_KEY }}
+      - name: Retrieve the built wheel
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-${{ matrix.python-version }}
+      - name: Install testing dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install --upgrade pytest pytest-cov
+      - name: Install the built wheel (there should only be one)
+        run: python -m pip install *.whl
+      - name: Run tests
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: pytest
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE

@@ -80,6 +80,7 @@ setup(
         # "Programming Language :: Python :: 3.8",
         # "Programming Language :: Python :: 3.9",
         # "Programming Language :: Python :: 3.10",
+        # "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
     # The versions of nassl pinned by our sslyze version constraint only have

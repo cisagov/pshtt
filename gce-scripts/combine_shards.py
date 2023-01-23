@@ -15,13 +15,13 @@ def main():
     filenames = []
 
     # Read in the filenames that are the different shards.
-    with open(master_file, "r") as input_file:
+    with open(master_file) as input_file:
         for line in input_file:
             filenames.append(line.rstrip())
     # For each shard, read it in and append to the final list to
     # print out.
     for f in filenames:
-        with open(f, "r") as input_file:
+        with open(f) as input_file:
             json_data = json.load(input_file)
             for item in json_data:
                 print(json.dumps(item))
