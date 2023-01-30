@@ -1611,7 +1611,7 @@ def load_suffix_list(cache_suffix_list=None, update_list=False):
 
     # Use the local copy
     if cache_suffix_list:
-        utils.debug("Using cached Chrome preload list.", divider=True)
+        utils.debug("Using cached Public Suffix List.", divider=True)
         with codecs.open(cache_suffix_list, encoding="utf-8") as cache_file:
             suffixes = PublicSuffixList(cache_file)
     # Use the built-in copy
