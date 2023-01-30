@@ -94,7 +94,7 @@ setup(
     py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     install_requires=[
         "docopt>=0.6.2",
-        "publicsuffix>=1.1.0",
+        "publicsuffixlist[update]>=0.9.2 ",
         "pyopenssl>=17.5.0",
         "pytablereader>=0.15.0",
         "pytablewriter>=0.27.2",

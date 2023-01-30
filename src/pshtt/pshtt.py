@@ -9,13 +9,11 @@ import os
 import re
 import sys
 from urllib import parse as urlparse
-from urllib.error import URLError
 
 # Third-Party Libraries
 import OpenSSL
-
-# Unable to find type stubs for the publicsuffix package.
-from publicsuffix import PublicSuffixList, fetch  # type: ignore
+from publicsuffixlist.compat import PublicSuffixList  # type: ignore
+from publicsuffixlist.update import updatePSL  # type: ignore
 import requests
 
 # Unable to find type stubs for the sslyze package.
@@ -1594,21 +1592,33 @@ def load_preload_list():
     return fully_preloaded
 
 
-# Returns an instantiated PublicSuffixList object, and the
-# list of lines read from the file.
-def load_suffix_list():
+# Returns an instantiated PublicSuffixList object.
+def load_suffix_list(cache_suffix_list=None, update_list=False):
     """Download and load the public suffix list."""
-    # File does not exist, download current list and cache it at given location.
-    utils.debug("Downloading the Public Suffix List...", divider=True)
-    try:
-        cache_file = fetch()
-    except URLError as err:
-        logging.exception("Unable to download the Public Suffix List...")
-        utils.debug(err)
-        return []
-    content = cache_file.readlines()
-    suffixes = PublicSuffixList(content)
-    return suffixes, content
+    if update_list:
+        utils.debug("Downloading the Public Suffix List...", divider=True)
+        try:
+            # Update the local copy
+            if cache_suffix_list:
+                updatePSL(cache_suffix_list)
+            # Update the built-in copy
+            else:
+                updatePSL()
+        except Exception as err:
+            logging.exception("Unable to download the Public Suffix List...")
+            utils.debug(err)
+            return None
+
+    # Use the local copy
+    if cache_suffix_list:
+        utils.debug("Using cached Public Suffix List.", divider=True)
+        with codecs.open(cache_suffix_list, encoding="utf-8") as cache_file:
+            suffixes = PublicSuffixList(cache_file)
+    # Use the built-in copy
+    else:
+        suffixes = PublicSuffixList()
+
+    return suffixes
 
 
 def initialize_external_data(
@@ -1696,18 +1706,14 @@ def initialize_external_data(
 
     # Load Mozilla's current Public Suffix list.
     if SUFFIX_LIST is None:
-        if cache_suffix_list and os.path.exists(cache_suffix_list):
-            utils.debug("Using cached suffix list.", divider=True)
-            with codecs.open(cache_suffix_list, encoding="utf-8") as cache_file:
-                SUFFIX_LIST = PublicSuffixList(cache_file)
+        if cache_suffix_list:
+            # Retrieve the list if the path does not exist otherwise use the cached copy
+            SUFFIX_LIST = load_suffix_list(
+                cache_suffix_list, not os.path.exists(cache_suffix_list)
+            )
         else:
-            SUFFIX_LIST, raw_content = load_suffix_list()
-
-            if cache_suffix_list:
-                utils.debug(
-                    "Caching suffix list at %s", cache_suffix_list, divider=True
-                )
-                utils.write("".join(raw_content), cache_suffix_list)
+            # Load the built-in PSL
+            SUFFIX_LIST = load_suffix_list()
 
 
 def inspect_domains(domains, options):
