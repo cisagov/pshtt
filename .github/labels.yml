@@ -53,6 +53,9 @@
 - color: "ef476c"
   description: This issue is a request for information or needs discussion
   name: question
+- color: "d73a4a"
+  description: This issue or pull request addresses a security issue
+  name: security
 - color: "00008b"
   description: This issue or pull request adds or otherwise modifies test code
   name: test
