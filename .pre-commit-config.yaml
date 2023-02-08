@@ -118,7 +118,10 @@ repos:
         additional_dependencies:
           - flake8-docstrings
   - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+    # isort 5.12.0 dropped support for Python <3.8. Until this project and
+    # the build.yml workflow can migrate to Python 3.8 or newer we must
+    # continue to use an older version.
+    rev: 5.11.5
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/mirrors-mypy
