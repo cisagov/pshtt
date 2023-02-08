@@ -103,6 +103,7 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test:
+    name: test source - py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -195,10 +196,11 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   build:
-    runs-on: ${{ matrix.os }}
+    name: build wheel - py${{ matrix.python-version }}
     needs:
       - lint
       - test
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -248,9 +250,10 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test-build:
-    runs-on: ${{ matrix.os }}
+    name: test built wheel - py${{ matrix.python-version }}
     needs:
       - build
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
