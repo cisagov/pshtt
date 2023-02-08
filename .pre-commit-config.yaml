@@ -56,7 +56,10 @@ repos:
 
   # pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit
-    rev: v3.0.2
+    # pre-commit v3+ dropped support for Python <3.8. Until this project and
+    # the build.yml workflow can migrate to Python 3.8 or newer we must
+    # continue to use an older version.
+    rev: v2.21.0
     hooks:
       - id: validate_manifest
 
