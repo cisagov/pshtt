@@ -109,7 +109,10 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    # flake8 v6+ dropped support for Python <3.8. Until this project and
+    # the build.yml workflow can migrate to Python 3.8 or newer we must
+    # continue to use an older version.
+    rev: 5.0.4
     hooks:
       - id: flake8
         additional_dependencies:
