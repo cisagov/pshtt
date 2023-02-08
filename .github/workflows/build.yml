@@ -105,6 +105,7 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test:
+    name: test source - py${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -208,10 +209,11 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   build:
-    runs-on: ${{ matrix.os }}
+    name: build wheel - py${{ matrix.python-version }}
     needs:
       - lint
       - test
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -268,9 +270,10 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test-build:
-    runs-on: ${{ matrix.os }}
+    name: test built wheel - py${{ matrix.python-version }}
     needs:
       - build
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -316,12 +319,14 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: dist-${{ matrix.python-version }}
-      - name: Install testing dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade pytest pytest-cov
-      - name: Install the built wheel (there should only be one)
-        run: python -m pip install *.whl
+          path: dist
+      - id: find-wheel
+        name: Get the name of the retrieved wheel (there should only be one)
+        run: echo "wheel=$(ls dist/*whl)" >> $GITHUB_OUTPUT
+      - name: Update core Python packages
+        run: python -m pip install --upgrade pip setuptools wheel
+      - name: Install the built wheel (along with testing dependencies)
+        run: python -m pip install ${{ steps.find-wheel.outputs.wheel }}[test]
       - name: Run tests
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
