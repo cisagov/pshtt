@@ -80,7 +80,6 @@ repos:
       # Go Mod Tidy
       - id: go-mod-tidy
       - id: go-mod-tidy-repo
-
       # Go Test
       - id: go-test-mod
       - id: go-test-pkg
