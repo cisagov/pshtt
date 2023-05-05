@@ -64,7 +64,7 @@ repos:
   - repo: https://github.com/TekWizely/pre-commit-golang
     rev: v1.0.0-rc.1
     hooks:
-    # Style Checkers
+      # Style Checkers
       - id: go-lint
       - id: go-critic
     # StaticCheck
