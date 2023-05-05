@@ -86,7 +86,6 @@ repos:
       - id: go-test-pkg
       - id: go-test-repo-mod
       - id: go-test-repo-pkg
-
       # Go Vet
       - id: go-vet
       - id: go-vet-mod
