@@ -69,33 +69,16 @@ repos:
       - id: go-critic
       # StaticCheck
       - id: go-staticcheck-mod
-      - id: go-staticcheck-pkg
-      - id: go-staticcheck-repo-mod
-      - id: go-staticcheck-repo-pkg
       # Go Build
       - id: go-build-mod
-      - id: go-build-pkg
-      - id: go-build-repo-mod
-      - id: go-build-repo-pkg
       # Go Mod Tidy
       - id: go-mod-tidy
-      - id: go-mod-tidy-repo
       # Go Test
       - id: go-test-mod
-      - id: go-test-pkg
-      - id: go-test-repo-mod
-      - id: go-test-repo-pkg
       # Go Vet
       - id: go-vet
-      - id: go-vet-mod
-      - id: go-vet-pkg
-      - id: go-vet-repo-mod
-      - id: go-vet-repo-pkg
       # GoSec
       - id: go-sec-mod
-      - id: go-sec-pkg
-      - id: go-sec-repo-mod
-      - id: go-sec-repo-pkg
 
   # Shell script hooks
   - repo: https://github.com/cisagov/pre-commit-shfmt
