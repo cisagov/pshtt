@@ -783,7 +783,6 @@ def https_check(endpoint):
 
     # A certificate can have multiple issues.
     for msg in cert_response:
-
         # Check for missing SAN.
         if (("DNS Subject Alternative Names") in msg) and (("[]") in msg):
             endpoint.https_bad_hostname = True
@@ -1095,7 +1094,10 @@ def is_http_redirect_domain(domain):
     is a redirect, and all other http endpoints are either redirects
     or down.
     """
-    http, httpwww, = (
+    (
+        http,
+        httpwww,
+    ) = (
         domain.http,
         domain.httpwww,
     )
