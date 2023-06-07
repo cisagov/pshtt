@@ -65,7 +65,6 @@ repos:
     rev: v1.0.0-rc.1
     hooks:
       # Style Checkers
-      - id: go-lint
       - id: go-critic
       # StaticCheck
       - id: go-staticcheck-repo-mod
