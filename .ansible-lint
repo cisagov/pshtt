@@ -1,10 +1,9 @@
 ---
-# See https://ansible-lint.readthedocs.io/en/latest/configuring.html
-# for a list of the configuration elements that can exist in this
-# file.
+# See https://ansible-lint.readthedocs.io/configuring/ for a list of
+# the configuration elements that can exist in this file.
 enable_list:
   # Useful checks that one must opt-into.  See here for more details:
-  # https://ansible-lint.readthedocs.io/en/latest/rules.html
+  # https://ansible-lint.readthedocs.io/rules/
   - fcqn-builtins
   - no-log-password
   - no-same-owner

@@ -65,7 +65,7 @@ done
 eval set -- "$PARAMS"
 
 # Check to see if pyenv is installed
-if [ -z "$(command -v pyenv)" ] || [ -z "$(command -v pyenv-virtualenv)" ]; then
+if [ -z "$(command -v pyenv)" ] || { [ -z "$(command -v pyenv-virtualenv)" ] && [ ! -f "$(pyenv root)/plugins/pyenv-virtualenv/bin/pyenv-virtualenv" ]; }; then
   echo "pyenv and pyenv-virtualenv are required."
   if [[ "$OSTYPE" == "darwin"* ]]; then
     cat << 'END_OF_LINE'
@@ -186,5 +186,5 @@ else:
 END_OF_LINE
 )"
 
-# Qapla
+# Qapla'
 echo "Success!"
