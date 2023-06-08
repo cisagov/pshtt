@@ -60,6 +60,25 @@ repos:
     hooks:
       - id: validate_manifest
 
+  # Go hooks
+  - repo: https://github.com/TekWizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+      # Style Checkers
+      - id: go-critic
+      # StaticCheck
+      - id: go-staticcheck-repo-mod
+      # Go Build
+      - id: go-build-repo-mod
+      # Go Mod Tidy
+      - id: go-mod-tidy-repo
+      # Go Test
+      - id: go-test-repo-mod
+      # Go Vet
+      - id: go-vet-repo-mod
+      # GoSec
+      - id: go-sec-repo-mod
+
   # Shell script hooks
   - repo: https://github.com/cisagov/pre-commit-shfmt
     rev: v0.0.2
