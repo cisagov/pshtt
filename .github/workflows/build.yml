@@ -33,22 +33,6 @@ jobs:
           # it relies on the existence of a go.sum file.
           cache: false
           go-version: "1.20"
-      - id: setup-go-critic
-        run: go install -v github.com/go-critic/go-critic/cmd/gocritic@0.8.1
-      - id: setup staticheck
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-      - name: Run staticcheck
-        uses: dominikh/staticcheck-action@v1.3.0
-        with:
-          version: "2022.1.3"
-      - id: setup-go-sec
-        uses: actions/checkout@v3
-        env:
-          GO111MODULE: on
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
       - name: Lookup Go cache directory
         id: go-cache
         run: |
@@ -80,6 +64,16 @@ jobs:
             ${{ env.BASE_CACHE_KEY }}
       - name: Setup curl cache
         run: mkdir -p ${{ env.CURL_CACHE_DIR }}
+      - name: Install GoCritic 
+        env:
+          PACKAGE_URL: github.com/go-critic/go-critic/cmd/gocritic
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-critic-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install GoSec 
+        env:
+          PACKAGE_URL: github.com/securego/gosec/v2/cmd/gosec
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.gosec-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install Packer
         env:
           PACKER_VERSION: ${{ steps.setup-env.outputs.packer-version }}
@@ -100,6 +94,11 @@ jobs:
         env:
           PACKAGE_URL: mvdan.cc/sh/v3/cmd/shfmt
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.shfmt-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install Staticcheck 
+        env:
+          PACKAGE_URL: dominikh/staticcheck-action
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-staticcheck-version }}
         run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install Terraform-docs
         env:
