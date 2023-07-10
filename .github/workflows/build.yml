@@ -34,7 +34,7 @@ jobs:
           cache: false
           go-version: "1.20"
       - id: setup-go-critic
-        run: go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
+        run: go install -v github.com/go-critic/go-critic/cmd/gocritic@0.8.1
       - id: setup staticheck
         uses: actions/checkout@v3
         with:
