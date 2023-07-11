@@ -78,7 +78,7 @@ jobs:
       - name: Install Staticcheck 
         env:
           PACKAGE_URL: dominikh/staticcheck-action
-          PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-staticcheck-version }}
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.staticcheck-version }}
         run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install Packer
         env:
