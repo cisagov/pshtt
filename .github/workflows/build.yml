@@ -64,6 +64,7 @@ jobs:
             ${{ env.BASE_CACHE_KEY }}
       - name: Setup curl cache
         run: mkdir -p ${{ env.CURL_CACHE_DIR }}
+       # Install GoCrtitic, GoSec and Staticcheck Go tools 
       - name: Install GoCritic 
         env:
           PACKAGE_URL: github.com/go-critic/go-critic/cmd/gocritic
@@ -73,6 +74,11 @@ jobs:
         env:
           PACKAGE_URL: github.com/securego/gosec/v2/cmd/gosec
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.gosec-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install Staticcheck 
+        env:
+          PACKAGE_URL: dominikh/staticcheck-action
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-staticcheck-version }}
         run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install Packer
         env:
@@ -94,11 +100,6 @@ jobs:
         env:
           PACKAGE_URL: mvdan.cc/sh/v3/cmd/shfmt
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.shfmt-version }}
-        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
-      - name: Install Staticcheck 
-        env:
-          PACKAGE_URL: dominikh/staticcheck-action
-          PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-staticcheck-version }}
         run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install Terraform-docs
         env:
