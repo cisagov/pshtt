@@ -64,8 +64,8 @@ jobs:
             ${{ env.BASE_CACHE_KEY }}
       - name: Setup curl cache
         run: mkdir -p ${{ env.CURL_CACHE_DIR }}
-       # Install GoCrtitic, GoSec and Staticcheck Go tools 
-      - name: Install GoCritic 
+       # Install go-critic, GoSec and staticcheck Go tools 
+      - name: Install go-critic
         env:
           PACKAGE_URL: github.com/go-critic/go-critic/cmd/gocritic
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-critic-version }}
