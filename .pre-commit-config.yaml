@@ -31,17 +31,17 @@ repos:
 
   # Text file hooks
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.33.0
+    rev: v0.34.0
     hooks:
       - id: markdownlint
         args:
           - --config=.mdl_config.yaml
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.6
+    rev: v3.0.0-alpha.9-for-vscode
     hooks:
       - id: prettier
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.30.0
+    rev: v1.32.0
     hooks:
       - id: yamllint
         args:
@@ -49,16 +49,35 @@ repos:
 
   # GitHub Actions hooks
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.22.0
+    rev: 0.23.1
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
 
   # pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit
-    rev: v3.2.1
+    rev: v3.3.2
     hooks:
       - id: validate_manifest
+
+  # Go hooks
+  - repo: https://github.com/TekWizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+      # Style Checkers
+      - id: go-critic
+      # StaticCheck
+      - id: go-staticcheck-repo-mod
+      # Go Build
+      - id: go-build-repo-mod
+      # Go Mod Tidy
+      - id: go-mod-tidy-repo
+      # Go Test
+      - id: go-test-repo-mod
+      # Go Vet
+      - id: go-vet-repo-mod
+      # GoSec
+      - id: go-sec-repo-mod
 
   # Shell script hooks
   - repo: https://github.com/cisagov/pre-commit-shfmt
@@ -98,7 +117,7 @@ repos:
         name: bandit (everything else)
         exclude: tests
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.3.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
@@ -112,33 +131,33 @@ repos:
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.1.1
+    rev: v1.3.0
     hooks:
       - id: mypy
         additional_dependencies:
           - types-setuptools
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.4.0
     hooks:
       - id: pyupgrade
 
   # Ansible hooks
   - repo: https://github.com/ansible-community/ansible-lint
-    rev: v5.4.0
+    rev: v6.17.0
     hooks:
       - id: ansible-lint
       # files: molecule/default/playbook.yml
 
   # Terraform hooks
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.77.1
+    rev: v1.80.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
 
   # Docker hooks
   - repo: https://github.com/IamTheFij/docker-pre-commit
-    rev: v2.1.1
+    rev: v3.0.1
     hooks:
       - id: docker-compose-check
 
