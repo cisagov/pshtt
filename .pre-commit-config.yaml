@@ -160,7 +160,10 @@ repos:
         args:
           - --scripts-are-modules
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    # pyupgrade no longer supports Python 3.7 as of version 3.4.0, so
+    # we cannot upgrade past the 3.3.2 release:
+    # https://github.com/asottile/pyupgrade/blob/v3.4.0/setup.cfg#L23
+    rev: v3.3.2
     hooks:
       - id: pyupgrade
 
