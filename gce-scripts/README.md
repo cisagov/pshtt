@@ -116,9 +116,9 @@ The following is a set of commands to run to make your running directory.
         `.csv`.
       - Domains must have the schema stripped of them and no trailing '/',
         such as:
-        - domain.tld
-        - subdomain.domain.tld
-        - www.subdomain.domain.tld
+        - `domain.tld`
+        - `subdomain.domain.tld`
+        - `www.subdomain.domain.tld`
     - `mkdir ~/pshtt_run/data_results/`
     - `mv ~/pshtt_run/combine_shards.py ~/pshtt_run/data_results`
       - Places combine_shards.py into data_results/.
@@ -181,9 +181,9 @@ The following is a set of commands to run to make your running directory.
       roots.pem.
     - Domains must have the schema stripped of them and no trailing '/', such
       as:
-      - domain.tld
-      - subdomain.domain.tld
-      - www.subdomain.domain.tld
+      - `domain.tld`
+      - `subdomain.domain.tld`
+      - `www.subdomain.domain.tld`
     - `chmod +x running_script.sh` to make it executable.
 1. Run `./running_script.sh <input_filename>`
 1. Results and profit.
