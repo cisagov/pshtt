@@ -80,7 +80,6 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ steps.setup-env.outputs.terraform-version }}
-      # Begin Go packages install below
       - name: Install go-critic
         env:
           PACKAGE_URL: github.com/go-critic/go-critic/cmd/gocritic
