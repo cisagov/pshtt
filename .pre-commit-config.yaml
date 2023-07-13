@@ -130,7 +130,7 @@ repos:
       - id: pyupgrade
 
   # Ansible hooks
-  - repo: https://github.com/ansible-community/ansible-lint
+  - repo: https://github.com/ansible/ansible-lint
     rev: v6.17.0
     hooks:
       - id: ansible-lint
