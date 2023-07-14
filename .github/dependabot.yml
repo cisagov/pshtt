@@ -5,12 +5,8 @@
 # these updates when the pull request(s) in the appropriate skeleton are merged
 # and Lineage processes these changes.
 
-version: 2
 updates:
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
+  - directory: /
     # ignore:
     #   # Managed by cisagov/skeleton-generic
     #   - dependency-name: actions/cache
@@ -19,13 +15,17 @@ updates:
     #   - dependency-name: actions/setup-python
     #   - dependency-name: hashicorp/setup-terraform
     #   - dependency-name: mxschmitt/action-tmate
-
-  - package-ecosystem: pip
-    directory: /
+    package-ecosystem: github-actions
     schedule:
       interval: weekly
 
-  - package-ecosystem: terraform
-    directory: /
+  - directory: /
+    package-ecosystem: pip
     schedule:
       interval: weekly
+
+  - directory: /
+    package-ecosystem: terraform
+    schedule:
+      interval: weekly
+version: 2
