@@ -7,10 +7,10 @@
 
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
     # ignore:
     #   # Managed by cisagov/skeleton-generic
     #   - dependency-name: actions/cache
@@ -20,12 +20,12 @@ updates:
     #   - dependency-name: hashicorp/setup-terraform
     #   - dependency-name: mxschmitt/action-tmate
 
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: pip
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
 
-  - package-ecosystem: "terraform"
-    directory: "/"
+  - package-ecosystem: terraform
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
