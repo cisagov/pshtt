@@ -27,7 +27,7 @@ for z in $list_of_files; do
   touch data_results/to_combine.txt
   echo $?
   echo 'putting file name into combine script'
-  echo "${z}"'.json' >> data_results/to_combine.txt
+  "${z}"'.json' >> data_results/to_combine.txt
   echo $?
   ((i = i + 1))
 done
