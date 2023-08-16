@@ -85,7 +85,7 @@ jobs:
           PACKAGE_URL: github.com/go-critic/go-critic/cmd/gocritic
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-critic-version }}
         run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
-      - name: Install GoSec
+      - name: Install gosec
         env:
           PACKAGE_URL: github.com/securego/gosec/v2/cmd/gosec
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.gosec-version }}
