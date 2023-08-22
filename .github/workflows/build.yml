@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: setup-env
-        uses: cisagov/setup-env-github-action@add-go-actions-for-go-skeleton
+        uses: cisagov/setup-env-github-action@develop
       - uses: actions/checkout@v3
       - id: setup-python
         uses: actions/setup-python@v4
