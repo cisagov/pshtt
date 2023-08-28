@@ -79,6 +79,12 @@ repos:
       # GoSec
       - id: go-sec-repo-mod
 
+  # Nix hooks
+  - repo: https://github.com/nix-community/nixpkgs-fmt
+    rev: v1.3.0
+    hooks:
+      - id: nixpkgs-fmt
+
   # Shell script hooks
   - repo: https://github.com/cisagov/pre-commit-shfmt
     rev: v0.0.2
