@@ -14,6 +14,12 @@ env:
   RUN_TMATE: ${{ secrets.RUN_TMATE }}
 
 jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    steps:
+      - id: github-status
+        name: Check GitHub status
+        uses: crazy-max/ghaction-github-status@v3
   lint:
     runs-on: ubuntu-latest
     steps:
