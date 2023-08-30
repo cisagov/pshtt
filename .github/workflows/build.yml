@@ -18,6 +18,11 @@ jobs:
     name: Run diagnostics
     runs-on: ubuntu-latest
     steps:
+      - id: harden-runner
+        name: Harden the runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - id: github-status
         name: Check GitHub status
         uses: crazy-max/ghaction-github-status@v3

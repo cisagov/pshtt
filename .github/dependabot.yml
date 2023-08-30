@@ -18,6 +18,7 @@ updates:
     #   - dependency-name: crazy-max/ghaction-github-status
     #   - dependency-name: hashicorp/setup-terraform
     #   - dependency-name: mxschmitt/action-tmate
+    #   - dependency-name: step-security/harden-runner
     package-ecosystem: github-actions
     schedule:
       interval: weekly
