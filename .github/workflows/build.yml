@@ -20,6 +20,9 @@ jobs:
       - id: github-status
         name: Check GitHub status
         uses: crazy-max/ghaction-github-status@v3
+      - id: dump-context
+        name: Dump context
+        uses: crazy-max/ghaction-dump-context@v2
   lint:
     needs:
       - diagnostics

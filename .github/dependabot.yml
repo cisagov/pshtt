@@ -13,6 +13,7 @@ updates:
     #   - dependency-name: actions/checkout
     #   - dependency-name: actions/setup-go
     #   - dependency-name: actions/setup-python
+    #   - dependency-name: crazy-max/ghaction-dump-context
     #   - dependency-name: crazy-max/ghaction-github-labeler
     #   - dependency-name: crazy-max/ghaction-github-status
     #   - dependency-name: hashicorp/setup-terraform
