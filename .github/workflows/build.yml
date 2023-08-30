@@ -34,6 +34,11 @@ jobs:
       - diagnostics
     runs-on: ubuntu-latest
     steps:
+      - id: harden-runner
+        name: Harden the runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - id: setup-env
         uses: cisagov/setup-env-github-action@develop
       - uses: actions/checkout@v4
