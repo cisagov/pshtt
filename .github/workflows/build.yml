@@ -15,6 +15,7 @@ env:
 
 jobs:
   diagnostics:
+    name: Run diagnostics
     runs-on: ubuntu-latest
     steps:
       - id: github-status
