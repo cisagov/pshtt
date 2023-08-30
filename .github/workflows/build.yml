@@ -21,6 +21,8 @@ jobs:
         name: Check GitHub status
         uses: crazy-max/ghaction-github-status@v3
   lint:
+    needs:
+      - diagnostics
     runs-on: ubuntu-latest
     steps:
       - id: setup-env
