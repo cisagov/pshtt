@@ -164,6 +164,11 @@ jobs:
           - os: ubuntu-20.04
             python-version: "3.6"
     steps:
+      - id: harden-runner
+        name: Harden the runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
@@ -209,6 +214,11 @@ jobs:
       - diagnostics
       - test
     steps:
+      - id: harden-runner
+        name: Harden the runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
@@ -262,6 +272,11 @@ jobs:
           - os: ubuntu-20.04
             python-version: "3.6"
     steps:
+      - id: harden-runner
+        name: Harden the runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
@@ -316,6 +331,11 @@ jobs:
           - os: ubuntu-20.04
             python-version: "3.6"
     steps:
+      - id: harden-runner
+        name: Harden the runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
