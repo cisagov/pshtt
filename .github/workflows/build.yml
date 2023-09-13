@@ -146,6 +146,8 @@ jobs:
         if: env.RUN_TMATE
   test:
     name: test source - py${{ matrix.python-version }}
+    needs:
+      - diagnostics
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -204,6 +206,7 @@ jobs:
   coveralls-finish:
     runs-on: ubuntu-latest
     needs:
+      - diagnostics
       - test
     steps:
       - uses: actions/checkout@v4
@@ -240,6 +243,7 @@ jobs:
   build:
     name: build wheel - py${{ matrix.python-version }}
     needs:
+      - diagnostics
       - lint
       - test
     runs-on: ${{ matrix.os }}
@@ -294,6 +298,7 @@ jobs:
   test-build:
     name: test built wheel - py${{ matrix.python-version }}
     needs:
+      - diagnostics
       - build
     runs-on: ${{ matrix.os }}
     strategy:
