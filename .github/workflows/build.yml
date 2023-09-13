@@ -162,7 +162,7 @@ jobs:
           - os: ubuntu-20.04
             python-version: "3.6"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
         with:
@@ -206,7 +206,7 @@ jobs:
     needs:
       - test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
         with:
@@ -258,7 +258,7 @@ jobs:
           - os: ubuntu-20.04
             python-version: "3.6"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
         with:
@@ -311,7 +311,7 @@ jobs:
           - os: ubuntu-20.04
             python-version: "3.6"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v4
         with:
