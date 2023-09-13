@@ -19,10 +19,10 @@ jobs:
       issues: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Sync repository labels
         if: success()
-        uses: crazy-max/ghaction-github-labeler@v4
+        uses: crazy-max/ghaction-github-labeler@v5
         with:
           # This is a hideous ternary equivalent so we only do a dry run unless
           # this workflow is triggered by the develop branch.
