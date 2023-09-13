@@ -80,10 +80,25 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ steps.setup-env.outputs.terraform-version }}
+      - name: Install go-critic
+        env:
+          PACKAGE_URL: github.com/go-critic/go-critic/cmd/gocritic
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.go-critic-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install gosec
+        env:
+          PACKAGE_URL: github.com/securego/gosec/v2/cmd/gosec
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.gosec-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install shfmt
         env:
           PACKAGE_URL: mvdan.cc/sh/v3/cmd/shfmt
           PACKAGE_VERSION: ${{ steps.setup-env.outputs.shfmt-version }}
+        run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
+      - name: Install staticcheck
+        env:
+          PACKAGE_URL: honnef.co/go/tools/cmd/staticcheck
+          PACKAGE_VERSION: ${{ steps.setup-env.outputs.staticcheck-version }}
         run: go install ${PACKAGE_URL}@${PACKAGE_VERSION}
       - name: Install Terraform-docs
         env:
