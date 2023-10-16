@@ -850,11 +850,11 @@ def https_check(endpoint):
         ):
             # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
-            has_verfied_cert_chain = True
+            has_verified_cert_chain = True
             for certificate_deployment in cert_plugin_result.certificate_deployments:
                 if certificate_deployment.verified_certificate_chain is None:
-                    has_verfied_cert_chain = False
-            if not has_verfied_cert_chain:
+                    has_verified_cert_chain = False
+            if not has_verified_cert_chain:
                 logging.warning(
                     "%s: Untrusted certificate chain, probably due to missing intermediate certificate.",
                     endpoint.url,
@@ -887,7 +887,7 @@ def https_check(endpoint):
                         cert_plugin_result = scan_result.scan_commands_results[
                             ScanCommand.CERTIFICATE_INFO
                         ]
-                        has_verfied_cert_chain = True
+                        has_verified_cert_chain = True
                         for (
                             certificate_deployment
                         ) in cert_plugin_result.certificate_deployments:
@@ -895,8 +895,8 @@ def https_check(endpoint):
                                 certificate_deployment.verified_certificate_chain
                                 is None
                             ):
-                                has_verfied_cert_chain = False
-                        if has_verfied_cert_chain:
+                                has_verified_cert_chain = False
+                        if has_verified_cert_chain:
                             public_trust = True
                             endpoint.https_public_trusted = public_trust
                             logging.warning(
