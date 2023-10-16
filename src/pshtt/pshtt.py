@@ -753,7 +753,7 @@ def https_check(endpoint):
         endpoint.https_bad_chain = False
         endpoint.https_bad_hostname = False
 
-        # Default trust to Fase until proven True
+        # Default trust to False until proven True
         public_trust = True
         custom_trust = True
         public_not_trusted_names = []
