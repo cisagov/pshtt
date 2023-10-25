@@ -119,6 +119,7 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
+          - "3.12"
         include:
           - os: ubuntu-20.04
             python-version: "3.6"
@@ -215,6 +216,7 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
+          - "3.12"
         include:
           - os: ubuntu-20.04
             python-version: "3.6"
@@ -268,6 +270,7 @@ jobs:
           - "3.9"
           - "3.10"
           - "3.11"
+          - "3.12"
         include:
           - os: ubuntu-20.04
             python-version: "3.6"
