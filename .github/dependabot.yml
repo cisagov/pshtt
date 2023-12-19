@@ -22,6 +22,9 @@ updates:
       # # Managed by cisagov/skeleton-python-library
       # - dependency-name: actions/download-artifact
       # - dependency-name: actions/upload-artifact
+      # - dependency-name: github/codeql-action/analyze
+      # - dependency-name: github/codeql-action/autobuild
+      # - dependency-name: github/codeql-action/init
     package-ecosystem: github-actions
     schedule:
       interval: weekly
