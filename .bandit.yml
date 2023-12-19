@@ -4,7 +4,7 @@
 # This config is applied to bandit when scanning the "tests" tree
 
 # Tests are first included by `tests`, and then excluded by `skips`.
-# If `tests` is empty, all tests are are considered included.
+# If `tests` is empty, all tests are considered included.
 
 tests:
 # - B101
