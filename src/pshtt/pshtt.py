@@ -1569,8 +1569,12 @@ def load_preload_pending():
     pending_url = "https://hstspreload.org/api/v2/pending"
 
     try:
-        request = requests.get(pending_url)
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+        request = requests.get(pending_url, timeout=TIMEOUT)
+    except (
+        requests.exceptions.SSLError,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.ConnectTimeout,
+    ) as err:
         logging.exception("Failed to fetch pending preload list: %s", pending_url)
         logging.debug(err)
         return []
@@ -1601,8 +1605,12 @@ def load_preload_list():
     file_url = "https://chromium.googlesource.com/chromium/src/+/main/net/http/transport_security_state_static.json?format=TEXT"
 
     try:
-        request = requests.get(file_url)
-    except (requests.exceptions.SSLError, requests.exceptions.ConnectionError) as err:
+        request = requests.get(file_url, timeout=TIMEOUT)
+    except (
+        requests.exceptions.SSLError,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.ConnectTimeout,
+    ) as err:
         logging.exception("Failed to fetch preload list: %s", file_url)
         logging.debug(err)
         return []
