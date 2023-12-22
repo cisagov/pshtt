@@ -282,9 +282,6 @@ instructions for doing so:
 
 ## Who uses pshtt? ##
 
-- GSA maintains [Pulse](https://pulse.cio.gov), a dashboard that
-  tracks how federal government domains are meeting best practices on
-  the web. [Pulse is open source](https://github.com/18F/pulse).
 - The Freedom of the Press Foundation runs
   [securethe.news](https://securethe.news), a site that aims to "track
   and promote the adoption of HTTPS encryption by major news
