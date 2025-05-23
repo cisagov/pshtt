@@ -1,7 +1,7 @@
 ---
 name: sync-labels
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     paths:
       - .github/labels.yml
@@ -20,23 +20,34 @@ jobs:
     steps:
       # Note that a duplicate of this step must be added at the top of
       # each job.
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      # Note that a duplicate of this step must be added at the top of
-      # each job.
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-      - id: github-status
-        name: Check GitHub status
-        uses: crazy-max/ghaction-github-status@v4
-      - id: dump-context
-        name: Dump context
-        uses: crazy-max/ghaction-dump-context@v2
+          check_github_status: "true"
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-generic#207 for more details.
+          monitor_permissions: "false"
+          output_workflow_context: "true"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
   labeler:
     needs:
       - diagnostics
@@ -47,15 +58,32 @@ jobs:
       issues: write
     runs-on: ubuntu-latest
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-generic#207 for more details.
+          monitor_permissions: "false"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - uses: actions/checkout@v4
       - name: Sync repository labels
         if: success()

@@ -1,28 +1,19 @@
 ---
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-name: CodeQL
+name: Dependency review
 
-# The use of on here as a key is part of the GitHub actions syntax.
-# yamllint disable-line rule:truthy
-on:
+on:  # yamllint disable-line rule:truthy
   merge_group:
     types:
       - checks_requested
   pull_request:
-    # The branches here must be a subset of the ones in the push key
-    branches:
-      - develop
-  push:
-    # Dependabot-triggered push events have read-only access, but uploading code
-    # scanning requires write access.
-    branches-ignore:
-      - dependabot/**
-  schedule:
-    - cron: 0 14 * * 6
+
+# Set a default shell for any run steps. The `-Eueo pipefail` sets errtrace,
+# nounset, errexit, and pipefail. The `-x` will print all commands as they are
+# run. Please see the GitHub Actions documentation for more information:
+# https://docs.github.com/en/actions/using-jobs/setting-default-values-for-jobs
+defaults:
+  run:
+    shell: bash -Eueo pipefail -x {0}
 
 jobs:
   diagnostics:
@@ -61,30 +52,14 @@ jobs:
           # monitoring configuration *does not* require you to modify
           # this workflow.
           permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-  analyze:
-    name: Analyze
+  dependency-review:
+    name: Dependency review
     needs:
       - diagnostics
     permissions:
       # actions/checkout needs this to fetch code
       contents: read
-      # required for all workflows
-      security-events: write
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Override automatic language detection by changing the below
-        # list
-        #
-        # Supported options are actions, c-cpp, csharp, go,
-        # java-kotlin, javascript-typescript, python, ruby, and swift.
-        language:
-          - actions
-          - python
-        # Learn more...
-        # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
-
     steps:
       - name: Apply standard cisagov job preamble
         uses: cisagov/action-job-preamble@v1
@@ -112,32 +87,9 @@ jobs:
           # monitoring configuration *does not* require you to modify
           # this workflow.
           permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-
-      - name: Checkout repository
+      - id: checkout-repo
+        name: Checkout the repository
         uses: actions/checkout@v4
-
-      # Initializes the CodeQL tools for scanning.
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-
-      # Autobuild attempts to build any compiled languages (C/C++, C#, or
-      # Java). If this step fails, then you should remove it and run the build
-      # manually (see below).
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-
-      # ℹ️ Command-line programs to run using the OS shell.
-      # 📚 https://git.io/JvXDl
-
-      # ✏️ If the Autobuild fails above, remove it and uncomment the following
-      #    three lines and modify them (or add more) to build your code if your
-      #    project uses a compiled language
-
-      # - run: |
-      #     make bootstrap
-      #     make release
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+      - id: dependency-review
+        name: Review dependency changes for vulnerabilities and license changes
+        uses: actions/dependency-review-action@v4

@@ -1,7 +1,7 @@
 ---
 name: build
 
-on:
+on:  # yamllint disable-line rule:truthy
   merge_group:
     types:
       - checks_requested
@@ -36,23 +36,34 @@ jobs:
     steps:
       # Note that a duplicate of this step must be added at the top of
       # each job.
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      # Note that a duplicate of this step must be added at the top of
-      # each job.
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-      - id: github-status
-        name: Check GitHub status
-        uses: crazy-max/ghaction-github-status@v4
-      - id: dump-context
-        name: Dump context
-        uses: crazy-max/ghaction-dump-context@v2
+          check_github_status: "true"
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-generic#207 for more details.
+          monitor_permissions: "false"
+          output_workflow_context: "true"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
   lint:
     needs:
       - diagnostics
@@ -61,15 +72,32 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-generic#207 for more details.
+          monitor_permissions: "false"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - id: setup-env
         uses: cisagov/setup-env-github-action@develop
       - uses: actions/checkout@v4
@@ -94,20 +122,20 @@ jobs:
           echo "dir=$(go env GOCACHE)" >> $GITHUB_OUTPUT
       - uses: actions/cache@v4
         env:
-          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
+          BASE_CACHE_KEY: ${{ github.job }}-${{ runner.os }}-\
             py${{ steps.setup-python.outputs.python-version }}-\
             go${{ steps.setup-go.outputs.go-version }}-\
             packer${{ steps.setup-env.outputs.packer-version }}-\
-            tf${{ steps.setup-env.outputs.terraform-version }}-"
+            tf${{ steps.setup-env.outputs.terraform-version }}-
         with:
           # We do not use '**/setup.py' in the cache key so only the 'setup.py'
           # file in the root of the repository is used. This is in case a Python
           # package were to have a 'setup.py' as part of its internal codebase.
-          key: "${{ env.BASE_CACHE_KEY }}\
+          key: ${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
             ${{ hashFiles('**/requirements.txt') }}-\
             ${{ hashFiles('**/.pre-commit-config.yaml') }}-\
-            ${{ hashFiles('setup.py') }}"
+            ${{ hashFiles('setup.py') }}
           # Note that the .terraform directory IS NOT included in the
           # cache because if we were caching, then we would need to use
           # the `-upgrade=true` option. This option blindly pulls down the
@@ -198,15 +226,32 @@ jobs:
           # - "3.12"
           # - "3.13"
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-python-library#149 for more details.
+          monitor_permissions: "false"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v5
@@ -214,17 +259,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v4
         env:
-          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
-            py${{ steps.setup-python.outputs.python-version }}-"
+          BASE_CACHE_KEY: ${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           # We do not use '**/setup.py' in the cache key so only the 'setup.py'
           # file in the root of the repository is used. This is in case a Python
           # package were to have a 'setup.py' as part of its internal codebase.
-          key: "${{ env.BASE_CACHE_KEY }}\
+          key: ${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements-test.txt') }}-\
             ${{ hashFiles('**/requirements.txt') }}-\
-            ${{ hashFiles('setup.py') }}"
+            ${{ hashFiles('setup.py') }}
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install dependencies
@@ -236,12 +281,10 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: pytest
       - name: Upload coverage report
-        run: coveralls
-        env:
-          COVERALLS_FLAG_NAME: "py${{ matrix.python-version }}"
-          COVERALLS_PARALLEL: true
-          COVERALLS_SERVICE_NAME: github
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: coverallsapp/github-action@v2
+        with:
+          flag-name: py${{ matrix.python-version }}
+          parallel: true
         if: success()
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
@@ -255,47 +298,37 @@ jobs:
       - diagnostics
       - test
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-python-library#149 for more details.
+          monitor_permissions: "false"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - uses: actions/checkout@v4
-      - id: setup-env
-        uses: cisagov/setup-env-github-action@develop
-      - id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          # python-version: ${{ steps.setup-env.outputs.python-version }}
-          # This project cannot currently support Python 3.11 or later.
-          python-version: "3.10"
-      - uses: actions/cache@v4
-        env:
-          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
-            py${{ steps.setup-python.outputs.python-version }}-"
-        with:
-          path: ${{ env.PIP_CACHE_DIR }}
-          # We do not use '**/setup.py' in the cache key so only the 'setup.py'
-          # file in the root of the repository is used. This is in case a Python
-          # package were to have a 'setup.py' as part of its internal codebase.
-          key: "${{ env.BASE_CACHE_KEY }}\
-            ${{ hashFiles('**/requirements-test.txt') }}-\
-            ${{ hashFiles('**/requirements.txt') }}-\
-            ${{ hashFiles('setup.py') }}"
-          restore-keys: |
-            ${{ env.BASE_CACHE_KEY }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade --requirement requirements-test.txt
       - name: Finished coveralls reports
-        run: coveralls --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
       - name: Setup tmate debug session
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
@@ -325,15 +358,32 @@ jobs:
           # - "3.12"
           # - "3.13"
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-python-library#149 for more details.
+          monitor_permissions: "false"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v5
@@ -341,16 +391,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v4
         env:
-          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
-            py${{ steps.setup-python.outputs.python-version }}-"
+          BASE_CACHE_KEY: ${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           # We do not use '**/setup.py' in the cache key so only the 'setup.py'
           # file in the root of the repository is used. This is in case a Python
           # package were to have a 'setup.py' as part of its internal codebase.
-          key: "${{ env.BASE_CACHE_KEY }}\
+          key: ${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements.txt') }}-\
-            ${{ hashFiles('setup.py') }}"
+            ${{ hashFiles('setup.py') }}
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Install build dependencies
@@ -392,15 +442,32 @@ jobs:
           # - "3.12"
           # - "3.13"
     steps:
-      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
+      - name: Apply standard cisagov job preamble
+        uses: cisagov/action-job-preamble@v1
         with:
-          # Uses the organization variable unless overridden
-          config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - id: harden-runner
-        name: Harden the runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
+          # This functionality is poorly implemented and has been
+          # causing problems due to the MITM implementation hogging or
+          # leaking memory.  As a result we disable it by default.  If
+          # you want to temporarily enable it, simply set
+          # monitor_permissions equal to "true".
+          #
+          # TODO: Re-enable this functionality when practical.  See
+          # cisagov/skeleton-python-library#149 for more details.
+          monitor_permissions: "false"
+          # Use a variable to specify the permissions monitoring
+          # configuration. By default this will yield the
+          # configuration stored in the cisagov organization-level
+          # variable, but if you want to use a different configuration
+          # then simply:
+          # 1. Create a repository-level variable with the name
+          # ACTIONS_PERMISSIONS_CONFIG.
+          # 2. Set this new variable's value to the configuration you
+          # want to use for this repository.
+          #
+          # Note in particular that changing the permissions
+          # monitoring configuration *does not* require you to modify
+          # this workflow.
+          permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - uses: actions/checkout@v4
       - id: setup-python
         uses: actions/setup-python@v5
@@ -408,16 +475,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v4
         env:
-          BASE_CACHE_KEY: "${{ github.job }}-${{ runner.os }}-\
-            py${{ steps.setup-python.outputs.python-version }}-"
+          BASE_CACHE_KEY: ${{ github.job }}-${{ runner.os }}-\
+            py${{ steps.setup-python.outputs.python-version }}-
         with:
           path: ${{ env.PIP_CACHE_DIR }}
           # We do not use '**/setup.py' in the cache key so only the 'setup.py'
           # file in the root of the repository is used. This is in case a Python
           # package were to have a 'setup.py' as part of its internal codebase.
-          key: "${{ env.BASE_CACHE_KEY }}\
+          key: ${{ env.BASE_CACHE_KEY }}\
             ${{ hashFiles('**/requirements.txt') }}-\
-            ${{ hashFiles('setup.py') }}"
+            ${{ hashFiles('setup.py') }}
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
       - name: Retrieve the built wheel

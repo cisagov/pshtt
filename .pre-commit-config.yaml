@@ -39,17 +39,17 @@ repos:
 
   # Text file hooks
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
+    rev: v0.44.0
     hooks:
       - id: markdownlint
         args:
           - --config=.mdl_config.yaml
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.3.3
+    rev: v3.5.3
     hooks:
       - id: prettier
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.0
     hooks:
       - id: yamllint
         args:
@@ -57,7 +57,7 @@ repos:
 
   # GitHub Actions hooks
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.29.4
+    rev: 0.32.1
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -102,7 +102,7 @@ repos:
 
   # Shell script hooks
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.10.0-1
+    rev: v3.11.0-1
     hooks:
       - id: shfmt
         args:
@@ -152,7 +152,7 @@ repos:
         additional_dependencies:
           - importlib-metadata<5
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.10.0
+    rev: 25.1.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
@@ -218,7 +218,7 @@ repos:
       - id: pyupgrade
 
   # Ansible hooks
-  # - repo: https://github.com/ansible-community/ansible-lint
+  # - repo: https://github.com/ansible/ansible-lint
   #   # ansible-lint no longer supports Python 3.7 as of version 6.0, so
   #   # we cannot upgrade past the 5.4.0 release:
   #   # https://github.com/ansible/ansible-lint/releases/tag/v6.0.0
@@ -227,10 +227,10 @@ repos:
   #   # version of ansible isn't correctly pinned.  The best way forward
   #   # is to simply comment out this pre-commit hook until we can move
   #   # to Python >3.7.
-  #   rev: v6.17.0
+  #   rev: v25.1.3
   #   hooks:
   #     - id: ansible-lint
-  #         additional_dependencies:
+  #       additional_dependencies:
   #         # On its own ansible-lint does not pull in ansible, only
   #         # ansible-core.  Therefore, if an Ansible module lives in
   #         # ansible instead of ansible-core, the linter will complain
@@ -238,21 +238,40 @@ repos:
   #         # necessary to add the ansible package itself as an
   #         # additional dependency, with the same pinning as is done in
   #         # requirements-test.txt of cisagov/skeleton-ansible-role.
-  #         # - ansible>=9,<10
+  #         #
+  #         # Version 10 is required because the pip-audit pre-commit
+  #         # hook identifies a vulnerability in ansible-core 2.16.13,
+  #         # but all versions of ansible 9 have a dependency on
+  #         # ~=2.16.X.
+  #         #
+  #         # It is also a good idea to go ahead and upgrade to version
+  #         # 10 since version 9 is going EOL at the end of November:
+  #         # https://endoflife.date/ansible
+  #         # - ansible>=10,<11
   #         # ansible-core 2.16.3 through 2.16.6 suffer from the bug
   #         # discussed in ansible/ansible#82702, which breaks any
   #         # symlinked files in vars, tasks, etc. for any Ansible role
   #         # installed via ansible-galaxy.  Hence we never want to
   #         # install those versions.
   #         #
+  #         # Note that the pip-audit pre-commit hook identifies a
+  #         # vulnerability in ansible-core 2.16.13.  The pin of
+  #         # ansible-core to >=2.17 effectively also pins ansible to
+  #         # >=10.
+  #         #
+  #         # It is also a good idea to go ahead and upgrade to
+  #         # ansible-core 2.17 since security support for ansible-core
+  #         # 2.16 ends this month:
+  #         # https://docs.ansible.com/ansible/devel/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
+  #         #
   #         # Note that any changes made to this dependency must also be
   #         # made in requirements.txt in cisagov/skeleton-packer and
   #         # requirements-test.txt in cisagov/skeleton-ansible-role.
-  #         - ansible-core>=2.16.7
+  #         - ansible-core>=2.17
 
   # Terraform hooks
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.1
+    rev: v1.98.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
