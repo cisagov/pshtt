@@ -8,7 +8,7 @@ set -o errexit
 set -o pipefail
 
 # Stores the canonical version for the project.
-VERSION_FILE=src/example/_version.py
+VERSION_FILE=src/pshtt/_version.py
 # Files that should be updated with the new version.
 VERSION_FILES=("$VERSION_FILE")
 
