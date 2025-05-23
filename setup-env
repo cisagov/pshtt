@@ -74,7 +74,8 @@ check_python_version() {
       "invalid version of Python."
     exit 1
   # Else if the Python version isn't installed then notify the user.
-  # grep -E is used for searching through text lines that match the specific verison.
+  # grep -E is used for searching through text lines that match the
+  # specific version.
   elif ! python_versions | grep -E "^${version}$" > /dev/null; then
     echo "Error: Python version $version is not installed."
     echo "Installed Python versions are:"
