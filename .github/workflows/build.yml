@@ -203,21 +203,26 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test:
-    name: test source - py${{ matrix.python-version }}
+    name: test source - py${{ matrix.python-version }} - ${{ matrix.platform }}
     needs:
       - diagnostics
     permissions:
       # actions/checkout needs this to fetch code
       contents: read
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
             python-version: "3.7"
-        os:
+        # We test on all of the latest platforms available to use with GitHub-
+        # hosted runners for public repositories.
+        platform:
+          - macos-latest
+          - ubuntu-24.04-arm
           - ubuntu-latest
+          - windows-latest
         python-version:
           - "3.8"
           - "3.9"
@@ -259,7 +264,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v4
         env:
-          BASE_CACHE_KEY: ${{ github.job }}-${{ runner.os }}-\
+          BASE_CACHE_KEY: ${{ github.job }}-\
+            ${{ runner.os }}-${{ runner.arch }}-\
             py${{ steps.setup-python.outputs.python-version }}-
         with:
           path: ${{ env.PIP_CACHE_DIR }}
@@ -418,22 +424,27 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: env.RUN_TMATE
   test-build:
-    name: test built wheel - py${{ matrix.python-version }}
+    name: test built wheel - py${{ matrix.python-version }} - ${{ matrix.platform }}
     needs:
       - diagnostics
       - build
     permissions:
       # actions/checkout needs this to fetch code
       contents: read
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
             python-version: "3.7"
-        os:
+        # We test on all of the latest platforms available to use with GitHub-
+        # hosted runners for public repositories.
+        platform:
+          - macos-latest
+          - ubuntu-24.04-arm
           - ubuntu-latest
+          - windows-latest
         python-version:
           - "3.8"
           - "3.9"
@@ -475,7 +486,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: actions/cache@v4
         env:
-          BASE_CACHE_KEY: ${{ github.job }}-${{ runner.os }}-\
+          BASE_CACHE_KEY: ${{ github.job }}-\
+            ${{ runner.os }}-${{ runner.arch }}-\
             py${{ steps.setup-python.outputs.python-version }}-
         with:
           path: ${{ env.PIP_CACHE_DIR }}
