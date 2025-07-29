@@ -219,7 +219,9 @@ jobs:
         # We test on all of the latest platforms available to use with GitHub-
         # hosted runners for public repositories.
         platform:
-          - macos-latest
+          # The old version of sslyze that we use does not support
+          # OSX.
+          # - macos-latest
           # The old version of sslyze that we use does not support ARM
           # architectures.
           # - ubuntu-24.04-arm
@@ -443,7 +445,9 @@ jobs:
         # We test on all of the latest platforms available to use with GitHub-
         # hosted runners for public repositories.
         platform:
-          - macos-latest
+          # The old version of sslyze that we use does not support
+          # OSX.
+          # - macos-latest
           # The old version of sslyze that we use does not support ARM
           # architectures.
           # - ubuntu-24.04-arm
