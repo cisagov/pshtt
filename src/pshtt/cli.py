@@ -25,6 +25,7 @@ Notes:
 # Standard Python Libraries
 import csv
 import logging
+import os
 import sys
 
 # Third-Party Libraries
@@ -61,7 +62,7 @@ def to_json(results, out_filename):
     with smart_open(out_filename) as out_file:
         json_content = utils.json_for(results)
 
-        out_file.write(json_content + "\n")
+        out_file.write(json_content + os.linesep)
 
         if out_file is not sys.stdout:
             logging.warning("Wrote results to %s.", out_filename)

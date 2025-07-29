@@ -52,7 +52,7 @@ class TestToCSV(unittest.TestCase):
         with open(self.temp_filename) as fh:
             content = fh.read()
 
-        expected = ",".join(_pshtt.HEADERS) + "\n"
+        expected = ",".join(_pshtt.HEADERS) + os.linesep
 
         self.assertEqual(content, expected)
 
@@ -108,7 +108,7 @@ class TestToCSV(unittest.TestCase):
 
         header = ",".join(t[0] for t in domain_data)
         values = ",".join(t[1] for t in domain_data)
-        expected = header + "\n" + values + "\n"
+        expected = header + os.linesep + values + os.linesep
         self.assertEqual(content, expected)
 
         # Sanity check that this hard coded data has the same headers as defined

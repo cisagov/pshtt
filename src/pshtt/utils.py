@@ -17,7 +17,9 @@ import traceback
 def format_last_exception():
     """Pretty format the last raised exception."""
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    return "\n".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    return os.linesep.join(
+        traceback.format_exception(exc_type, exc_value, exc_traceback)
+    )
 
 
 # mkdir -p in python, from:
@@ -99,7 +101,7 @@ def format_domains(domains):
 def debug(*args, divider=False):
     """Output a debugging message."""
     if divider:
-        logging.debug("\n-------------------------\n")
+        logging.debug(os.linesep + "-------------------------" + os.linesep)
 
     if args:
         logging.debug(*args)
