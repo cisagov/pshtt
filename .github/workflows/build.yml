@@ -220,7 +220,9 @@ jobs:
         # hosted runners for public repositories.
         platform:
           - macos-latest
-          - ubuntu-24.04-arm
+          # The old version of sslyze that we use does not support ARM
+          # architectures.
+          # - ubuntu-24.04-arm
           - ubuntu-latest
           - windows-latest
         python-version:
@@ -442,7 +444,9 @@ jobs:
         # hosted runners for public repositories.
         platform:
           - macos-latest
-          - ubuntu-24.04-arm
+          # The old version of sslyze that we use does not support ARM
+          # architectures.
+          # - ubuntu-24.04-arm
           - ubuntu-latest
           - windows-latest
         python-version:
