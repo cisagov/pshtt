@@ -351,14 +351,14 @@ jobs:
     permissions:
       # actions/checkout needs this to fetch code
       contents: read
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: ubuntu-22.04
             python-version: "3.7"
-        os:
+        platform:
           - ubuntu-latest
         python-version:
           - "3.8"
@@ -440,7 +440,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - platform: ubuntu-22.04
             python-version: "3.7"
         # We test on all of the latest platforms available to use with GitHub-
         # hosted runners for public repositories.
