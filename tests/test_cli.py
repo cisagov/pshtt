@@ -52,6 +52,9 @@ class TestToCSV(unittest.TestCase):
         with open(self.temp_filename) as fh:
             content = fh.read()
 
+        # We don't use os.linesep here because Python converts Windows line
+        # endings to \n when reading from a text file:
+        # https://docs.python.org/3/library/csv.html#csv.writer
         expected = ",".join(_pshtt.HEADERS) + "\n"
 
         self.assertEqual(content, expected)
@@ -108,6 +111,9 @@ class TestToCSV(unittest.TestCase):
 
         header = ",".join(t[0] for t in domain_data)
         values = ",".join(t[1] for t in domain_data)
+        # We don't use os.linesep here because Python converts Windows line
+        # endings to \n when reading from a text file:
+        # https://docs.python.org/3/library/csv.html#csv.writer
         expected = header + "\n" + values + "\n"
         self.assertEqual(content, expected)
 

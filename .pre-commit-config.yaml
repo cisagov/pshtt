@@ -227,7 +227,7 @@ repos:
   #   # version of ansible isn't correctly pinned.  The best way forward
   #   # is to simply comment out this pre-commit hook until we can move
   #   # to Python >3.7.
-  #   rev: v25.1.3
+  #   rev: v25.4.0
   #   hooks:
   #     - id: ansible-lint
   #       additional_dependencies:
