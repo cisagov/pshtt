@@ -101,10 +101,10 @@ LONGOPTS="force,help,install-hooks,list-versions,python-version:,venv-name:"
 # Define short options for getopt
 SHORTOPTS="fhilp:v:"
 
-# Check for GNU getopt by matching a specific pattern ("getopt from util-linux")
-# in its version output. This approach presumes the output format remains stable.
-# Be aware that format changes could invalidate this check.
-if [[ $(getopt --version 2> /dev/null) != *"getopt from util-linux"* ]]; then
+# Check for GNU getopt by testing for long option support. GNU getopt supports
+# the "--test" option and will return exit code 4 while POSIX/BSD getopt does
+# not and will return exit code 0.
+if getopt --test > /dev/null 2>&1; then
   cat << 'END_OF_LINE'
 
   Please note, this script requires GNU getopt due to its enhanced

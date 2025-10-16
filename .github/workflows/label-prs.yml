@@ -1,15 +1,20 @@
 ---
-name: sync-labels
+name: Label pull requests
 
 on:  # yamllint disable-line rule:truthy
-  push:
-    paths:
-      - .github/labels.yml
-      - .github/workflows/sync-labels.yml
-  workflow_dispatch:
+  pull_request:
+    types:
+      - edited
+      - opened
+      - synchronize
 
-permissions:
-  contents: read
+# Set a default shell for any run steps. The `-Eueo pipefail` sets errtrace,
+# nounset, errexit, and pipefail. The `-x` will print all commands as they are
+# run. Please see the GitHub Actions documentation for more information:
+# https://docs.github.com/en/actions/using-jobs/setting-default-values-for-jobs
+defaults:
+  run:
+    shell: bash -Eueo pipefail -x {0}
 
 jobs:
   diagnostics:
@@ -48,14 +53,14 @@ jobs:
           # monitoring configuration *does not* require you to modify
           # this workflow.
           permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-  labeler:
+  label:
     needs:
       - diagnostics
     permissions:
-      # actions/checkout needs this to fetch code
+      # Permissions required by actions/labeler
       contents: read
-      # crazy-max/ghaction-github-labeler needs this to manage repository labels
       issues: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Apply standard cisagov job preamble
@@ -84,11 +89,5 @@ jobs:
           # monitoring configuration *does not* require you to modify
           # this workflow.
           permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - uses: actions/checkout@v5
-      - name: Sync repository labels
-        if: success()
-        uses: crazy-max/ghaction-github-labeler@v5
-        with:
-          # This is a hideous ternary equivalent so we only do a dry run unless
-          # this workflow is triggered by the develop branch.
-          dry-run: ${{ github.ref_name == 'develop' && 'false' || 'true' }}
+      - name: Apply suitable labels to a pull request
+        uses: actions/labeler@v6

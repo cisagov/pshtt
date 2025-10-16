@@ -12,6 +12,7 @@ updates:
       - dependency-name: actions/cache
       - dependency-name: actions/checkout
       - dependency-name: actions/dependency-review-action
+      - dependency-name: actions/labeler
       - dependency-name: actions/setup-go
       - dependency-name: actions/setup-python
       - dependency-name: cisagov/action-job-preamble
@@ -24,6 +25,12 @@ updates:
       # Managed by cisagov/skeleton-python-library
       - dependency-name: actions/download-artifact
       - dependency-name: actions/upload-artifact
+    labels:
+      # dependabot default we need to replicate
+      - dependencies
+      # This matches our label definition in .github/labels.yml as opposed to
+      # dependabot's default of `github_actions`.
+      - github-actions
     package-ecosystem: github-actions
     schedule:
       interval: weekly

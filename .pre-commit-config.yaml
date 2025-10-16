@@ -1,4 +1,10 @@
 ---
+ci:
+  # Do not commit changes from running pre-commit for pull requests.
+  autofix_prs: false
+  # Autoupdate hooks weekly (this is the default).
+  autoupdate_schedule: weekly
+
 default_language_version:
   # force all unspecified python hooks to run python3
   python: python3
@@ -10,7 +16,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
@@ -39,17 +45,17 @@ repos:
 
   # Text file hooks
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.44.0
+    rev: v0.45.0
     hooks:
       - id: markdownlint
         args:
           - --config=.mdl_config.yaml
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.5.3
+    rev: v3.6.2
     hooks:
       - id: prettier
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.0
+    rev: v1.37.1
     hooks:
       - id: yamllint
         args:
@@ -57,7 +63,7 @@ repos:
 
   # GitHub Actions hooks
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.32.1
+    rev: 0.33.3
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -73,7 +79,7 @@ repos:
 
   # Go hooks
   - repo: https://github.com/TekWizely/pre-commit-golang
-    rev: v1.0.0-rc.1
+    rev: v1.0.0-rc.2
     hooks:
       # Go Build
       - id: go-build-repo-mod
@@ -102,7 +108,7 @@ repos:
 
   # Shell script hooks
   - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.11.0-1
+    rev: v3.12.0-2
     hooks:
       - id: shfmt
         args:
@@ -120,7 +126,7 @@ repos:
           # Redirect operators are followed by a space
           - --space-redirects
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
 
@@ -198,7 +204,7 @@ repos:
   # we cannot pull in a newer version of that library because we
   # can't currently support any version of Python later than 3.10.
   # - repo: https://github.com/pypa/pip-audit
-  #   rev: v2.7.3
+  #   rev: v2.9.0
   #   hooks:
   #     - id: pip-audit
   #       args:
@@ -227,7 +233,7 @@ repos:
   #   # version of ansible isn't correctly pinned.  The best way forward
   #   # is to simply comment out this pre-commit hook until we can move
   #   # to Python >3.7.
-  #   rev: v25.4.0
+  #   rev: v25.9.0
   #   hooks:
   #     - id: ansible-lint
   #       additional_dependencies:
@@ -272,7 +278,7 @@ repos:
 
   # Terraform hooks
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.98.0
+    rev: v1.100.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
@@ -285,7 +291,7 @@ repos:
 
   # Packer hooks
   - repo: https://github.com/cisagov/pre-commit-packer
-    rev: v0.3.0
+    rev: v0.3.1
     hooks:
       - id: packer_fmt
       - id: packer_validate
