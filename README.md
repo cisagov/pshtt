@@ -4,7 +4,6 @@
 [![GitHub Build Status](https://github.com/cisagov/pshtt/workflows/build/badge.svg)](https://github.com/cisagov/pshtt/actions)
 [![CodeQL](https://github.com/cisagov/pshtt/workflows/CodeQL/badge.svg)](https://github.com/cisagov/pshtt/actions/workflows/codeql-analysis.yml)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/pshtt?branch=develop)
-[![Known Vulnerabilities](https://snyk.io/test/github/cisagov/pshtt/develop/badge.svg)](https://snyk.io/test/github/cisagov/pshtt)
 
 `pshtt` (*"pushed"*) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.

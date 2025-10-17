@@ -1,0 +1,76 @@
+---
+# Each entry in this file is a label that will be applied to pull requests
+# if there is a match based on the matching rules for the entry. Please see
+# the actions/labeler documentation for more information:
+# https://github.com/actions/labeler#match-object
+#
+# Note: Verify that the label you want to use is defined in the
+# crazy-max/ghaction-github-labeler configuration file located at
+# .github/labels.yml.
+
+ansible:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/ansible/**"
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          # Add any dependency files used.
+          - .pre-commit-config.yaml
+          - requirements*.txt
+          - setup.py
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/compose*.yml"
+          - "**/docker-compose*.yml"
+          - "**/Dockerfile*"
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+github-actions:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+javascript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.js"
+packer:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.pkr.hcl"
+python:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.py"
+terraform:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.tf"
+test:
+  - changed-files:
+      - any-glob-to-any-file:
+          # Add any test-related files or paths.
+          - .ansible-lint
+          - .bandit.yml
+          - .flake8
+          - .isort.cfg
+          - .mdl_config.yaml
+          - .yamllint
+          - pytest.ini
+          - tests/**
+typescript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.ts"
+upstream update:
+  - head-branch:
+      # Any Lineage pull requests should use this branch.
+      - lineage/skeleton
+version bump:
+  - changed-files:
+      - any-glob-to-any-file:
+          # Ensure this matches your version tracking file(s).
+          - src/**/_version.py
