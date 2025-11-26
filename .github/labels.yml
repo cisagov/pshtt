@@ -2,7 +2,7 @@
 # Rather than breaking up descriptions into multiline strings we disable that
 # specific rule in yamllint for this file.
 # yamllint disable rule:line-length
-- color: f15a53
+- color: ff5850
   description: Pull requests that update Ansible code
   name: ansible
 - color: eb6420
@@ -20,7 +20,7 @@
 - color: 0366d6
   description: Pull requests that update a dependency file
   name: dependencies
-- color: 2497ed
+- color: 1d63ed
   description: Pull requests that update Docker code
   name: docker
 - color: 5319e7
@@ -47,7 +47,7 @@
 - color: fef2c0
   description: This issue or pull request is not applicable, incorrect, or obsolete
   name: invalid
-- color: f1d642
+- color: f0db4f
   description: Pull requests that update JavaScript code
   name: javascript
 - color: ce099a
@@ -62,7 +62,7 @@
 - color: 02a8ef
   description: Pull requests that update Packer code
   name: packer
-- color: 3772a4
+- color: 3776ab
   description: Pull requests that update Python code
   name: python
 - color: ef476c
@@ -71,13 +71,16 @@
 - color: d73a4a
   description: This issue or pull request addresses a security issue
   name: security
+- color: 4eaa25
+  description: Pull requests that update shell scripts
+  name: shell script
 - color: 7b42bc
   description: Pull requests that update Terraform code
   name: terraform
 - color: 00008b
   description: This issue or pull request adds or otherwise modifies test code
   name: test
-- color: 2b6ebf
+- color: 2678c5
   description: Pull requests that update TypeScript code
   name: typescript
 - color: 1d76db
