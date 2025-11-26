@@ -201,7 +201,6 @@ repos:
           - types-docopt
           - types-pyOpenSSL
           - types-requests
-          - types-setuptools
           - types-urllib3
         # Override the default arguments to drop the --ignore-missing-imports
         # option to enforce a complete mypy configuration.
