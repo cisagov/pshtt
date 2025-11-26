@@ -50,7 +50,11 @@ dependencies = [
 description = "Scan websites for HTTPS deployment best practices"
 dynamic = ["readme", "version"]
 keywords = ["https best practices"]
-license = "CC0-1.0"
+# Although PEP 639 allows us to specify the license via a simple SPDX
+# string, the versions of setuptools we have to use for Python 3.7 and
+# 3.8 do not allow this; hence, this antiquated format from the
+# deprecated PEP 621.
+license = { text = "CC0-1.0" }
 name = "pshtt"
 requires-python = ">=3.7"
 
