@@ -2,8 +2,10 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/pshtt.svg)](https://pypi.org/project/pshtt/)
 [![GitHub Build Status](https://github.com/cisagov/pshtt/workflows/build/badge.svg)](https://github.com/cisagov/pshtt/actions)
+[![License](https://img.shields.io/github/license/cisagov/pshtt)](https://spdx.org/licenses/)
 [![CodeQL](https://github.com/cisagov/pshtt/workflows/CodeQL/badge.svg)](https://github.com/cisagov/pshtt/actions/workflows/codeql-analysis.yml)
 [![Coverage Status](https://coveralls.io/repos/github/cisagov/pshtt/badge.svg?branch=develop)](https://coveralls.io/github/cisagov/pshtt?branch=develop)
+[![Code Style](https://img.shields.io/badge/Code%20Style-black-black)](https://github.com/psf/black)
 
 `pshtt` (*"pushed"*) is a tool to scan domains for HTTPS best
 practices. It saves its results to a CSV (or JSON) file.

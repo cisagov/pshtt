@@ -63,7 +63,7 @@ repos:
 
   # GitHub Actions hooks
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.3
+    rev: 0.35.0
     hooks:
       - id: check-github-actions
       - id: check-github-workflows
@@ -79,7 +79,7 @@ repos:
 
   # Go hooks
   - repo: https://github.com/TekWizely/pre-commit-golang
-    rev: v1.0.0-rc.2
+    rev: v1.0.0-rc.4
     hooks:
       # Go Build
       - id: go-build-repo-mod
@@ -142,7 +142,9 @@ repos:
         name: bandit (tests tree)
         files: tests
         args:
-          - --config=.bandit.yml
+          # Skip "assert used" check since assertions are used
+          # frequently in pytests.
+          - --skip=B101
         additional_dependencies:
           - importlib-metadata<5
           - pbr
@@ -160,7 +162,7 @@ repos:
           - importlib-metadata<5
           - pbr
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.1.0
+    rev: 25.11.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
@@ -172,6 +174,9 @@ repos:
       - id: flake8
         additional_dependencies:
           - flake8-docstrings==1.7.0
+          # This is necessary to read the flake8 configuration from
+          # the pyproject.toml file.
+          - flake8-pyproject==1.2.3
   - repo: https://github.com/PyCQA/isort
     # isort 5.12.0 dropped support for Python <3.8. Until this project and
     # the build.yml workflow can migrate to Python 3.8 or newer we must
@@ -196,7 +201,6 @@ repos:
           - types-docopt
           - types-pyOpenSSL
           - types-requests
-          - types-setuptools
           - types-urllib3
         # Override the default arguments to drop the --ignore-missing-imports
         # option to enforce a complete mypy configuration.
@@ -235,7 +239,7 @@ repos:
   #   # version of ansible isn't correctly pinned.  The best way forward
   #   # is to simply comment out this pre-commit hook until we can move
   #   # to Python >3.7.
-  #   rev: v25.9.0
+  #   rev: v25.11.0
   #   hooks:
   #     - id: ansible-lint
   #       additional_dependencies:
@@ -280,7 +284,7 @@ repos:
 
   # Terraform hooks
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.100.0
+    rev: v1.103.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate

@@ -18,7 +18,7 @@ dependencies:
           # Add any dependency files used.
           - .pre-commit-config.yaml
           - requirements*.txt
-          - setup.py
+          - pyproject.toml
 docker:
   - changed-files:
       - any-glob-to-any-file:
@@ -45,6 +45,14 @@ python:
   - changed-files:
       - any-glob-to-any-file:
           - "**/*.py"
+shell script:
+  - changed-files:
+      - any-glob-to-any-file:
+          # If this project has any shell scripts that do not end in the ".sh"
+          # extension, add them below.
+          - "**/*.sh"
+          - bump-version
+          - setup-env
 terraform:
   - changed-files:
       - any-glob-to-any-file:
@@ -54,12 +62,9 @@ test:
       - any-glob-to-any-file:
           # Add any test-related files or paths.
           - .ansible-lint
-          - .bandit.yml
-          - .flake8
-          - .isort.cfg
           - .mdl_config.yaml
           - .yamllint
-          - pytest.ini
+          - pyproject.toml
           - tests/**
 typescript:
   - changed-files:
