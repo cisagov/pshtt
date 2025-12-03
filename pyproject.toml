@@ -80,7 +80,7 @@ test = [
 ]
 
 [project.scripts]
-example = "pshtt.cli:main"
+pshtt = "pshtt.cli:main"
 
 [project.urls]
 homepage = "https://github.com/cisagov/pshtt"
