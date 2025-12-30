@@ -3,7 +3,20 @@
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools"]
+requires = [
+    # 61.0.0 was the first version of setuptools to offer a full-fledged
+    # backend that uses pyproject.toml for metadata configuration (in
+    # compliance with PEP 621):
+    # https://setuptools.pypa.io/en/stable/history.html#v61-0-0
+    #
+    # 77.0.0 was the first version of setuptools to support license
+    # expressions (in compliance with PEP 639):
+    # https://setuptools.pypa.io/en/stable/history.html#v77-0-0
+    #
+    # Unfortunately setuptools 77.0.0 does not support Python 3.7 and
+    # 3.8.
+    "setuptools>=61.0.0"
+]
 
 [project]
 authors = [
@@ -66,6 +79,8 @@ requires-python = ">=3.7"
 # field of the mypy pre-commit hook to avoid discrepancies in type
 # checking between environments.
 dev = [
+    "build",
+    "twine",
     "types-docopt",
     "types-pyOpenSSL",
     "types-requests",
