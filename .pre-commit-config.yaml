@@ -229,11 +229,10 @@ repos:
     hooks:
       - id: pyupgrade
         args:
-          # Python 3.10 is currently the oldest non-EOL version of
-          # Python, so we want to apply all rules that apply to this
-          # version or later.  See here for more details:
+          # We must support Python 3.7, so we cannot include upgrades
+          # past that point.  See here for more details:
           # https://www.gyford.com/phil/writing/2025/08/26/how-to-use-pyupgrade/
-          - --py310-plus
+          - --py37-plus
 
   # Ansible hooks
   # - repo: https://github.com/ansible/ansible-lint
