@@ -84,7 +84,7 @@ jobs:
           # monitoring configuration *does not* require you to modify
           # this workflow.
           permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Sync repository labels
         if: success()
         uses: crazy-max/ghaction-github-labeler@v5

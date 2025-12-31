@@ -193,8 +193,8 @@ repos:
       - id: mypy
         # IMPORTANT: Keep type hinting-related dependencies of the
         # mypy pre-commit hook additional_dependencies in sync with
-        # the dev section of setup.py to avoid discrepancies in type
-        # checking between environments.
+        # the dev section of pyproject.toml to avoid discrepancies in
+        # type checking between environments.
         additional_dependencies:
           - pytest
           - pytablewriter
@@ -228,6 +228,11 @@ repos:
     rev: v3.3.2
     hooks:
       - id: pyupgrade
+        args:
+          # We must support Python 3.7, so we cannot include upgrades
+          # past that point.  See here for more details:
+          # https://www.gyford.com/phil/writing/2025/08/26/how-to-use-pyupgrade/
+          - --py37-plus
 
   # Ansible hooks
   # - repo: https://github.com/ansible/ansible-lint
@@ -239,7 +244,7 @@ repos:
   #   # version of ansible isn't correctly pinned.  The best way forward
   #   # is to simply comment out this pre-commit hook until we can move
   #   # to Python >3.7.
-  #   rev: v25.11.0
+  #   rev: v25.11.1
   #   hooks:
   #     - id: ansible-lint
   #       additional_dependencies:
@@ -255,27 +260,8 @@ repos:
   #         # hook identifies a vulnerability in ansible-core 2.16.13,
   #         # but all versions of ansible 9 have a dependency on
   #         # ~=2.16.X.
-  #         #
-  #         # It is also a good idea to go ahead and upgrade to version
-  #         # 10 since version 9 is going EOL at the end of November:
-  #         # https://endoflife.date/ansible
   #         # - ansible>=10,<11
-  #         # ansible-core 2.16.3 through 2.16.6 suffer from the bug
-  #         # discussed in ansible/ansible#82702, which breaks any
-  #         # symlinked files in vars, tasks, etc. for any Ansible role
-  #         # installed via ansible-galaxy.  Hence we never want to
-  #         # install those versions.
-  #         #
-  #         # Note that the pip-audit pre-commit hook identifies a
-  #         # vulnerability in ansible-core 2.16.13.  The pin of
-  #         # ansible-core to >=2.17 effectively also pins ansible to
-  #         # >=10.
-  #         #
-  #         # It is also a good idea to go ahead and upgrade to
-  #         # ansible-core 2.17 since security support for ansible-core
-  #         # 2.16 ends this month:
-  # yamllint disable-line rule:line-length
-  #         # https://docs.ansible.com/ansible/devel/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
+  #         # ansible-core<2.17.7 suffers from GHSA-99w6-3xph-cx78.
   #         #
   #         # Note that any changes made to this dependency must also be
   #         # made in requirements.txt in cisagov/skeleton-packer and

@@ -89,7 +89,7 @@ jobs:
           permissions_monitoring_config: ${{ vars.ACTIONS_PERMISSIONS_CONFIG }}
       - id: checkout-repo
         name: Checkout the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - id: dependency-review
         name: Review dependency changes for vulnerabilities and license changes
         uses: actions/dependency-review-action@v4
