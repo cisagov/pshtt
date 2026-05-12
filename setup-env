@@ -271,7 +271,7 @@ fi
 pyenv local "${env_name}"
 
 # Upgrade pip and friends
-python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install --upgrade pip setuptools
 
 # Find a requirements file (if possible) and install
 for req_file in "requirements-dev.txt" "requirements-test.txt" "requirements.txt"; do

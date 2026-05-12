@@ -110,30 +110,40 @@ source = "https://github.com/cisagov/pshtt"
 [tool.flake8]
 max-line-length = 80
 # Select (turn on)
-# * Complexity violations reported by mccabe (C) -
-#   http://flake8.pycqa.org/en/latest/user/error-codes.html#error-violation-codes
-# * Documentation conventions compliance reported by pydocstyle (D) -
-#   http://www.pydocstyle.org/en/stable/error_codes.html
-# * Default errors and warnings reported by pycodestyle (E and W) -
+# * C: Complexity violations reported by mccabe -
+#   https://flake8.pycqa.org/en/latest/user/error-codes.html#error-violation-codes
+# * C4: Default errors and warnings reported by flake8-comprehensions -
+#   https://github.com/adamchainz/flake8-comprehensions#rules
+# * D: Documentation conventions compliance reported by pydocstyle -
+#   https://github.com/PyCQA/pydocstyle/blob/master/docs/error_codes.rst
+# * DUO: Default errors and warnings reported by dlint -
+#   https://github.com/dlint-py/dlint/tree/master/docs
+# * E: Default errors reported by pycodestyle -
 #   https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
-# * Default errors reported by pyflakes (F) -
-#   http://flake8.pycqa.org/en/latest/glossary.html#term-pyflakes
-# * Default warnings reported by flake8-bugbear (B) -
+# * F: Default errors reported by pyflakes -
+#   https://flake8.pycqa.org/en/latest/glossary.html#term-pyflakes
+# * N: Default errors and warnings reported by pep8-naming -
+#   https://github.com/PyCQA/pep8-naming#error-codes
+# * NQA: Default errors and warnings reported by flake8-noqa -
+#   https://github.com/plinss/flake8-noqa#error-codes
+# * W: Default warnings reported by pycodestyle -
+#   https://pycodestyle.readthedocs.io/en/latest/intro.html#error-codes
+# * B: Default warnings reported by flake8-bugbear -
 #   https://github.com/PyCQA/flake8-bugbear#list-of-warnings
-# * The B950 flake8-bugbear opinionated warning -
+# * B950: Bugbear opinionated warning for line too long -
 #   https://github.com/PyCQA/flake8-bugbear#opinionated-warnings
-select = ["C", "D", "E", "F", "W", "B", "B950"]
-# Ignore flake8's default warning about "whitespace before ':'" as it
-# is not PEP 8 compliant and conflicts with black's styling.
-#
-# Ignore flake8's default warning about maximum line length, which has
-# a hard stop at the configured value.  Instead we use
-# flake8-bugbear's B950, which allows up to 10% overage.
-#
-# Also ignore flake8's warning about line breaks before binary
-# operators.  It no longer agrees with PEP8.  See, for example, here:
-# https://github.com/ambv/black/issues/21. Guido agrees here:
-# https://github.com/python/peps/commit/c59c4376ad233a62ca4b3a6060c81368bd21e85b.
+select = ["C", "C4", "D", "DUO", "E", "F", "N", "NQA", "W", "B", "B950"]
+# Ignore
+# * E203: pycodestyle's default warning about whitespace before ':' because Black enforces
+#   an equal amount of whitespace around slice operators (':').
+# * E501: pycodestyle's default warning about maximum line length, which has a hard stop
+#   at the configured value.  Instead we use flake8-bugbear's B950, which
+#   allows up to 10% overage.
+# * W503: pycodestyle's warning about line breaks before binary operators.  It no longer
+#   agrees with PEP8.  See, for example, here:
+#   https://github.com/ambv/black/issues/21
+#   Guido agrees here:
+#   https://github.com/python/peps/commit/c59c4376ad233a62ca4b3a6060c81368bd21e85b
 extend-ignore = ["E203", "E501", "W503"]
 
 [tool.isort]

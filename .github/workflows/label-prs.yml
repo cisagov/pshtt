@@ -2,11 +2,9 @@
 name: Label pull requests
 
 on:  # yamllint disable-line rule:truthy
+  # We use the default activity types for the pull_request event as specified here:
+  # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
   pull_request:
-    types:
-      - edited
-      - opened
-      - synchronize
 
 # Set a default shell for any run steps. The `-Eueo pipefail` sets errtrace,
 # nounset, errexit, and pipefail. The `-x` will print all commands as they are
