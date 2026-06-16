@@ -2,10 +2,11 @@
 
 # Standard Python Libraries
 import unittest
+from unittest.mock import MagicMock, patch
 
 # cisagov Libraries
 from pshtt.models import Domain, Endpoint
-from pshtt.pshtt import is_live
+from pshtt.pshtt import https_check, is_live
 
 
 class TestLiveliness(unittest.TestCase):
@@ -85,3 +86,51 @@ class TestLiveliness(unittest.TestCase):
         self.domain.httpswww.live = True
 
         self.assertTrue(is_live(self.domain))
+
+
+class TestHttpsCheckServerLocation(unittest.TestCase):
+    """Test HTTPS check parses endpoint host/port correctly for sslyze."""
+
+    @patch("pshtt.pshtt.ServerConnectivityTester")
+    @patch("pshtt.pshtt.ServerNetworkLocationViaDirectConnection")
+    def test_https_check_uses_explicit_port(
+        self, mock_server_network_location, mock_server_connectivity_tester
+    ):
+        """Use the endpoint's explicit port when building sslyze target."""
+        endpoint = Endpoint("https", "root", "example.com:9443")
+
+        server_location = MagicMock()
+        server_location.ip_address = "127.0.0.1"
+        mock_server_network_location.with_ip_address_lookup.return_value = server_location
+
+        tester = MagicMock()
+        tester.perform.side_effect = RuntimeError("stop after checking location args")
+        mock_server_connectivity_tester.return_value = tester
+
+        https_check(endpoint)
+
+        mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
+            hostname="example.com", port=9443
+        )
+
+    @patch("pshtt.pshtt.ServerConnectivityTester")
+    @patch("pshtt.pshtt.ServerNetworkLocationViaDirectConnection")
+    def test_https_check_defaults_to_port_443(
+        self, mock_server_network_location, mock_server_connectivity_tester
+    ):
+        """Default to port 443 when endpoint URL has no explicit port."""
+        endpoint = Endpoint("https", "root", "example.com")
+
+        server_location = MagicMock()
+        server_location.ip_address = "127.0.0.1"
+        mock_server_network_location.with_ip_address_lookup.return_value = server_location
+
+        tester = MagicMock()
+        tester.perform.side_effect = RuntimeError("stop after checking location args")
+        mock_server_connectivity_tester.return_value = tester
+
+        https_check(endpoint)
+
+        mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
+            hostname="example.com", port=443
+        )

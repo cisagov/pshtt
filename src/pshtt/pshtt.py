@@ -654,12 +654,21 @@ def https_check(endpoint):
     """Use sslyze to figure out the reason an endpoint failed to verify."""
     utils.debug("sslyzing %s...", endpoint.url)
 
-    # remove the https:// from prefix for sslyze
+    # Parse endpoint URL so explicit non-default ports are preserved.
     try:
-        hostname = endpoint.url[8:]
+        parsed_url = urlparse.urlparse(endpoint.url)
+        hostname = parsed_url.hostname
+        port = parsed_url.port
+
+        if hostname is None:
+            raise ValueError(f"Unable to parse hostname from URL: {endpoint.url}")
+
+        if port is None:
+            port = 443 if parsed_url.scheme == "https" else 80
+
         server_location = (
             ServerNetworkLocationViaDirectConnection.with_ip_address_lookup(
-                hostname=hostname, port=443
+                hostname=hostname, port=port
             )
         )
         server_tester = ServerConnectivityTester()
