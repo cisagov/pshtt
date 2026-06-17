@@ -23,7 +23,7 @@ class TestSmartOpen(unittest.TestCase):
 
         Should raise a `FileNotFoundError`
         """
-        with self.assertRaises(FileNotFoundError):  # noqa
+        with self.assertRaises(FileNotFoundError):
             with smart_open(""):
                 pass
 
