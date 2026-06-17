@@ -36,7 +36,11 @@ from .models import Domain, Endpoint
 # disabled.  Commented next line due to pylint warning that urllib3 is
 # not in requests.packages
 # requests.packages.urllib3.disable_warnings()
-urllib3.disable_warnings()
+#
+# Without the noqa comment flake8 generates a DUO131 error because
+# disabling this warning allows for the possibility of insecure
+# connections.
+urllib3.disable_warnings()  # noqa: DUO131
 
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
