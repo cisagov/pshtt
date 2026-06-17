@@ -101,7 +101,9 @@ class TestHttpsCheckServerLocation(unittest.TestCase):
 
         server_location = MagicMock()
         server_location.ip_address = "127.0.0.1"
-        mock_server_network_location.with_ip_address_lookup.return_value = server_location
+        mock_server_network_location.with_ip_address_lookup.return_value = (
+            server_location
+        )
 
         tester = MagicMock()
         tester.perform.side_effect = RuntimeError("stop after checking location args")
@@ -123,7 +125,9 @@ class TestHttpsCheckServerLocation(unittest.TestCase):
 
         server_location = MagicMock()
         server_location.ip_address = "127.0.0.1"
-        mock_server_network_location.with_ip_address_lookup.return_value = server_location
+        mock_server_network_location.with_ip_address_lookup.return_value = (
+            server_location
+        )
 
         tester = MagicMock()
         tester.perform.side_effect = RuntimeError("stop after checking location args")
