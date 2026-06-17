@@ -9,7 +9,6 @@ import logging
 import os
 from pathlib import Path  # Python3
 import re
-import sys
 from urllib import parse as urlparse
 
 # Third-Party Libraries
@@ -1580,10 +1579,7 @@ def load_preload_pending():
         return []
 
     # TODO: abstract Py 2/3 check out to utils
-    if sys.version_info[0] < 3:
-        raw = request.content
-    else:
-        raw = str(request.content, "utf-8")
+    raw = str(request.content, "utf-8")
 
     pending_json = json.loads(raw)
 
