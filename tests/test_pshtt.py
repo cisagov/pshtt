@@ -109,7 +109,12 @@ class TestHttpsCheckServerLocation(unittest.TestCase):
         tester.perform.side_effect = RuntimeError("stop after checking location args")
         mock_server_connectivity_tester.return_value = tester
 
-        https_check(endpoint)
+        # We stop the scan early by raising from perform(); https_check catches
+        # that and logs it via logging.exception, which would otherwise dump a
+        # traceback into the test output and look like a failure. Capture the
+        # expected error log so the output stays clean.
+        with self.assertLogs(level="ERROR"):
+            https_check(endpoint)
 
         mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
             hostname="example.com", port=9443
@@ -133,7 +138,12 @@ class TestHttpsCheckServerLocation(unittest.TestCase):
         tester.perform.side_effect = RuntimeError("stop after checking location args")
         mock_server_connectivity_tester.return_value = tester
 
-        https_check(endpoint)
+        # We stop the scan early by raising from perform(); https_check catches
+        # that and logs it via logging.exception, which would otherwise dump a
+        # traceback into the test output and look like a failure. Capture the
+        # expected error log so the output stays clean.
+        with self.assertLogs(level="ERROR"):
+            https_check(endpoint)
 
         mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
             hostname="example.com", port=443
