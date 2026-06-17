@@ -712,7 +712,7 @@ def https_check(endpoint):
             )
         scanner.queue_scan(scan_request)
         # Retrieve results from generator object
-        scan_result = [x for x in scanner.get_results()][0]
+        scan_result = list(scanner.get_results())[0]
         cert_plugin_result = scan_result.scan_commands_results[
             ScanCommand.CERTIFICATE_INFO
         ]
@@ -724,7 +724,7 @@ def https_check(endpoint):
                 )
                 scanner.queue_scan(scan_request)
                 # Consume the generator object and retrieve the first result
-                scan_result = [x for x in scanner.get_results()][0]
+                scan_result = list(scanner.get_results())[0]
                 cert_plugin_result = scan_result.scan_commands_results[
                     ScanCommand.CERTIFICATE_INFO
                 ]
@@ -894,7 +894,7 @@ def https_check(endpoint):
                         )
                         scanner.queue_scan(scan_request)
                         # Consume the generator object and retrieve the first result
-                        scan_result = [x for x in scanner.get_results()][0]
+                        scan_result = list(scanner.get_results())[0]
                         cert_plugin_result = scan_result.scan_commands_results[
                             ScanCommand.CERTIFICATE_INFO
                         ]
