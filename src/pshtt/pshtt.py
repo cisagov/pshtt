@@ -9,7 +9,6 @@ import logging
 import os
 from pathlib import Path  # Python3
 import re
-import sys
 from urllib import parse as urlparse
 
 # Third-Party Libraries
@@ -37,7 +36,11 @@ from .models import Domain, Endpoint
 # disabled.  Commented next line due to pylint warning that urllib3 is
 # not in requests.packages
 # requests.packages.urllib3.disable_warnings()
-urllib3.disable_warnings()
+#
+# Without the noqa comment flake8 generates a DUO131 error because
+# disabling this warning allows for the possibility of insecure
+# connections.
+urllib3.disable_warnings()  # noqa: DUO131
 
 # Default, overrideable via --user-agent
 USER_AGENT = "pshtt, https scanning"
@@ -316,7 +319,8 @@ def basic_check(endpoint):
             "sslv3 alert handshake failure" in str(err) or "Unexpected EOF" in str(err)
         ):
             logging.exception(
-                "%s: Error completing TLS handshake usually due to required client authentication.",
+                "%s: Error completing TLS handshake usually due to required "
+                "client authentication.",
                 endpoint.url,
             )
             utils.debug("%s: %s", endpoint.url, err)
@@ -415,7 +419,8 @@ def basic_check(endpoint):
     # Run SSLyze to see if there are any errors
     if endpoint.protocol == "https":
         https_check(endpoint)
-        # Double-check in case sslyze failed the first time, but the regular conneciton succeeded
+        # Double-check in case sslyze failed the first time, but the
+        # regular connection succeeded
         if endpoint.live is False and req is not None:
             logging.warning(
                 "%s: Trying sslyze again since it connected once already.", endpoint.url
@@ -424,7 +429,8 @@ def basic_check(endpoint):
             endpoint.https_valid = True
             https_check(endpoint)
             if endpoint.live is False:
-                # sslyze failed so back everything out and don't continue analyzing the existing response
+                # sslyze failed so back everything out and don't
+                # continue analyzing the existing response
                 req = None
                 endpoint.https_valid = False
                 endpoint.https_full_connection = False
@@ -450,7 +456,8 @@ def basic_check(endpoint):
                         ip,
                     )
     except Exception:
-        # if the socket has already closed, it will throw an exception, but this is just best effort, so ignore it
+        # if the socket has already closed, it will throw an exception,
+        # but this is just best effort, so ignore it
         logging.exception("Error closing socket")
 
     # Endpoint is live, analyze the response.
@@ -558,12 +565,14 @@ def basic_check(endpoint):
                     base_original == base_eventual
                 ) and (subdomain_original != subdomain_eventual)
 
-            # If we were able to make the first redirect, but not the ultimate redirect,
-            # and if the immediate redirect is external, then it's accurate enough to
-            # say that the eventual redirect is the immediate redirect, since you're capturing
-            # the domain it's going to.
-            # This also avoids "punishing" the domain for configuration issues of the site
-            # it redirects to.
+            # If we were able to make the first redirect, but not the
+            # ultimate redirect, and if the immediate redirect is
+            # external, then it's accurate enough to say that the
+            # eventual redirect is the immediate redirect, since you're
+            # capturing the domain it's going to.
+            #
+            # This also avoids "punishing" the domain for configuration
+            # issues of the site it redirects to.
             elif endpoint.redirect_immediately_to_external:
                 endpoint.redirect_eventually_to = endpoint.redirect_immediately_to
                 endpoint.redirect_eventually_to_https = (
@@ -707,7 +716,7 @@ def https_check(endpoint):
             )
         scanner.queue_scan(scan_request)
         # Retrieve results from generator object
-        scan_result = [x for x in scanner.get_results()][0]
+        scan_result = list(scanner.get_results())[0]
         cert_plugin_result = scan_result.scan_commands_results[
             ScanCommand.CERTIFICATE_INFO
         ]
@@ -719,7 +728,7 @@ def https_check(endpoint):
                 )
                 scanner.queue_scan(scan_request)
                 # Consume the generator object and retrieve the first result
-                scan_result = [x for x in scanner.get_results()][0]
+                scan_result = list(scanner.get_results())[0]
                 cert_plugin_result = scan_result.scan_commands_results[
                     ScanCommand.CERTIFICATE_INFO
                 ]
@@ -805,7 +814,9 @@ def https_check(endpoint):
                     # SAN(s) are checked as part of _certificate_matches_hostname which
                     # called as part of leaf_certificate_subject_matches_hostname
                     if (
-                        not certificate_deployment.leaf_certificate_subject_matches_hostname
+                        # flake8 complains that this line is too long, but I
+                        # don't see a way to split it up.
+                        not certificate_deployment.leaf_certificate_subject_matches_hostname  # noqa: B950
                     ):
                         endpoint.https_bad_hostname = True
 
@@ -848,7 +859,9 @@ def https_check(endpoint):
         if endpoint.https_self_signed_cert is False and (
             endpoint.https_cert_chain_len < 2
         ):
-            # *** TODO check that it is not a bad hostname and that the root cert is trusted before suggesting that it is an intermediate cert issue.
+            # *** TODO - check that it is not a bad hostname and that
+            # the root cert is trusted before suggesting that it is an
+            # intermediate cert issue.
             endpoint.https_missing_intermediate_cert = True
             has_verified_cert_chain = True
             for certificate_deployment in cert_plugin_result.certificate_deployments:
@@ -856,7 +869,8 @@ def https_check(endpoint):
                     has_verified_cert_chain = False
             if not has_verified_cert_chain:
                 logging.warning(
-                    "%s: Untrusted certificate chain, probably due to missing intermediate certificate.",
+                    "%s: Untrusted certificate chain, probably due to "
+                    "missing intermediate certificate.",
                     endpoint.url,
                 )
                 utils.debug(
@@ -865,7 +879,8 @@ def https_check(endpoint):
                     endpoint.https_cert_chain_len,
                 )
             elif custom_trust is True and public_trust is False:
-                # recheck public trust using custom public trust store with manually added intermediate certificates
+                # recheck public trust using custom public trust store
+                # with manually added intermediate certificates
                 if PT_INT_CA_FILE is not None:
                     try:
                         cert_plugin_result = None
@@ -883,7 +898,7 @@ def https_check(endpoint):
                         )
                         scanner.queue_scan(scan_request)
                         # Consume the generator object and retrieve the first result
-                        scan_result = [x for x in scanner.get_results()][0]
+                        scan_result = list(scanner.get_results())[0]
                         cert_plugin_result = scan_result.scan_commands_results[
                             ScanCommand.CERTIFICATE_INFO
                         ]
@@ -900,7 +915,8 @@ def https_check(endpoint):
                             public_trust = True
                             endpoint.https_public_trusted = public_trust
                             logging.warning(
-                                "%s: Trusted by special public trust store with intermediate certificates.",
+                                "%s: Trusted by special public trust store "
+                                "with intermediate certificates.",
                                 endpoint.url,
                             )
                     except Exception:
@@ -1580,10 +1596,7 @@ def load_preload_pending():
         return []
 
     # TODO: abstract Py 2/3 check out to utils
-    if sys.version_info[0] < 3:
-        raw = request.content
-    else:
-        raw = str(request.content, "utf-8")
+    raw = str(request.content, "utf-8")
 
     pending_json = json.loads(raw)
 
@@ -1602,7 +1615,10 @@ def load_preload_list():
     utils.debug("Fetching Chrome preload list from source...", divider=True)
 
     # Downloads the chromium preloaded domain list and sets it to a global set
-    file_url = "https://chromium.googlesource.com/chromium/src/+/main/net/http/transport_security_state_static.json?format=TEXT"
+    file_url = (
+        "https://chromium.googlesource.com/chromium/src/+/main/net/http/"
+        "transport_security_state_static.json?format=TEXT"
+    )
 
     try:
         request = requests.get(file_url, timeout=TIMEOUT)

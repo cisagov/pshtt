@@ -12,6 +12,8 @@ on:
   merge_group:
     types:
       - checks_requested
+  # We use the default activity types for the pull_request event as specified here:
+  # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
   pull_request:
     # The branches here must be a subset of the ones in the push key
     branches:

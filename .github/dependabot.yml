@@ -7,6 +7,11 @@
 
 updates:
   - directory: /
+    groups:
+      upload-download-artifact:
+        patterns:
+          - actions/download-artifact
+          - actions/upload-artifact
     ignore:
       # Managed by cisagov/skeleton-generic
       - dependency-name: actions/cache
@@ -36,6 +41,16 @@ updates:
       interval: weekly
 
   - directory: /
+    ignore:
+      # Managed by cisagov/skeleton-python-library
+      - dependency-name: build
+      - dependency-name: coverage
+      - dependency-name: coveralls
+      - dependency-name: pre-commit
+      - dependency-name: pytest-cov
+      - dependency-name: pytest
+      - dependency-name: setuptools
+      - dependency-name: twine
     package-ecosystem: pip
     schedule:
       interval: weekly
