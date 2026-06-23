@@ -159,6 +159,12 @@ import_heading_firstparty = "cisagov Libraries"
 # linting
 profile = "black"
 
+[[tool.mypy.overrides]]
+# This library contains a py.typed file but that doesn't appear to be
+# sufficient for mypy.
+module = "unittest_parametrize"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 # Increase verbosity, display extra test summary info for tests that
 # did not pass, display code coverage results, and enable debug
