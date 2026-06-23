@@ -132,7 +132,7 @@ class TestHttpsCheckServerLocation(ParametrizedTestCase):
     )
     @patch("pshtt.pshtt.ServerConnectivityTester")
     @patch("pshtt.pshtt.ServerNetworkLocationViaDirectConnection")
-    def test_https_check_default_ports(
+    def test_check_default_web_ports(
         self,
         mock_server_network_location,
         mock_server_connectivity_tester,
