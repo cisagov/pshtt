@@ -1,6 +1,7 @@
 """Test the core functionality of the library."""
 
 # Standard Python Libraries
+import datetime
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +10,7 @@ from unittest_parametrize import ParametrizedTestCase, param, parametrize
 
 # cisagov Libraries
 from pshtt.models import Domain, Endpoint
-from pshtt.pshtt import https_check, is_live
+from pshtt.pshtt import certificate_is_expired, https_check, is_live
 
 
 class TestLiveliness(unittest.TestCase):
@@ -162,3 +163,28 @@ class TestHttpsCheckServerLocation(ParametrizedTestCase):
         mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
             hostname="example.com", port=port
         )
+
+
+class TestCertificateExpiry(unittest.TestCase):
+    """Test certificate expiration logic uses UTC-aware comparisons."""
+
+    def test_naive_not_valid_after_is_treated_as_utc(self):
+        """A naive timestamp should be treated as UTC instead of local time."""
+        cert = MagicMock()
+        cert.not_valid_after_utc = None
+        cert.not_valid_after = datetime.datetime(2026, 1, 1, 12, 0, 0)
+
+        now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
+
+        self.assertFalse(certificate_is_expired(cert, now_utc))
+
+    def test_prefers_aware_not_valid_after_utc_when_available(self):
+        """Use not_valid_after_utc when cryptography exposes it."""
+        cert = MagicMock()
+        cert.not_valid_after_utc = datetime.datetime(
+            2026, 1, 1, 10, 0, 0, tzinfo=datetime.timezone.utc
+        )
+
+        now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
+
+        self.assertTrue(certificate_is_expired(cert, now_utc))

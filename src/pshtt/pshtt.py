@@ -650,6 +650,26 @@ def hsts_check(endpoint):
         return
 
 
+def certificate_is_expired(cert, now_utc=None):
+    """Determine whether a certificate is expired using UTC timestamps."""
+    if now_utc is None:
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+
+    not_valid_after_utc = getattr(cert, "not_valid_after_utc", None)
+    if not_valid_after_utc is None:
+        not_valid_after_utc = cert.not_valid_after
+        if not_valid_after_utc.tzinfo is None:
+            not_valid_after_utc = not_valid_after_utc.replace(
+                tzinfo=datetime.timezone.utc
+            )
+        else:
+            not_valid_after_utc = not_valid_after_utc.astimezone(
+                datetime.timezone.utc
+            )
+
+    return not_valid_after_utc < now_utc
+
+
 def https_check(endpoint):
     """Use sslyze to figure out the reason an endpoint failed to verify."""
     utils.debug("sslyzing %s...", endpoint.url)
@@ -770,6 +790,7 @@ def https_check(endpoint):
         endpoint.https_self_signed_cert = False
         endpoint.https_bad_chain = False
         endpoint.https_bad_hostname = False
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
 
         # Default trust to False until proven True
         public_trust = True
@@ -793,7 +814,7 @@ def https_check(endpoint):
                     leaf_cert = cert_chain[0]
 
                     # Check for leaf certificate expiration/self-signature.
-                    if leaf_cert.not_valid_after < datetime.datetime.now():
+                    if certificate_is_expired(leaf_cert, now_utc):
                         endpoint.https_expired_cert = True
 
                     # Check to see if the cert is self-signed
@@ -811,7 +832,7 @@ def https_check(endpoint):
                     # because sslyze doesn't have enough granularity
                     for cert in cert_chain[:-1]:
                         # Check for certificate expiration
-                        if cert.not_valid_after < datetime.datetime.now():
+                        if certificate_is_expired(cert, now_utc):
                             endpoint.https_bad_chain = True
 
                         # Check to see if the cert is self-signed
