@@ -658,12 +658,13 @@ def certificate_is_expired(cert, now_utc=None):
     not_valid_after_utc = getattr(cert, "not_valid_after_utc", None)
     if not_valid_after_utc is None:
         not_valid_after_utc = cert.not_valid_after
-        if not_valid_after_utc.tzinfo is None:
-            not_valid_after_utc = not_valid_after_utc.replace(
-                tzinfo=datetime.timezone.utc
-            )
-        else:
-            not_valid_after_utc = not_valid_after_utc.astimezone(datetime.timezone.utc)
+
+    if not_valid_after_utc.tzinfo is None:
+        # Naive timestamp
+        not_valid_after_utc = not_valid_after_utc.replace(tzinfo=datetime.timezone.utc)
+    else:
+        # TZ-aware timestamp
+        not_valid_after_utc = not_valid_after_utc.astimezone(datetime.timezone.utc)
 
     return not_valid_after_utc <= now_utc
 
