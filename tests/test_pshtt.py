@@ -4,6 +4,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+# Third-Party Libraries
+from unittest_parametrize import ParametrizedTestCase, param, parametrize
+
 # cisagov Libraries
 from pshtt.models import Domain, Endpoint
 from pshtt.pshtt import https_check, is_live
@@ -88,7 +91,7 @@ class TestLiveliness(unittest.TestCase):
         self.assertTrue(is_live(self.domain))
 
 
-class TestHttpsCheckServerLocation(unittest.TestCase):
+class TestHttpsCheckServerLocation(ParametrizedTestCase):
     """Test HTTPS check parses endpoint host/port correctly for sslyze."""
 
     @patch("pshtt.pshtt.ServerConnectivityTester")
@@ -120,13 +123,24 @@ class TestHttpsCheckServerLocation(unittest.TestCase):
             hostname="example.com", port=9443
         )
 
+    @parametrize(
+        ("port", "protocol"),
+        [
+            param(80, "http", id="http"),
+            param(443, "https", id="https"),
+        ],
+    )
     @patch("pshtt.pshtt.ServerConnectivityTester")
     @patch("pshtt.pshtt.ServerNetworkLocationViaDirectConnection")
-    def test_https_check_defaults_to_port_443(
-        self, mock_server_network_location, mock_server_connectivity_tester
+    def test_check_default_web_ports(
+        self,
+        mock_server_network_location,
+        mock_server_connectivity_tester,
+        port,
+        protocol,
     ):
-        """Default to port 443 when endpoint URL has no explicit port."""
-        endpoint = Endpoint("https", "root", "example.com")
+        """Default to expected default port when endpoint URL has no explicit port."""
+        endpoint = Endpoint(protocol, "root", "example.com")
 
         server_location = MagicMock()
         server_location.ip_address = "127.0.0.1"
@@ -146,5 +160,5 @@ class TestHttpsCheckServerLocation(unittest.TestCase):
             https_check(endpoint)
 
         mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
-            hostname="example.com", port=443
+            hostname="example.com", port=port
         )

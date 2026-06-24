@@ -95,6 +95,7 @@ test = [
     "pre-commit",
     "pytest-cov",
     "pytest",
+    "unittest-parametrize",
 ]
 
 [project.scripts]
@@ -157,6 +158,12 @@ import_heading_firstparty = "cisagov Libraries"
 # Run isort under the black profile to align with our other Python
 # linting
 profile = "black"
+
+[[tool.mypy.overrides]]
+# This library contains a py.typed file but that doesn't appear to be
+# sufficient for mypy.
+module = "unittest_parametrize"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 # Increase verbosity, display extra test summary info for tests that
