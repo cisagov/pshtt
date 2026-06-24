@@ -1,6 +1,7 @@
 """Test the core functionality of the library."""
 
 # Standard Python Libraries
+import datetime
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -9,7 +10,7 @@ from unittest_parametrize import ParametrizedTestCase, param, parametrize
 
 # cisagov Libraries
 from pshtt.models import Domain, Endpoint
-from pshtt.pshtt import https_check, is_live
+from pshtt.pshtt import certificate_is_expired, https_check, is_live
 
 
 class TestLiveliness(unittest.TestCase):
@@ -162,3 +163,66 @@ class TestHttpsCheckServerLocation(ParametrizedTestCase):
         mock_server_network_location.with_ip_address_lookup.assert_called_once_with(
             hostname="example.com", port=port
         )
+
+
+class TestCertificateExpiry(ParametrizedTestCase):
+    """Test certificate expiration logic uses UTC-aware comparisons."""
+
+    @parametrize(
+        "not_valid_after",
+        [
+            param(
+                datetime.datetime(2026, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
+                id="timezone_aware",
+            ),
+            param(
+                datetime.datetime(
+                    2026,
+                    1,
+                    1,
+                    12,
+                    0,
+                    0,
+                ),
+                id="naive",
+            ),
+        ],
+    )
+    def test_not_valid_after_utc_unavailable(self, not_valid_after):
+        """Use not_valid_after if not_valid_after_utc is not available."""
+        cert = MagicMock()
+        cert.not_valid_after_utc = None
+        cert.not_valid_after = not_valid_after
+
+        now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
+
+        self.assertFalse(certificate_is_expired(cert, now_utc))
+
+    @parametrize(
+        "not_valid_after_utc",
+        [
+            param(
+                datetime.datetime(2026, 1, 1, 10, 0, 0, tzinfo=datetime.timezone.utc),
+                id="timezone_aware",
+            ),
+            param(
+                datetime.datetime(
+                    2026,
+                    1,
+                    1,
+                    10,
+                    0,
+                    0,
+                ),
+                id="naive",
+            ),
+        ],
+    )
+    def test_not_valid_after_utc_available(self, not_valid_after_utc):
+        """Use not_valid_after_utc when cryptography exposes it."""
+        cert = MagicMock()
+        cert.not_valid_after_utc = not_valid_after_utc
+
+        now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
+
+        self.assertTrue(certificate_is_expired(cert, now_utc))
