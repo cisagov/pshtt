@@ -665,7 +665,7 @@ def certificate_is_expired(cert, now_utc=None):
         else:
             not_valid_after_utc = not_valid_after_utc.astimezone(datetime.timezone.utc)
 
-    return not_valid_after_utc < now_utc
+    return not_valid_after_utc <= now_utc
 
 
 def https_check(endpoint):
