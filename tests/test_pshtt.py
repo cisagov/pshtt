@@ -165,25 +165,63 @@ class TestHttpsCheckServerLocation(ParametrizedTestCase):
         )
 
 
-class TestCertificateExpiry(unittest.TestCase):
+class TestCertificateExpiry(ParametrizedTestCase):
     """Test certificate expiration logic uses UTC-aware comparisons."""
 
-    def test_naive_not_valid_after_is_treated_as_utc(self):
-        """A naive timestamp should be treated as UTC instead of local time."""
+    @parametrize(
+        "not_valid_after",
+        [
+            param(
+                datetime.datetime(2026, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc),
+                id="timezone_aware",
+            ),
+            param(
+                datetime.datetime(
+                    2026,
+                    1,
+                    1,
+                    12,
+                    0,
+                    0,
+                ),
+                id="naive",
+            ),
+        ],
+    )
+    def test_not_valid_after_utc_unavailable(self, not_valid_after):
+        """Use not_valid_after if not_valid_after_utc is not available."""
         cert = MagicMock()
         cert.not_valid_after_utc = None
-        cert.not_valid_after = datetime.datetime(2026, 1, 1, 12, 0, 0)
+        cert.not_valid_after = not_valid_after
 
         now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
 
         self.assertFalse(certificate_is_expired(cert, now_utc))
 
-    def test_prefers_aware_not_valid_after_utc_when_available(self):
+    @parametrize(
+        "not_valid_after_utc",
+        [
+            param(
+                datetime.datetime(2026, 1, 1, 10, 0, 0, tzinfo=datetime.timezone.utc),
+                id="timezone_aware",
+            ),
+            param(
+                datetime.datetime(
+                    2026,
+                    1,
+                    1,
+                    10,
+                    0,
+                    0,
+                ),
+                id="naive",
+            ),
+        ],
+    )
+    def test_not_valid_after_utc_available(self, not_valid_after_utc):
         """Use not_valid_after_utc when cryptography exposes it."""
         cert = MagicMock()
-        cert.not_valid_after_utc = datetime.datetime(
-            2026, 1, 1, 10, 0, 0, tzinfo=datetime.timezone.utc
-        )
+        cert.not_valid_after_utc = not_valid_after_utc
 
         now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
 
