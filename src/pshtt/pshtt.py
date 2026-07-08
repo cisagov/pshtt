@@ -1274,9 +1274,9 @@ def is_strictly_forces_https(domain):
     )
 
     def down_or_redirects(endpoint):
-        return not endpoint.live or endpoint.redirect_immediately_to_https
+        return (not endpoint.live) or bool(endpoint.redirect_immediately_to_https)
 
-    https_somewhere = https.live or httpswww.live
+    https_somewhere = bool(https.live or httpswww.live)
     all_http_unused = down_or_redirects(http) and down_or_redirects(httpwww)
 
     return https_somewhere and all_http_unused
