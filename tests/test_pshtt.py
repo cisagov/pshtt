@@ -10,7 +10,12 @@ from unittest_parametrize import ParametrizedTestCase, param, parametrize
 
 # cisagov Libraries
 from pshtt.models import Domain, Endpoint
-from pshtt.pshtt import certificate_is_expired, https_check, is_live
+from pshtt.pshtt import (
+    certificate_is_expired,
+    https_check,
+    is_live,
+    is_strictly_forces_https,
+)
 
 
 class TestLiveliness(unittest.TestCase):
@@ -226,3 +231,54 @@ class TestCertificateExpiry(ParametrizedTestCase):
         now_utc = datetime.datetime(2026, 1, 1, 11, 0, 0, tzinfo=datetime.timezone.utc)
 
         self.assertTrue(certificate_is_expired(cert, now_utc))
+
+
+class TestStrictlyForcesHttps(unittest.TestCase):
+    """Test is_strictly_forces_https always returns a bool, never None.
+
+    When an endpoint is live but redirect_immediately_to_https has not been
+    determined yet (its default is None), the inner down_or_redirects helper
+    formerly evaluated ``False or None`` which Python propagates as None.
+    That None then bubbled up through the ``and`` chain so the public field
+    "Strictly Forces HTTPS" was reported as null in JSON output.  See #176.
+    """
+
+    def setUp(self):
+        """Set up a domain with fresh endpoints."""
+        base_domain = "example.com"
+        self.domain = Domain(base_domain)
+        self.domain.http = Endpoint("http", "root", base_domain)
+        self.domain.httpwww = Endpoint("http", "www", base_domain)
+        self.domain.https = Endpoint("https", "root", base_domain)
+        self.domain.httpswww = Endpoint("https", "www", base_domain)
+
+    def test_result_is_bool_when_http_live_and_redirect_unset(self):
+        """Return False (not None) when HTTP is live with no redirect configured."""
+        self.domain.https.live = True
+        self.domain.http.live = True
+        # redirect_immediately_to_https stays at its default value of None
+
+        result = is_strictly_forces_https(self.domain)
+
+        self.assertIsInstance(result, bool, "is_strictly_forces_https must return bool")
+        self.assertFalse(result)
+
+    def test_result_is_bool_when_all_endpoints_none(self):
+        """Return False (not None) when all endpoint attributes are still None."""
+        result = is_strictly_forces_https(self.domain)
+
+        self.assertIsInstance(result, bool, "is_strictly_forces_https must return bool")
+        self.assertFalse(result)
+
+    def test_strictly_forces_when_http_endpoints_redirect_to_https(self):
+        """Return True when HTTPS is live and HTTP endpoints redirect to HTTPS."""
+        self.domain.https.live = True
+        self.domain.http.live = True
+        self.domain.http.redirect_immediately_to_https = True
+        self.domain.httpwww.live = True
+        self.domain.httpwww.redirect_immediately_to_https = True
+
+        result = is_strictly_forces_https(self.domain)
+
+        self.assertIsInstance(result, bool)
+        self.assertTrue(result)
