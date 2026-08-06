@@ -282,7 +282,7 @@ jobs:
           key: >-
             ${{ env.BASE_CACHE_KEY }}${{
             hashFiles('**/requirements-test.txt') }}-${{
-            hashFiles('**/requirements.txt') }}${{
+            hashFiles('**/requirements.txt') }}-${{
             hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ env.BASE_CACHE_KEY }}
