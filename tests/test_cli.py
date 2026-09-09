@@ -5,10 +5,11 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest.mock import call, patch
 
 # cisagov Libraries
 from pshtt import pshtt as _pshtt
-from pshtt.cli import to_csv
+from pshtt.cli import main, to_csv
 from pshtt.models import Domain, Endpoint
 
 
@@ -121,3 +122,30 @@ class TestToCSV(unittest.TestCase):
         # in the package. This should never fail, as the above assert should
         # catch any changes in the header columns.
         self.assertEqual(header, ",".join(_pshtt.HEADERS))
+
+
+class TestDomainNormalization(unittest.TestCase):
+    """Test CLI normalization and sorting through the library."""
+
+    @patch("pshtt.pshtt.initialize_external_data")
+    @patch("pshtt.pshtt.inspect", side_effect=lambda domain: {"Domain": domain})
+    @patch("pshtt.cli.to_json", side_effect=lambda results, filename: list(results))
+    def test_sorted_domains(self, mock_output, mock_inspect, mock_initialize):
+        """Sort normalized names and remove at most one www prefix."""
+        with patch.object(
+            sys,
+            "argv",
+            [
+                "pshtt",
+                "example.org",
+                "https://www.example.com",
+                "www.www.example.net",
+                "--sorted",
+                "--json",
+            ],
+        ):
+            main()
+        self.assertEqual(
+            mock_inspect.call_args_list,
+            [call("example.com"), call("example.org"), call("www.example.net")],
+        )

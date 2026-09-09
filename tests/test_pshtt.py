@@ -3,7 +3,7 @@
 # Standard Python Libraries
 import datetime
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 # Third-Party Libraries
 from unittest_parametrize import ParametrizedTestCase, param, parametrize
@@ -13,6 +13,7 @@ from pshtt.models import Domain, Endpoint
 from pshtt.pshtt import (
     certificate_is_expired,
     https_check,
+    inspect_domains,
     is_live,
     is_strictly_forces_https,
 )
@@ -282,3 +283,53 @@ class TestStrictlyForcesHttps(unittest.TestCase):
 
         self.assertIsInstance(result, bool)
         self.assertTrue(result)
+
+
+class TestInspectDomains(ParametrizedTestCase):
+    """Test input normalization through the library entry point."""
+
+    @parametrize(
+        ("domains", "expected"),
+        [
+            param(["https://www.example.com"], ["example.com"], id="https"),
+            param(["http://www.example.com"], ["example.com"], id="http"),
+            param(["www.example.com"], ["example.com"], id="www"),
+            param(["example.com:8443"], ["example.com:8443"], id="port"),
+            param(["www.www.example.com"], ["www.example.com"], id="one_prefix"),
+            param(
+                ["example.org", "example.com"],
+                ["example.org", "example.com"],
+                id="order",
+            ),
+            param([], [], id="empty"),
+        ],
+    )
+    @patch("pshtt.pshtt.initialize_external_data")
+    @patch("pshtt.pshtt.inspect", side_effect=lambda domain: domain)
+    def test_normalization(self, mock_inspect, mock_initialize, domains, expected):
+        """Normalize inputs once without changing their order or the input list."""
+        original = domains.copy()
+        self.assertEqual(list(inspect_domains(domains, {})), expected)
+        self.assertEqual(
+            mock_inspect.call_args_list, [call(domain) for domain in expected]
+        )
+        self.assertEqual(domains, original)
+
+    @patch("pshtt.pshtt.initialize_external_data")
+    @patch("pshtt.pshtt.inspect", side_effect=lambda domain: domain)
+    def test_sort_normalized_domains(self, mock_inspect, mock_initialize):
+        """Sort on normalized names when requested, preserving duplicates."""
+        domains = ["example.org", "https://www.example.com", "www.example.com"]
+        self.assertEqual(
+            list(inspect_domains(domains, {"sorted": True})),
+            ["example.com", "example.com", "example.org"],
+        )
+
+    @patch("pshtt.pshtt.initialize_external_data")
+    @patch("pshtt.pshtt.inspect", side_effect=lambda domain: domain)
+    def test_iterable_input(self, mock_inspect, mock_initialize):
+        """Accept an iterable of domain names."""
+        domains = (domain for domain in ["https://www.example.com", "www.example.org"])
+        self.assertEqual(
+            list(inspect_domains(domains, {})), ["example.com", "example.org"]
+        )
