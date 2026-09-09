@@ -102,13 +102,8 @@ def main():
     else:
         domains = args["INPUT"]
 
-    domains = utils.format_domains(domains)
-
-    # If the user wants to sort them, sort them in place.
-    if args["--sorted"]:
-        domains.sort()
-
     options = {
+        "sorted": args["--sorted"],
         "user_agent": args["--user-agent"],
         "timeout": args["--timeout"],
         "cache-third-parties": args["--cache-third-parties"],

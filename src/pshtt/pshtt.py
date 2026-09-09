@@ -1808,7 +1808,11 @@ def initialize_external_data(
 
 
 def inspect_domains(domains, options):
-    """Run inspect() against each of the given domains with the given options."""
+    """Normalize and inspect domains, optionally sorting by normalized name."""
+    domains = utils.format_domains(domains)
+    if options.get("sorted"):
+        domains.sort()
+
     # Override timeout, user agent, preload cache, default CA bundle
     global TIMEOUT, USER_AGENT, THIRD_PARTIES_CACHE, CA_FILE, PT_INT_CA_FILE, STORE
 
