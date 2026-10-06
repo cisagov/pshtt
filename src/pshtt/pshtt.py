@@ -527,12 +527,13 @@ def basic_check(endpoint):
 
             # The hostname of the immediate redirect.
             # The parent domain of the immediate redirect.
-            subdomain_immediate = urlparse.urlparse(immediate).hostname
+            parsed_immediate = urlparse.urlparse(immediate)
+            subdomain_immediate = parsed_immediate.hostname
             base_immediate = parent_domain_for(subdomain_immediate)
 
             endpoint.redirect_immediately_to = immediate
-            endpoint.redirect_immediately_to_https = immediate.startswith("https://")
-            endpoint.redirect_immediately_to_http = immediate.startswith("http://")
+            endpoint.redirect_immediately_to_https = parsed_immediate.scheme == "https"
+            endpoint.redirect_immediately_to_http = parsed_immediate.scheme == "http"
             endpoint.redirect_immediately_to_external = base_original != base_immediate
             endpoint.redirect_immediately_to_subdomain = (
                 base_original == base_immediate
@@ -552,12 +553,13 @@ def basic_check(endpoint):
 
                 # The hostname of the eventual destination.
                 # The parent domain of the eventual destination.
-                subdomain_eventual = urlparse.urlparse(eventual).hostname
+                parsed_eventual = urlparse.urlparse(eventual)
+                subdomain_eventual = parsed_eventual.hostname
                 base_eventual = parent_domain_for(subdomain_eventual)
 
                 endpoint.redirect_eventually_to = eventual
-                endpoint.redirect_eventually_to_https = eventual.startswith("https://")
-                endpoint.redirect_eventually_to_http = eventual.startswith("http://")
+                endpoint.redirect_eventually_to_https = parsed_eventual.scheme == "https"
+                endpoint.redirect_eventually_to_http = parsed_eventual.scheme == "http"
                 endpoint.redirect_eventually_to_external = (
                     base_original != base_eventual
                 )
