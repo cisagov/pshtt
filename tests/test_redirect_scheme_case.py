@@ -46,6 +46,7 @@ def check_redirect(location, eventual, protocol="http"):
 
 @pytest.mark.parametrize("scheme", ["https", "HTTPS", "HtTpS", "http", "HTTP", "hTtP"])
 def test_immediate_redirect_classification_uses_the_uri_scheme(scheme):
+    """Classify immediate HTTP and HTTPS redirects regardless of scheme case."""
     location = scheme + "://example.test/CasePath?Key=Value#Section"
     endpoint = check_redirect(
         location, "https://example.test/CasePath?Key=Value#Section"
@@ -63,6 +64,7 @@ def test_immediate_redirect_classification_uses_the_uri_scheme(scheme):
 
 @pytest.mark.parametrize("scheme", ["https", "HTTPS", "HtTpS", "http", "HTTP", "hTtP"])
 def test_eventual_redirect_classification_uses_the_uri_scheme(scheme):
+    """Classify eventual HTTP and HTTPS redirects by their parsed schemes."""
     eventual = scheme + "://www.example.test/CasePath?Key=Value"
     endpoint = check_redirect("/next", eventual)
     assert endpoint.redirect_eventually_to_https == (scheme.lower() == "https")
@@ -73,6 +75,7 @@ def test_eventual_redirect_classification_uses_the_uri_scheme(scheme):
 
 @pytest.mark.parametrize("scheme", ["HTTP", "hTtP"])
 def test_https_downgrade_is_reported_for_mixed_case_http(scheme):
+    """Detect HTTPS-to-HTTP downgrades with mixed-case HTTP schemes."""
     endpoint = check_redirect(
         scheme + "://example.test/plain", "http://example.test/plain", protocol="https"
     )
@@ -83,6 +86,7 @@ def test_https_downgrade_is_reported_for_mixed_case_http(scheme):
 
 
 def test_external_redirect_fallback_preserves_https_classification():
+    """Preserve HTTPS flags if an external redirect cannot be followed."""
     endpoint = check_redirect(
         "HTTPS://outside.test/CasePath", requests.ConnectionError("offline fixture")
     )
@@ -93,6 +97,7 @@ def test_external_redirect_fallback_preserves_https_classification():
 
 @pytest.mark.parametrize("location", ["/CasePath", "//www.example.test/CasePath"])
 def test_relative_redirects_retain_the_original_http_scheme(location):
+    """Preserve the originating HTTP scheme for relative redirects."""
     endpoint = check_redirect(location, "http://www.example.test/CasePath")
     assert endpoint.redirect_immediately_to_http is True
     assert endpoint.redirect_immediately_to_https is False

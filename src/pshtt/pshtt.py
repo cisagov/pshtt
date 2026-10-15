@@ -558,7 +558,9 @@ def basic_check(endpoint):
                 base_eventual = parent_domain_for(subdomain_eventual)
 
                 endpoint.redirect_eventually_to = eventual
-                endpoint.redirect_eventually_to_https = parsed_eventual.scheme == "https"
+                endpoint.redirect_eventually_to_https = (
+                    parsed_eventual.scheme == "https"
+                )
                 endpoint.redirect_eventually_to_http = parsed_eventual.scheme == "http"
                 endpoint.redirect_eventually_to_external = (
                     base_original != base_eventual
