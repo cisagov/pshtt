@@ -2,13 +2,17 @@
 
 # Standard Python Libraries
 import datetime
+import io
 import unittest
 from unittest.mock import MagicMock, patch
+from urllib.parse import urlparse
 
 # Third-Party Libraries
+import requests
 from unittest_parametrize import ParametrizedTestCase, param, parametrize
 
 # cisagov Libraries
+from pshtt import pshtt
 from pshtt.models import Domain, Endpoint
 from pshtt.pshtt import (
     certificate_is_expired,
@@ -282,3 +286,128 @@ class TestStrictlyForcesHttps(unittest.TestCase):
 
         self.assertIsInstance(result, bool)
         self.assertTrue(result)
+
+
+class TestRedirectSchemeCase(ParametrizedTestCase):
+    """Classify case-insensitive redirect schemes without rewriting URI text."""
+
+    @staticmethod
+    def response(url, status, location=None):
+        """Build an HTTP response backed by an empty readable stream."""
+        result = requests.Response()
+        result.url = url
+        result.status_code = status
+        result.raw = io.BytesIO()
+        if location is not None:
+            result.headers["Location"] = location
+        return result
+
+    def check_redirect(self, location, eventual, protocol="http"):
+        """Run endpoint checks with mocked network and TLS boundaries."""
+        endpoint = Endpoint(protocol, "root", "example.test")
+        initial = self.response(endpoint.url, 301, location)
+        final = (
+            eventual
+            if isinstance(eventual, Exception)
+            else self.response(eventual, 200)
+        )
+        with patch.object(pshtt, "ping", side_effect=[initial, final]), patch.object(
+            pshtt, "https_check"
+        ), patch.object(
+            pshtt,
+            "parent_domain_for",
+            side_effect=lambda host: ".".join(host.split(".")[-2:]),
+        ):
+            pshtt.basic_check(endpoint)
+        self.assertFalse(endpoint.unknown_error)
+        return endpoint
+
+    @parametrize(
+        "scheme",
+        [
+            param("https", id="https"),
+            param("HTTPS", id="HTTPS"),
+            param("HtTpS", id="HtTpS"),
+            param("http", id="http"),
+            param("HTTP", id="HTTP"),
+            param("hTtP", id="hTtP"),
+        ],
+    )
+    def test_immediate_redirect_classification_uses_the_uri_scheme(self, scheme):
+        """Recognize an absolute Location without rewriting its original case."""
+        location = scheme + "://example.test/CasePath?Key=Value#Section"
+        endpoint = self.check_redirect(
+            location, "https://example.test/CasePath?Key=Value#Section"
+        )
+        self.assertEqual(endpoint.redirect_immediately_to, location)
+        self.assertEqual(
+            endpoint.redirect_immediately_to_https, scheme.lower() == "https"
+        )
+        self.assertEqual(
+            endpoint.redirect_immediately_to_http, scheme.lower() == "http"
+        )
+        parsed = urlparse(endpoint.redirect_immediately_to)
+        self.assertEqual(
+            (parsed.path, parsed.query, parsed.fragment),
+            ("/CasePath", "Key=Value", "Section"),
+        )
+        self.assertFalse(endpoint.redirect_immediately_to_external)
+
+    @parametrize(
+        "scheme",
+        [
+            param("https", id="https"),
+            param("HTTPS", id="HTTPS"),
+            param("HtTpS", id="HtTpS"),
+            param("http", id="http"),
+            param("HTTP", id="HTTP"),
+            param("hTtP", id="hTtP"),
+        ],
+    )
+    def test_eventual_redirect_flags_use_the_uri_scheme(self, scheme):
+        """Keep eventual flags consistent if a transport supplies mixed-case URIs."""
+        eventual = scheme + "://www.example.test/CasePath?Key=Value"
+        endpoint = self.check_redirect("/next", eventual)
+        self.assertEqual(
+            endpoint.redirect_eventually_to_https, scheme.lower() == "https"
+        )
+        self.assertEqual(endpoint.redirect_eventually_to_http, scheme.lower() == "http")
+        self.assertEqual(endpoint.redirect_eventually_to, eventual)
+        self.assertTrue(endpoint.redirect_eventually_to_subdomain)
+
+    @parametrize("scheme", [param("HTTP", id="HTTP"), param("hTtP", id="hTtP")])
+    def test_https_downgrade_is_reported_for_mixed_case_http(self, scheme):
+        """Detect HTTPS-to-HTTP downgrade for a mixed-case Location."""
+        endpoint = self.check_redirect(
+            scheme + "://example.test/plain",
+            "http://example.test/plain",
+            protocol="https",
+        )
+        domain = Domain("example.test")
+        domain.canonical = domain.https = endpoint
+        domain.httpswww = Endpoint("https", "www", "example.test")
+        self.assertTrue(pshtt.is_downgrades_https(domain))
+
+    def test_external_redirect_fallback_preserves_https_classification(self):
+        """Copy immediate HTTPS flags when an external redirect cannot be followed."""
+        endpoint = self.check_redirect(
+            "HTTPS://outside.test/CasePath", requests.ConnectionError("offline fixture")
+        )
+        self.assertTrue(endpoint.redirect_immediately_to_external)
+        self.assertTrue(endpoint.redirect_eventually_to_https)
+        self.assertEqual(
+            endpoint.redirect_eventually_to, endpoint.redirect_immediately_to
+        )
+
+    @parametrize(
+        "location",
+        [
+            param("/CasePath", id="relative_path"),
+            param("//www.example.test/CasePath", id="protocol_relative"),
+        ],
+    )
+    def test_relative_redirects_retain_the_original_http_scheme(self, location):
+        """Keep the original HTTP scheme for relative redirects."""
+        endpoint = self.check_redirect(location, "http://www.example.test/CasePath")
+        self.assertTrue(endpoint.redirect_immediately_to_http)
+        self.assertFalse(endpoint.redirect_immediately_to_https)
