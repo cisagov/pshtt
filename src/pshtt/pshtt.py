@@ -479,9 +479,7 @@ def basic_check(endpoint):
         try:
             location_header = req.headers.get("Location")
             # Absolute redirects (e.g. "https://example.com/Index.aspx")
-            if location_header.startswith("http:") or location_header.startswith(
-                "https:"
-            ):
+            if urlparse.urlparse(location_header).scheme in ("http", "https"):
                 immediate = location_header
 
             # Relative redirects (e.g. "Location: /Index.aspx").
