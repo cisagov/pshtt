@@ -13,6 +13,7 @@ from pshtt.models import Domain, Endpoint
 from pshtt.pshtt import (
     certificate_is_expired,
     https_check,
+    is_domain_enforces_https,
     is_live,
     is_strictly_forces_https,
 )
@@ -282,3 +283,36 @@ class TestStrictlyForcesHttps(unittest.TestCase):
 
         self.assertIsInstance(result, bool)
         self.assertTrue(result)
+
+
+class TestDomainEnforcesHttps(ParametrizedTestCase):
+    """Test the Domain Enforces HTTPS calculation.
+
+    A domain enforces HTTPS only if it supports HTTPS, strictly forces
+    HTTPS, and either defaults to HTTPS or is an HTTP redirect domain.
+    Defaulting to HTTPS alone is not enough.  See #207.
+    """
+
+    @parametrize(
+        "supports,strictly,defaults,redirect_domain,expected",
+        [
+            param(True, True, True, False, True, id="defaults_and_strict"),
+            param(True, True, False, True, True, id="redirect_domain_and_strict"),
+            param(True, False, True, False, False, id="defaults_but_not_strict"),
+            param(True, False, False, True, False, id="redirect_domain_not_strict"),
+            param(True, True, False, False, False, id="strict_but_no_default"),
+            param(False, True, True, True, False, id="does_not_support_https"),
+        ],
+    )
+    def test_enforces_https(
+        self, supports, strictly, defaults, redirect_domain, expected
+    ):
+        """Combine the underlying calculations as documented."""
+        with patch(
+            "pshtt.pshtt.is_domain_supports_https", return_value=supports
+        ), patch("pshtt.pshtt.is_strictly_forces_https", return_value=strictly), patch(
+            "pshtt.pshtt.is_defaults_to_https", return_value=defaults
+        ), patch(
+            "pshtt.pshtt.is_http_redirect_domain", return_value=redirect_domain
+        ):
+            self.assertIs(is_domain_enforces_https(Domain("example.com")), expected)
