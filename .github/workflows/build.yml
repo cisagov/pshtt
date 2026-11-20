@@ -220,6 +220,16 @@ jobs:
         include:
           - platform: ubuntu-22.04
             python-version: "3.7"
+          - platform: ubuntu-24.04
+            python-version: "3.8"
+          - platform: ubuntu-24.04
+            python-version: "3.9"
+          - platform: windows-latest
+            python-version: "3.7"
+          - platform: windows-latest
+            python-version: "3.8"
+          - platform: windows-latest
+            python-version: "3.9"
         # We test on all of the latest platforms available to use with GitHub-
         # hosted runners for public repositories.
         platform:
@@ -232,8 +242,8 @@ jobs:
           - ubuntu-latest
           - windows-latest
         python-version:
-          - "3.8"
-          - "3.9"
+          # - "3.8"
+          # - "3.9"
           - "3.10"
           # - "3.11"
           # - "3.12"
@@ -360,11 +370,21 @@ jobs:
         include:
           - platform: ubuntu-22.04
             python-version: "3.7"
+          - platform: ubuntu-24.04
+            python-version: "3.8"
+          - platform: ubuntu-24.04
+            python-version: "3.9"
+          - platform: windows-latest
+            python-version: "3.7"
+          - platform: windows-latest
+            python-version: "3.8"
+          - platform: windows-latest
+            python-version: "3.9"
         platform:
           - ubuntu-latest
         python-version:
-          - "3.8"
-          - "3.9"
+          # - "3.8"
+          # - "3.9"
           - "3.10"
           # - "3.11"
           # - "3.12"
@@ -445,6 +465,16 @@ jobs:
         include:
           - platform: ubuntu-22.04
             python-version: "3.7"
+          - platform: ubuntu-24.04
+            python-version: "3.8"
+          - platform: ubuntu-24.04
+            python-version: "3.9"
+          - platform: windows-latest
+            python-version: "3.7"
+          - platform: windows-latest
+            python-version: "3.8"
+          - platform: windows-latest
+            python-version: "3.9"
         # We test on all of the latest platforms available to use with GitHub-
         # hosted runners for public repositories.
         platform:
@@ -457,8 +487,6 @@ jobs:
           - ubuntu-latest
           - windows-latest
         python-version:
-          - "3.8"
-          - "3.9"
           - "3.10"
           # - "3.11"
           # - "3.12"
