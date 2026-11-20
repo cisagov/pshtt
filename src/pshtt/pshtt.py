@@ -1496,8 +1496,11 @@ def is_domain_supports_https(domain):
 def is_domain_enforces_https(domain):
     """Check if a domain enforces HTTPS.
 
-    A domain that 'Enforces HTTPS' must 'Support HTTPS' and default to
-    HTTPS.  For websites (where Redirect is false) they are allowed to
+    A domain that 'Enforces HTTPS' must 'Support HTTPS' and 'Strictly
+    Force HTTPS' (so, for example, a domain that defaults to HTTPS but
+    still serves content over HTTP does not enforce HTTPS), and must
+    also either default to HTTPS or be an HTTP redirect domain.  For
+    websites (where Redirect is false) they are allowed to
     eventually redirect to an https:// URI. For "redirect domains"
     (domains where the Redirect value is true) they must immediately
     redirect clients to an https:// URI (even if that URI is on

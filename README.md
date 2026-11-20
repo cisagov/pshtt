@@ -231,12 +231,15 @@ conclusions about a domain's behavior.
   incomplete chain is just a mistake.). Domains with a bad chain
   "support" HTTPS but user-side errors can be expected.
 - `Domain Enforces HTTPS` - A domain that 'Enforces HTTPS' must
-  'Support HTTPS' and default to HTTPS. For websites (where `Redirect`
-  is `false`) they are allowed to *eventually* redirect to an
-  `https://` URI. For "redirect domains" (domains where the `Redirect`
-  value is `true`) they must *immediately* redirect clients to an
-  `https://` URI (even if that URI is on another domain) in order to
-  be said to enforce HTTPS.
+  'Support HTTPS' and 'Strictly Force HTTPS' (so, for example, a
+  domain that defaults to HTTPS but still serves content over HTTP
+  does not enforce HTTPS), and must also either default to HTTPS or
+  be an HTTP redirect domain. For websites (where `Redirect` is
+  `false`) they are allowed to *eventually* redirect to an `https://`
+  URI. For "redirect domains" (domains where the `Redirect` value is
+  `true`) they must *immediately* redirect clients to an `https://`
+  URI (even if that URI is on another domain) in order to be said to
+  enforce HTTPS.
 - `Domain Uses Strong HSTS` - A domain 'Uses Strong HSTS' when the
   max-age ≥ 31536000.
 
